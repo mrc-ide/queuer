@@ -98,22 +98,34 @@ queue_local <- function(...) {
       ## What would be nicer is if storr allowed some way of generally
       ## locking but that's getting a bit far out and would induce a
       ## seagull dependency in storr.
-      if (self$context$db$driver$type() != "rds") {
+      db <- context::context_db(self$context)
+
+      if (db$driver$type() == "rds") {
+        ## NOTE: So far, this is the only part that makes an explicit
+        ## reference to the root, so that's nice.
+        self$lockfile <- file.path(self$context$root, "lockfile")
+      } else {
+        ## No lockfile for environment storage.
         warning("Some code may assume rds storage, or shared filesystems")
       }
-      ## NOTE: So far, this is the only part that makes an explicit
-      ## reference to the root, so that's nice.
-      self$lockfile <- file.path(self$context$root, "lockfile")
       self$timeout <- 10.0
     },
 
     ## This is the running half of the system.
+    run_task=function(task_id, ...) {
+      context::task_run(self$task_get(task_id)$handle, ...)
+    },
     run_next=function() {
+      ## TODO: It is possible for the task to be lost here if
+      ## context::task_run throws an error.  We should be atomically
+      ## doing something within the queue code to indicate where the
+      ## task has gone.  Otherwise task stays as PENDING (rather than
+      ## RUNNING) but is not in the queue.
       task_id <- self$queue_op(local_queue_pop)
       if (is.null(task_id)) {
         value <- NULL
       } else {
-        value <- context::task_run(self$task_get(task_id)$handle)
+        value <- self$run_task(task_id)
       }
       invisible(list(task_id=task_id, value=value))
     },

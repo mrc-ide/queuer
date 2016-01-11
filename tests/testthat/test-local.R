@@ -56,3 +56,25 @@ test_that("enqueue", {
   expect_equal(nrow(tt), 11)
   expect_equal(tt$task_id, c(t$id, t1$id, ord))
 })
+
+test_that("environment storage", {
+  ctx <- context::context_save(root=tempfile(), storage_type="environment")
+  on.exit(unlink(ctx$db$destroy()))
+  expect_warning(obj <- queue_local(ctx),
+                 "Some code may assume rds storage")
+  t <- obj$enqueue(sin(1))
+  expect_is(t, "task")
+  expect_equal(t$status(), "PENDING")
+
+  expect_equal(obj$run_next(),
+               list(task_id=t$id, value=sin(1)))
+  expect_equal(t$status(), "COMPLETE")
+
+  for (i in seq_len(10)) {
+    obj$enqueue(sin(i))
+  }
+  res <- obj$run_all()
+  db <- context::context_db(obj)
+  expect_equal(lapply(res, function(x) obj$task_get(x)$result()),
+               as.list(sin(1:10)))
+})
