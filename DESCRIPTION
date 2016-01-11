@@ -1,0 +1,18 @@
+Package: queuer
+Title: Queue Tasks
+Version: 0.0.1
+Author: Rich FitzJohn
+Maintainer: Rich FitzJohn <rich.fitzjohn@gmail.com>
+Description: Queue tasks to number of backends.
+License: MIT + file LICENSE
+LazyData: true
+URL: https://github.com/dide-tools/queuer
+BugReports: https://github.com/dide-tools/queuer/issues
+Imports:
+    R6,
+    context
+Suggests:
+    parallel,
+    seagull,
+    testthat
+RoxygenNote: 5.0.1
