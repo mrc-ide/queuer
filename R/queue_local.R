@@ -13,8 +13,8 @@
 ## wait because we need two event loops.  Might have to switch locally
 ## there.
 
-queue_local <- function(...) {
-  .R6_queue_local$new(...)
+queue_local <- function(context) {
+  .R6_queue_local$new(context)
 }
 
 .R6_queue_local <- R6::R6Class(
@@ -24,8 +24,8 @@ queue_local <- function(...) {
   public=list(
     lockfile=NULL,
     timeout=NULL,
-    initialize=function(...) {
-      super$initialize(...)
+    initialize=function(context) {
+      super$initialize(context)
       ## This can probably be relaxed to allow environment storage
       ## actually, though that would not survive a fork meaningfully.
       ## Redis storage can't be assumed to have the same filesystem,

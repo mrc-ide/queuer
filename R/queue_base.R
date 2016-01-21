@@ -1,22 +1,20 @@
-queue_base <- function(context, config=NULL) {
-  .R6_queue$new(context, config)
+queue_base <- function(context) {
+  .R6_queue$new(context)
 }
 
 .R6_queue_base <- R6::R6Class(
   "queue_base",
   public=
     list(
-      config=NULL,
       context=NULL,
       context_envir=NULL,
       root=NULL,
       db=NULL,
       workdir=NULL,
-      initialize=function(context, config=NULL) {
+      initialize=function(context) {
         if (!inherits(context, "context_handle")) {
           stop("Expected a context object")
         }
-        self$config <- config
         self$context <- context
         ## NOTE: The root is needed so that tasks can run correctly;
         ## we need this to set the local library.
@@ -31,7 +29,7 @@ queue_base <- function(context, config=NULL) {
         if (ctx$auto) {
           stop("auto environments not yet supported")
         } else {
-          message("Loading context")
+          message("Loading context ", context$id)
           self$context_envir <- context::context_load(self$context)
         }
       },
