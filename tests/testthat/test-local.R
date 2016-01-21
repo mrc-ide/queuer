@@ -60,8 +60,7 @@ test_that("enqueue", {
 test_that("environment storage", {
   ctx <- context::context_save(root=tempfile(), storage_type="environment")
   on.exit(unlink(ctx$db$destroy()))
-  expect_warning(obj <- queue_local(ctx),
-                 "Some code may assume rds storage")
+  obj <- queue_local(ctx)
   t <- obj$enqueue(sin(1))
   expect_is(t, "task")
   expect_equal(t$status(), "PENDING")

@@ -1,0 +1,38 @@
+#!/usr/bin/env Rscript
+library(methods)
+## For now at least, accept only the positional arguments:
+##
+##   <root> <context> [<loop>=TRUE]
+##
+## I'm avoiding doing anything more here until I write the general
+## function for doing this, in another package!
+##
+## Using the ideas in scriptr, this would look something like
+## {
+##     "function": "queuer:::queue_local_main",
+##     args: [
+##         {
+##             "name": "root"
+##         },
+##         {
+##             "name": "context"
+##         },
+##         {
+##             "name": "loop",
+##             "type": logical,
+##             "default": true
+##         }
+##     ]
+## }
+##
+## or a generated interface directly from queuer:::queue_local_main
+args <- commandArgs(TRUE)
+np <- length(args)
+if (np == 0L || np > 3L) {
+  stop("Usage: queue_local_worker <root> <context> [<loop>=TRUE]")
+} else {
+  root <- args[[1L]]
+  context <- args[[2L]]
+  loop <- if (np == 3L) as.logical(args[[3L]]) else TRUE
+}
+queuer:::queue_local_worker(root, context, loop)

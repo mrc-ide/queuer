@@ -7,75 +7,11 @@
 ## this package needs to implement to support the various queuing
 ## approaches in rrqueue and the windows cluster (and eventually for
 ## the imperial cluster but it sounds like that's hard).
-queue_base <- function(context, config=NULL) {
-  .R6_queue$new(context, config)
-}
 
-.R6_queue_base <- R6::R6Class(
-  "queue_base",
-  public=
-    list(
-      config=NULL,
-      context=NULL,
-      root=NULL,
-      db=NULL,
-      workdir=NULL,
-      initialize=function(context, config=NULL) {
-        if (!inherits(context, "context_handle")) {
-          stop("Expected a context object")
-        }
-        self$config <- config
-        self$context <- context
-        ## NOTE: The root is needed so that tasks can run correctly;
-        ## we need this to set the local library.
-        self$root <- context$root
-        ## NOTE: We need a copy of the db within the object for
-        ## context::context_db() elsewhere to work correctly.
-        self$db <- context::context_db(context)
-        self$workdir <- getwd()
-      },
-
-      tasks_list=function() {
-        tasks_list(self)
-      },
-      tasks_status=function(task_ids=NULL, follow_redirect=FALSE) {
-        tasks_status(self, task_ids, follow_redirect)
-      },
-      tasks_times=function(task_ids=NULL, unit_elapsed="secs") {
-        tasks_times(self, task_ids, unit_elapsed)
-      },
-      task_get=function(task_id) {
-        task(self, task_id)
-      },
-      task_result=function(task_id, follow_redirect=FALSE) {
-        task_result(self, task_id, follow_redirect)
-      },
-      tasks_drop=function(task_ids) {
-        tasks_drop(self, task_ids)
-        unsubmit(self, task_ids)
-      },
-
-      enqueue=function(expr, ..., envir=parent.frame(), submit=TRUE) {
-        self$enqueue_(substitute(expr), ..., envir=envir, submit=submit)
-      },
-      ## I don't know that these always want to be submitted.
-      enqueue_=function(expr, ..., envir=parent.frame(), submit=TRUE) {
-        task <- context::task_save(expr, self$context, envir)
-        if (submit) {
-          withCallingHandlers(self$submit(task$id),
-                              error=function(e) {
-                                message("Deleting task as submission failed")
-                                context::task_delete(task)
-                              })
-        }
-        invisible(task(self, task$id))
-      },
-
-      ## These exist only as a stub for now, for other classes to
-      ## override.
-      submit=function(task_ids) {},
-      unsubmit=function(task_ids) {}
-    ))
+## There are some fairly insurmountable issues with using a local
+## queue here unfortunately; there's no real way of using the blocking
+## wait because we need two event loops.  Might have to switch locally
+## there.
 
 queue_local <- function(...) {
   .R6_queue_local$new(...)
@@ -104,14 +40,16 @@ queue_local <- function(...) {
         ## NOTE: So far, this is the only part that makes an explicit
         ## reference to the root, so that's nice.
         self$lockfile <- file.path(self$context$root, "lockfile")
-      } else {
-        ## No lockfile for environment storage.
-        warning("Some code may assume rds storage, or shared filesystems")
+        ## NOTE: No lockfile for environment storage, won't be
+        ## possible for redis, which we can easily lock with SETX, but
+        ## will need a general interface for the lockfile.
       }
       self$timeout <- 10.0
     },
 
-    ## This is the running half of the system.
+    ## This is the running half of the system; these will shortly move
+    ## into workers, but the queue_local case might be weird enough to
+    ## warrant keeping them here too.
     run_task=function(task_id, ...) {
       context::task_run(self$task_get(task_id)$handle, ...)
     },
@@ -141,6 +79,18 @@ queue_local <- function(...) {
       }
       res
     },
+    run_loop=function(interval=0.5) {
+      ## TODO: Until messaging is implemented, this will need to run
+      ## until unterrupted.
+      ##
+      ## TODO: get a growing timeout in here too.
+      repeat {
+        res <- self$run_next()
+        if (is.null(res)) {
+          Sys.sleep(interval)
+        }
+      }
+    },
 
     ## Ordinarily there would be two objects created; one worker and
     ## one queue.  but for the local queue these are the same.
@@ -152,11 +102,11 @@ queue_local <- function(...) {
     },
     ## NOTE: not protected by lock, and duplication of key/ns names
     queue_list=function() {
-      local_queue_read(self$context$db, "queue", "queue_local")
+      local_queue_read(context::context_db(self), "queue", "queue_local")
     },
 
     queue_op=function(f, ...) {
-      f(self$lockfile, self$context$db, "queue", "queue_local",
+      f(self$lockfile, context::context_db(self), "queue", "queue_local",
         ..., timeout=self$timeout)
     }
 ))
@@ -199,4 +149,36 @@ local_queue_del <- function(lockfile, db, key, namespace, ids, ...) {
 local_queue_read <- function(db, key, namespace) {
   tryCatch(db$get(key, namespace),
            KeyError=function(e) character(0))
+}
+
+## TODO (here, and queue_base, queue_local).  The actual queue object
+## should take only take "root", rather than context, and we should
+## attempt to build all contexts.  This is fairly well developed in
+## rrqueue.
+queue_local_worker <- function(root, context_id=NULL, loop=TRUE, log=TRUE) {
+  if (log) {
+    context::context_log_start()
+    on.exit(context::context_log_stop())
+  }
+  if (!file.exists(root)) {
+    stop("Queue does not exist")
+  }
+  if (is.null(context_id)) {
+    db <- context_db(root)
+    context_id <- contexts_list(root)
+    if (length(context_id) != 1L) {
+      stop("Expected exactly one context")
+    }
+  } else {
+    db <- NULL
+  }
+
+  ctx <- context::context_handle(root, context_id, db)
+  obj <- queue_local(ctx)
+
+  if (loop) {
+    obj$run_loop()
+  } else {
+    obj$run_all()
+  }
 }

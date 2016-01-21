@@ -25,7 +25,12 @@
 ## there?  Then task_handle / task goes away.  But task_handle there
 ## does deal with _vectors_ of tasks (not sure where that is used
 ## though).
-
+##
+##    UPDATE (2016-01-20): The more I think about this the more I like
+##    the idea; it seems that this is going to be needed to be dealt
+##    with quite soon.  Same with the context handle itself I suspect.
+##    For now continue as-is, though it will be a breaking change when
+##    it's done.
 task <- function(obj, id) {
   .R6_task$new(obj, id, TRUE)
 }
@@ -42,10 +47,10 @@ task <- function(obj, id) {
         initialize=function(obj, id, check_exists=TRUE) {
           self$id <- id
           self$handle <- context::task_handle(obj, id, check_exists)
-          self$db <- self$handle$db
+          self$db <- context::context_db(self$handle)
         },
-        status=function(follow_redirect=FALSE) {
-          tasks_status(self, self$id, follow_redirect)
+        status=function(follow_redirect=FALSE, named=FALSE) {
+          tasks_status(self, self$id, follow_redirect, named)
         },
         result=function(follow_redirect=FALSE, sanitise=FALSE) {
           task_result(self, self$id, follow_redirect, sanitise)
@@ -94,7 +99,7 @@ tasks_list <- function(obj) {
   context::tasks_list(obj)
 }
 
-tasks_status <- function(obj, task_ids, follow_redirect=FALSE) {
+tasks_status <- function(obj, task_ids, follow_redirect=FALSE, named=TRUE) {
   if (follow_redirect) {
     .NotYetUsed("follow_redirect")
   }
@@ -102,7 +107,7 @@ tasks_status <- function(obj, task_ids, follow_redirect=FALSE) {
     task_ids <- tasks_list(obj)
   }
   task_handle <- context::task_handle(obj, task_ids, TRUE)
-  context::task_status(task_handle)
+  context::task_status(task_handle, named=named)
 }
 
 tasks_times <- function(obj, task_ids, unit_elapsed="secs") {
