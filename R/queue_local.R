@@ -82,12 +82,12 @@ queue_local <- function(context) {
     },
     run_loop=function(interval=0.5) {
       ## TODO: Until messaging is implemented, this will need to run
-      ## until unterrupted.
+      ## until interrupted.
       ##
       ## TODO: get a growing timeout in here too.
       repeat {
         res <- self$run_next()
-        if (is.null(res)) {
+        if (is.null(res$task_id)) {
           Sys.sleep(interval)
         }
       }
