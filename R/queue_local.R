@@ -25,6 +25,7 @@ queue_local <- function(context) {
     lockfile=NULL,
     timeout=NULL,
     initialize=function(context) {
+      loadNamespace("seagull")
       super$initialize(context)
       ## This can probably be relaxed to allow environment storage
       ## actually, though that would not survive a fork meaningfully.
@@ -164,8 +165,8 @@ queue_local_worker <- function(root, context_id=NULL, loop=TRUE, log=TRUE) {
     stop("Queue does not exist")
   }
   if (is.null(context_id)) {
-    db <- context_db(root)
-    context_id <- contexts_list(root)
+    db <- context::context_db(root)
+    context_id <- context::contexts_list(root)
     if (length(context_id) != 1L) {
       stop("Expected exactly one context")
     }
