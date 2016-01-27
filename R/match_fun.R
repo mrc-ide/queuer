@@ -176,8 +176,8 @@ match_fun_queue <- function(fun, envir, envir_queue) {
   dat
 }
 
-find_fun_queue <- function(FUN, env, envir_queue) {
-  dat <- match_fun_queue(FUN, env, envir_queue)
+find_fun_queue <- function(FUN, envir, envir_queue) {
+  dat <- match_fun_queue(FUN, envir, envir_queue)
   if (dat[[1]] == "") {
     as.name(dat[[2]])
   } else {
