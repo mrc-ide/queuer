@@ -15,7 +15,6 @@ queue_base <- function(context) {
         if (!inherits(context, "context_handle")) {
           stop("Expected a context object")
         }
-        self$context <- context
         ## NOTE: The root is needed so that tasks can run correctly;
         ## we need this to set the local library.
         self$root <- context$root
@@ -25,12 +24,13 @@ queue_base <- function(context) {
         self$workdir <- getwd()
 
         ## Consider making this optional?
-        ctx <- context::context_read(self$context)
+        ctx <- context::context_read(context)
         if (ctx$auto) {
           stop("auto environments not yet supported")
         } else {
           message("Loading context ", context$id)
-          self$context_envir <- context::context_load(self$context)
+          self$context <- ctx
+          self$context_envir <- context::context_load(context)
         }
       },
 
