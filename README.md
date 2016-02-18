@@ -24,7 +24,7 @@ install.packages("queuer")
 Development versions via `devtools`:
 
 ```r
-devtools::install_packages(c(
+devtools::install_github(c(
   "gaborcsardi/progress",
   "dide-tools/context",
   "richfitz/queuer"))
