@@ -110,6 +110,11 @@ tasks_status <- function(obj, task_ids, follow_redirect=FALSE, named=TRUE) {
   context::task_status(task_handle, named=named)
 }
 
+## TODO: It might be useful to have a "sorted" option here, because
+## it's a bit confusing that when a specific list of tasks is given
+## the output is a different order.  However, because the task_ids
+## might be generated at any point above this it's hard to tell when a
+## sorted/unsorted list is wanted.
 tasks_times <- function(obj, task_ids, unit_elapsed="secs") {
   if (is.null(task_ids)) {
     task_ids <- tasks_list(obj)

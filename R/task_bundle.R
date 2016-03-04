@@ -5,8 +5,6 @@
 ##' A task bundle exists to group together tasks that are related.  It
 ##' is possible for a task to belong to multiple bundles.
 ##'
-##' @template task_bundle_methods
-##'
 ##' @title Create a task bundle
 ##'
 ##' @param obj An observer or queue object; something that can be

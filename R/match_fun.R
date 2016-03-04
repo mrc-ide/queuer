@@ -176,6 +176,8 @@ match_fun_queue <- function(fun, envir, envir_queue) {
   dat
 }
 
+## TODO: This needs to deal with hidden functions; they should be OK
+## to call.  Once that is done fix buildr.
 find_fun_queue <- function(FUN, envir, envir_queue) {
   dat <- match_fun_queue(FUN, envir, envir_queue)
   if (dat[[1]] == "") {
