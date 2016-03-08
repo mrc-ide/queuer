@@ -66,7 +66,8 @@ qlapply <- function(X, FUN, obj, ...,
 enqueue_bulk <- function(obj, X, FUN, ..., do.call=FALSE,
                          timeout=Inf, time_poll=1, progress_bar=TRUE,
                          envir=parent.frame()) {
-  obj <- enqueue_bulk_submit(obj, X, FUN, ..., do.call=do.call, envir=envir)
+  obj <- enqueue_bulk_submit(obj, X, FUN, ..., do.call=do.call, envir=envir,
+                             progress_bar=progress_bar)
   if (timeout > 0) {
     tryCatch(obj$wait(timeout, time_poll, progress_bar),
              interrupt=function(e) obj)
@@ -76,7 +77,7 @@ enqueue_bulk <- function(obj, X, FUN, ..., do.call=FALSE,
 }
 
 enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
-                                envir=parent.frame()) {
+                                envir=parent.frame(), progress_bar=TRUE) {
   if (is.data.frame(X)) {
     X <- df_to_list(X)
   } else if (is.atomic(X)) {
@@ -102,9 +103,12 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
   context <- obj$context
 
   res <- context::task_save_list(tasks, context, envir)
+  p <- progress(prefix="Submitting: ", show=progress_bar, total=length(n),
+                spin=FALSE)
   withCallingHandlers({
     for (i in seq_len(n)) {
       obj$submit(res$id[[i]])
+      p(1)
     }
   }, error=function(e) {
     message("Deleting task as submission failed")

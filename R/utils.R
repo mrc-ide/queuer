@@ -14,9 +14,11 @@ df_to_list <- function(x) {
   unname(lapply(split(x, seq_len(nrow(x))), as.list))
 }
 
-progress <- function(total, ..., show=TRUE, prefix="") {
+progress <- function(total, ..., show=TRUE, prefix="", spin=TRUE) {
   if (show) {
-    fmt <- paste0(prefix, "(:spin) [:bar] :percent")
+    fmt <- paste0(prefix,
+                  if (spin) "(:spin) ",
+                  "[:bar] :percent")
     pb <- progress::progress_bar$new(fmt, total=total)
     function(len=1) {
       invisible(pb$tick(len))
