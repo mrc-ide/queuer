@@ -54,6 +54,13 @@ queue_base <- function(context) {
         unsubmit(self, task_ids)
       },
 
+      task_bundles_list=function() {
+        tasks_bundles_list(self)
+      },
+      task_bundle_get=function(id) {
+        task_bundle_get(self, id)
+      },
+
       enqueue=function(expr, ..., envir=parent.frame(), submit=TRUE) {
         self$enqueue_(substitute(expr), ..., envir=envir, submit=submit)
       },

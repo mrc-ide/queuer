@@ -122,6 +122,15 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
   ## really possible at the moment because it requires having a proper
   ## hash access interface to the database, which with RDS storage we
   ## don't really have?
-  context::context_db(obj)$set(group, res$id, "task_groups")
+  context::context_db(obj)$set(group, setNames(res$id, names(X)),
+                               "task_bundles")
   task_bundle(obj, res$id, group, names(X))
+}
+
+task_bundles_list <- function(obj) {
+  context::context_db(obj)$list("task_bundles")
+}
+task_bundle_get <- function(obj, id) {
+  task_ids <- context::context_db(obj)$get(id, "task_bundles")
+  ret <- task_bundle(obj, unname(task_ids), id, names(task_ids))
 }
