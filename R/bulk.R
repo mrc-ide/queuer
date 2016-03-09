@@ -88,7 +88,11 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
 
   fun <- find_fun_queue(FUN, envir, obj$context_envir)
   n <- length(X)
-  DOTS <- list(...)
+
+  ## It is important not to use list(...) here and instead capture the
+  ## symbols.  Otherwise later when we print the expression bad things
+  ## will happen!
+  DOTS <- lapply(lazyeval::lazy_dots(...), "[[", "expr")
 
   tasks <- vector("list", n)
   group <- context:::random_id()
@@ -101,7 +105,6 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
   }
 
   context <- obj$context
-
   res <- context::task_save_list(tasks, context, envir)
   p <- progress(prefix="Submitting: ", show=progress_bar, total=length(n),
                 spin=FALSE)

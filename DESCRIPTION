@@ -11,6 +11,7 @@ BugReports: https://github.com/dide-tools/queuer/issues
 Imports:
     R6,
     context,
+    lazyeval,
     progress
 Suggests:
     parallel,
