@@ -59,8 +59,12 @@ task_bundle <- function(obj, task_ids=NULL, group=NULL, names=NULL) {
     times=function(unit_elapsed="secs") {
       tasks_times(self, self$ids, unit_elapsed)
     },
-    results=function() {
-      self$wait(0, 0, FALSE)
+    results=function(partial=FALSE) {
+      if (partial) {
+        task_bundle_partial(self)
+      } else {
+        self$wait(0, 0, FALSE)
+      }
     },
     wait=function(timeout=60, time_poll=1, progress_bar=TRUE) {
       task_bundle_wait(self, timeout, time_poll, progress_bar)
@@ -127,6 +131,16 @@ task_bundle_wait <- function(bundle, timeout, time_poll, progress_bar) {
     }
   }
   cleanup(results)
+}
+
+task_bundle_partial <- function(bundle) {
+  task_ids <- bundle$ids
+  done <- bundle$check()
+  results <- setNames(vector("list", length(task_ids)), task_ids)
+  if (any(done)) {
+    results[done] <- lapply(bundle$tasks[done], function(t) t$result())
+  }
+  setNames(results, bundle$names)
 }
 
 ## This is going to be something that a queue should provide and be
