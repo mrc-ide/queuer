@@ -132,5 +132,5 @@ task_bundles_list <- function(obj) {
 }
 task_bundle_get <- function(obj, id) {
   task_ids <- context::context_db(obj)$get(id, "task_bundles")
-  ret <- task_bundle(obj, unname(task_ids), id, names(task_ids))
+  task_bundle(obj, unname(task_ids), id, names(task_ids))
 }
