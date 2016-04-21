@@ -55,7 +55,7 @@ queue_base <- function(context) {
       },
 
       task_bundles_list=function() {
-        tasks_bundles_list(self)
+        task_bundles_list(self)
       },
       task_bundle_get=function(id) {
         task_bundle_get(self, id)
