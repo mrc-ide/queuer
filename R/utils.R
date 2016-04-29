@@ -20,14 +20,24 @@ df_to_list <- function(x) {
   unname(lapply(split(x, seq_len(nrow(x))), as.list))
 }
 
-progress <- function(total, ..., show=TRUE, prefix="", spin=TRUE) {
+progress_has_spin <- function() {
+  packageVersion("progress") > numeric_version("1.0.2")
+}
+
+progress <- function(total, ..., show=TRUE, prefix="", fmt=NULL) {
   if (show) {
-    fmt <- paste0(prefix,
-                  if (spin) "(:spin) ",
-                  "[:bar] :percent")
+    if (is.null(fmt)) {
+      fmt <- paste0(prefix,
+                    if (progress_has_spin()) "(:spin) ",
+                    "[:bar] :percent")
+    }
     pb <- progress::progress_bar$new(fmt, total=total)
-    function(len=1) {
-      invisible(pb$tick(len))
+    function(len=1, ..., update=FALSE) {
+      if (update) {
+        invisible(pb$update(len, ...))
+      } else {
+        invisible(pb$tick(len, ...))
+      }
     }
   } else {
     function(...) {}
