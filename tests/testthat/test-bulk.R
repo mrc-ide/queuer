@@ -45,3 +45,52 @@ test_that("worker", {
     expect_equal(cl$recieve()[[1]], res$ids)
   }
 })
+
+test_that("task_bundles", {
+  context::context_log_start()
+  ctx <- context::context_save(root=tempfile(), sources="functions.R")
+  obj <- queue_local(ctx)
+
+  expect_equal(obj$task_bundles_list(), character(0))
+
+  x <- setNames(runif(4, max=0.1), letters[1:4])
+
+  res1 <- enqueue_bulk_submit(obj, x, "slow_double")
+  expect_equal(obj$task_bundles_list(), res1$name)
+  expect_equal(res1$names, names(x))
+  expect_equal(res1$X, x)
+
+  res2 <- enqueue_bulk_submit(obj, unname(x), "slow_double")
+  expect_equal(sort(obj$task_bundles_list()),
+               sort(c(res1$name, res2$name)))
+  expect_null(res2$names)
+  expect_equal(res2$X, unname(x))
+
+  x <- expand.grid(a=1:2, b=letters[1:3], stringsAsFactors=FALSE)
+  rownames(x) <- LETTERS[seq_len(nrow(x))]
+  res3 <- enqueue_bulk_submit(obj, x, "list", do.call=TRUE)
+  expect_equal(res3$names, rownames(x))
+  expect_equal(res3$X, x)
+  expect_equal(as.list(res3$tasks[[1]]$expr())[-1],
+               df_to_list(x, TRUE)[[1]])
+
+  res4 <- enqueue_bulk_submit(obj, x, "list", do.call=TRUE, use_names=FALSE)
+  expect_equal(res4$names, rownames(x))
+  expect_equal(res4$X, x)
+  expect_equal(as.list(res4$tasks[[1]]$expr())[-1],
+               df_to_list(x, FALSE)[[1]])
+
+  res5 <- enqueue_bulk_submit(obj, x, "list", name="mygroup")
+  expect_equal(res5$name, "mygroup")
+
+  t <- obj$tasks_list()
+  expect_error(enqueue_bulk_submit(obj, x, "list", name="mygroup"),
+               "Task bundle already exists")
+  ## No tasks were actually added here:
+  expect_equal(obj$tasks_list(), t)
+
+  res6 <- enqueue_bulk_submit(obj, x, "list", name="mygroup", overwrite=TRUE)
+  expect_equal(res6$name, "mygroup")
+  expect_equal(sort(c(t, res6$ids)), sort(obj$tasks_list()))
+  expect_equal(intersect(res5$ids, res6$ids), character(0))
+})

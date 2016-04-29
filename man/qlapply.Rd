@@ -6,10 +6,11 @@
 \title{Run tasks in a queue}
 \usage{
 qlapply(X, FUN, obj, ..., envir = parent.frame(), timeout = Inf,
-  time_poll = 1, progress_bar = TRUE)
+  time_poll = 1, progress_bar = TRUE, name = NULL, overwrite = FALSE)
 
 enqueue_bulk(obj, X, FUN, ..., do.call = FALSE, timeout = Inf,
-  time_poll = 1, progress_bar = TRUE, envir = parent.frame())
+  time_poll = 1, progress_bar = TRUE, envir = parent.frame(),
+  name = NULL, use_names = TRUE, overwrite = FALSE)
 }
 \arguments{
 \item{X}{A vector (atomic or list) to evaluate \code{FUN} on each
@@ -23,7 +24,15 @@ environment that the queue itself uses.}
 \item{obj}{The queue object.}
 
 \item{...}{Additional arguments to pass through to \code{FUN}
-along with each element of \code{X}.}
+along with each element of \code{X}.  Unfortunately, because of
+the huge number of options that these functions support, dots
+are going to be unreliable here (if you match any argument here
+the dots won't make it through to your function).  This function
+may adopt the (fairly ugly) convention used by \code{mapply} and
+support an explicit argument instead.  Extra unfortunately
+though, the dots arguments need some care so that they are
+evaluated as symbols.  So another option is that all arguments
+after \code{...} will acquire a leading dot.}
 
 \item{envir}{Environment to search for functions in.  This might change.}
 
@@ -39,9 +48,22 @@ should be seen as a lower limit.}
 
 \item{progress_bar}{Display a progress bar as tasks are polled.}
 
+\item{name}{Name for the task bundle.  If not provided a
+human-recognisable random name will be generated and printed to
+the console.}
+
+\item{overwrite}{If a task bundle name \code{name} exists already,
+should we overwrite it (see \code{\link{task_bundle_create}})?
+If \code{FALSE} (the default) we throw an error if it exists.}
+
 \item{do.call}{If \code{TRUE}, rather than evaluating \code{FUN(x,
 ...)}, evaluate \code{FUN(x[1], x[2], ..., x[n], ...)} (where
 \code{x} is an element of \code{X}).}
+
+\item{use_names}{Only meaningful when \code{do.call} is
+\code{TRUE} and \code{X} is a \code{data.frame}, if
+\code{use_names=FALSE}, then names will be stripped off each row
+of the data.frame before the function call is composed.}
 }
 \description{
 A queued version of \code{\link{lapply}}.  With this, tasks are

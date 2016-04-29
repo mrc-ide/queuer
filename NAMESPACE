@@ -2,4 +2,6 @@
 
 export(enqueue_bulk)
 export(qlapply)
-export(task_bundle)
+export(task_bundle_create)
+export(task_bundle_get)
+importFrom(ids,aa)

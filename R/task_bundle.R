@@ -12,25 +12,32 @@
 ##'
 ##' @param tasks A list of tasks.
 ##'
-##' @param group Group name
+##' @param name Group name
 ##'
-##' @param names Optional vector of names to label output with.
+##' @param X Metadata to associate with the tasks.  This is used by
+##'   the bulk interface (\code{\link{qlapply}} and
+##'   \code{\link{enqueue_bulk}} to associate the first argument with
+##'   the bundle).
+##'
+##' @param overwrite Logical indicating if an existing bundle with the
+##'   same name should be overwritten.  If \code{FALSE} and a bundle
+##'   with this name already exists, an error will be thrown.
 ##'
 ##' @export
-task_bundle <- function(obj, task_ids=NULL, group=NULL, names=NULL) {
-  new <- is.null(group)
-  if (new) {
-    group <- create_group(NULL, FALSE)
-  }
-  if (is.null(task_ids)) {
-    if (new) {
-      stop("task_ids cannot be NULL for nonexistant group")
-    }
-    task_ids <- tryCatch(
-      context::context_db(obj)$get(grp, "task_groups"),
-      error=function(e) stop(sprintf("No such group %s", group)))
-  }
-  .R6_task_bundle$new(obj, task_ids, group, names)
+##' @rdname task_bundle
+task_bundle_create <- function(obj, task_ids=NULL, name=NULL, X=NULL,
+                               overwrite=FALSE) {
+  db <- context::context_db(obj)
+  name <- create_bundle_name(name, overwrite, db)
+  db$set(name, task_ids, "task_bundles")
+  db$set(name, X, "task_bundles_X")
+  task_bundle_get(obj, name)
+}
+
+##' @export
+##' @rdname task_bundle
+task_bundle_get <- function(obj, name) {
+  .R6_task_bundle$new(obj, name)
 }
 
 .R6_task_bundle <- R6::R6Class(
@@ -39,26 +46,36 @@ task_bundle <- function(obj, task_ids=NULL, group=NULL, names=NULL) {
   public=list(
     db=NULL,
     tasks=NULL,
-    group=NULL,
+    name=NULL,
     names=NULL,
     ids=NULL,
     done=NULL,
+    X=NULL,
 
-    initialize=function(obj, task_ids, group, names) {
+    initialize=function(obj, name) {
       self$db <- context::context_db(obj)
-      self$tasks <- setNames(lapply(task_ids, obj$task_get), task_ids)
-      self$group <- group
-      self$names <- NULL
-      self$ids <- task_ids
+      task_ids <- self$db$get(name, "task_bundles")
+      self$name <- name
+      self$tasks <- setNames(lapply(task_ids, task, obj=obj), task_ids)
+
+      self$ids <- unname(task_ids)
+      self$names <- names(task_ids)
+      self$X <- self$db$get(name, "task_bundles_X")
       self$check()
     },
 
     status=function(named=TRUE) {
-      tasks_status(self, self$ids, named=named)
+      ## TODO: Only need to check the undone ones here...
+      ret <- tasks_status(self, self$ids, named=named)
+      self$done <- setNames(!(ret %in% c("PENDING", "RUNNING", "ORPHAN")),
+                            self$ids)
+      ret
     },
+
     times=function(unit_elapsed="secs") {
       tasks_times(self, self$ids, unit_elapsed)
     },
+
     results=function(partial=FALSE) {
       if (partial) {
         task_bundle_partial(self)
@@ -66,13 +83,13 @@ task_bundle <- function(obj, task_ids=NULL, group=NULL, names=NULL) {
         self$wait(0, 0, FALSE)
       }
     },
+
     wait=function(timeout=60, time_poll=1, progress_bar=TRUE) {
       task_bundle_wait(self, timeout, time_poll, progress_bar)
     },
+
     check=function() {
-      status <- self$status()
-      self$done <-
-        !(status == "PENDING" | status == "RUNNING" | status == "ORPHAN")
+      self$status()
       self$done
     }
     ## TODO: delete(), overview()
@@ -164,4 +181,20 @@ task_bundle_fetch1 <- function(db, task_ids, timeout) {
     Sys.sleep(timeout)
     NULL
   }
+}
+
+##' @importFrom ids aa
+create_bundle_name <- function(name, overwrite, db) {
+  if (is.null(name)) {
+    repeat {
+      name <- ids::aa(1)()
+      if (!db$exists(name, "task_bundles")) {
+        break
+      }
+    }
+    message(sprintf("Creating bundle: '%s'", name))
+  } else if (!overwrite && db$exists(name, "task_bundles")) {
+    stop("Task bundle already exists: ", name)
+  }
+  name
 }

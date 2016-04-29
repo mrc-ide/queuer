@@ -25,7 +25,15 @@
 ##' @param obj The queue object.
 ##'
 ##' @param ... Additional arguments to pass through to \code{FUN}
-##'   along with each element of \code{X}.
+##'   along with each element of \code{X}.  Unfortunately, because of
+##'   the huge number of options that these functions support, dots
+##'   are going to be unreliable here (if you match any argument here
+##'   the dots won't make it through to your function).  This function
+##'   may adopt the (fairly ugly) convention used by \code{mapply} and
+##'   support an explicit argument instead.  Extra unfortunately
+##'   though, the dots arguments need some care so that they are
+##'   evaluated as symbols.  So another option is that all arguments
+##'   after \code{...} will acquire a leading dot.
 ##'
 ##' @param envir Environment to search for functions in.  This might change.
 ##'
@@ -41,14 +49,26 @@
 ##'
 ##' @param progress_bar Display a progress bar as tasks are polled.
 ##'
+##' @param name Name for the task bundle.  If not provided a
+##'   human-recognisable random name will be generated and printed to
+##'   the console.
+##'
+##' @param overwrite If a task bundle name \code{name} exists already,
+##'   should we overwrite it (see \code{\link{task_bundle_create}})?
+##'   If \code{FALSE} (the default) we throw an error if it exists.
+##'
 ##' @export
 qlapply <- function(X, FUN, obj, ...,
                     envir=parent.frame(),
-                    timeout=Inf, time_poll=1, progress_bar=TRUE) {
+                    timeout=Inf, time_poll=1, progress_bar=TRUE,
+                    name=NULL, overwrite=FALSE) {
+  ## TODO: The dots here are going to cause grief at some point.  I
+  ## may need a more robust way of passing additional arguments in,
+  ## but not sure what that looks like...
   enqueue_bulk(obj, X, FUN, ...,
                do.call=FALSE,
                timeout=timeout, time_poll=time_poll, progress_bar=progress_bar,
-               envir=envir)
+               envir=envir, name=name, overwrite=overwrite)
 }
 
 ## A downside of the current treatment of dots is there are quite a
@@ -63,11 +83,18 @@ qlapply <- function(X, FUN, obj, ...,
 ##' @param do.call If \code{TRUE}, rather than evaluating \code{FUN(x,
 ##'   ...)}, evaluate \code{FUN(x[1], x[2], ..., x[n], ...)} (where
 ##'   \code{x} is an element of \code{X}).
+##'
+##' @param use_names Only meaningful when \code{do.call} is
+##'   \code{TRUE} and \code{X} is a \code{data.frame}, if
+##'   \code{use_names=FALSE}, then names will be stripped off each row
+##'   of the data.frame before the function call is composed.
 enqueue_bulk <- function(obj, X, FUN, ..., do.call=FALSE,
                          timeout=Inf, time_poll=1, progress_bar=TRUE,
-                         envir=parent.frame()) {
+                         envir=parent.frame(), name=NULL, use_names=TRUE,
+                         overwrite=FALSE) {
   obj <- enqueue_bulk_submit(obj, X, FUN, ..., do.call=do.call, envir=envir,
-                             progress_bar=progress_bar)
+                             progress_bar=progress_bar, name=name,
+                             use_names=use_names, overwrite=overwrite)
   if (timeout > 0) {
     tryCatch(obj$wait(timeout, time_poll, progress_bar),
              interrupt=function(e) obj)
@@ -77,17 +104,18 @@ enqueue_bulk <- function(obj, X, FUN, ..., do.call=FALSE,
 }
 
 enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
-                                envir=parent.frame(), progress_bar=TRUE) {
+                                envir=parent.frame(), progress_bar=TRUE,
+                                name=NULL, use_names=TRUE, overwrite=FALSE) {
   if (is.data.frame(X)) {
-    X <- df_to_list(X)
+    XX <- df_to_list(X, use_names)
   } else if (is.atomic(X)) {
-    X <- as.list(X)
+    XX <- as.list(X)
   } else if (!is.list(X)) {
     stop("X must be a data.frame or list")
   }
 
   fun <- find_fun_queue(FUN, envir, obj$context_envir)
-  n <- length(X)
+  n <- length(XX)
 
   ## It is important not to use list(...) here and instead capture the
   ## symbols.  Otherwise later when we print the expression bad things
@@ -95,42 +123,28 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
   DOTS <- lapply(lazyeval::lazy_dots(...), "[[", "expr")
 
   tasks <- vector("list", n)
-  group <- context:::random_id()
   for (i in seq_len(n)) {
     if (do.call) {
-      tasks[[i]] <- as.call(c(list(fun), X[[i]], DOTS))
+      tasks[[i]] <- as.call(c(list(fun), XX[[i]], DOTS))
     } else {
-      tasks[[i]] <- as.call(c(list(fun), X[i], DOTS))
+      tasks[[i]] <- as.call(c(list(fun), XX[i], DOTS))
     }
   }
 
-  context <- obj$context
-  res <- context::task_save_list(tasks, context, envir)
-  p <- progress(prefix="Submitting: ", show=progress_bar, total=length(n),
-                spin=FALSE)
-  withCallingHandlers({
-    for (i in seq_len(n)) {
-      obj$submit(res$id[[i]])
-      p(1)
-    }
-  }, error=function(e) {
-    message("Deleting task as submission failed")
-    context::task_delete(res)
-  })
+  name <- create_bundle_name(name, overwrite, context::context_db(obj))
+  msg <- sprintf("%d task%s...", n, ngettext(n, "", "s"))
 
-  ## TODO: Getting a list of the task groups out of the db is not
-  ## really possible at the moment because it requires having a proper
-  ## hash access interface to the database, which with RDS storage we
-  ## don't really have?
-  context::context_db(obj)$set(group, setNames(res$id, names(X)),
-                               "task_bundles")
-  task_bundle(obj, res$id, group, names(X))
+  message("saving ", msg)
+  res <- context::task_save_list(tasks, obj$context, envir)
+  ret <- task_bundle_create(obj, setNames(res$id, names(XX)), name, X,
+                            overwrite)
+
+  message("submitting ", msg)
+  obj$submit(res$id)
+
+  ret
 }
 
 task_bundles_list <- function(obj) {
   context::context_db(obj)$list("task_bundles")
-}
-task_bundle_get <- function(obj, id) {
-  task_ids <- context::context_db(obj)$get(id, "task_bundles")
-  task_bundle(obj, unname(task_ids), id, names(task_ids))
 }

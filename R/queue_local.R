@@ -122,7 +122,9 @@ queue_local <- function(context) {
 local_queue_push <- function(lockfile, db, key, namespace, ids, ...) {
   seagull::with_flock(lockfile, {
     queue <- local_queue_read(db, key, namespace)
-    db$set(key, c(queue, ids), namespace)
+    tot <- c(queue, ids)
+    db$set(key, tot, namespace)
+    length(tot)
   }, ...)
 }
 

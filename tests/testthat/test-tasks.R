@@ -15,14 +15,13 @@ test_that("basic", {
   ## expect_error(t$log(), "No log for")
   expect_error(t$wait(0), "task not returned in time")
   expect_error(t$wait(0.01), "task not returned in time")
-  ## takes_less_than is not ported to the new-style expectations yet.
   expect_true(system.time(try(t$wait(0.01), silent=TRUE))[["elapsed"]] < 0.5)
 
   tt <- t$times()
   expect_is(tt, "data.frame")
   expect_is(tt$submitted, "POSIXt")
-  expect_equal(tt$started, NA)
-  expect_equal(tt$finished, NA)
+  expect_equal(tt$started, as.POSIXct(NA))
+  expect_equal(tt$finished, as.POSIXct(NA))
 
   ## file <- path_log(t$root, t$id)
   file <- NULL

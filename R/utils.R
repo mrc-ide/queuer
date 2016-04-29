@@ -13,11 +13,18 @@ time_checker <- function(timeout, remaining=FALSE) {
 }
 
 ## Not necessarily the fastest, but it should do.
-df_to_list <- function(x) {
+df_to_list <- function(x, use_names) {
   keep <- c("names", "class", "row.names")
   at <- attributes(x)
   attributes(x) <- at[intersect(names(at), keep)]
-  unname(lapply(split(x, seq_len(nrow(x))), as.list))
+  ret <- unname(lapply(split(x, seq_len(nrow(x))), as.list))
+  if (!use_names) {
+    ret <- lapply(ret, unname)
+  }
+  if (is.character(at$row.names)) {
+    names(ret) <- at$row.names
+  }
+  ret
 }
 
 progress_has_spin <- function() {
