@@ -164,16 +164,21 @@ task_wait <- function(obj, task_id, timeout, every=0.5, progress=TRUE) {
   t <- time_checker(timeout, TRUE)
   every <- min(every, timeout)
 
-  fmt <- sprintf("waiting for %s, giving up in :remaining s",
-                 trim_id(task_id, 7, 3), timeout)
-  if (progress && progress_has_spin()) {
+  if (is.finite(timeout)) {
+    fmt <- sprintf("waiting for %s, giving up in :remaining s",
+                   trim_id(task_id, 7, 3))
+    total <- timeout / every + 1
+  } else {
+    fmt <- sprintf("waiting for %s, waited for :elapsed",
+                   trim_id(task_id, 7, 3))
+    total <- 1e8 # arbitrarily large number :(
+  }
+  if (progress_has_spin()) {
     fmt <- paste("(:spin)", fmt)
   }
 
   digits <- if (every < 1) abs(floor(log10(every))) else 0
-  total <- timeout / every + 1
   p <- progress(total, show=progress, fmt=fmt)
-
   repeat {
     res <- task_result(obj, task_id, sanitise=TRUE)
     if (!inherits(res, "UnfetchableTask")) {
