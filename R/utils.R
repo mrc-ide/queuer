@@ -54,3 +54,14 @@ scapply <- function(x, cond, no_match=NA_integer_) {
   }
   no_match
 }
+
+trim_id <- function(x, head=7, tail=0) {
+  n <- nchar(x)
+  i <- (head + tail) < (n - 3)
+  if (any(i)) {
+    x[i] <- sprintf("%s...%s",
+                    substr(x[i], 1, head),
+                    substr(x[i], n - tail + 1, n))
+  }
+  x
+}

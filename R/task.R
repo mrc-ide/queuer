@@ -66,8 +66,8 @@ task <- function(obj, id) {
         times=function(unit_elapsed="secs") {
           tasks_times(self, self$id, unit_elapsed)
         },
-        wait=function(timeout, every=0.5) {
-          task_wait(self, self$id, timeout, every)
+        wait=function(timeout, every=0.5, progress=TRUE) {
+          task_wait(self, self$id, timeout, every, progress)
         }))
 
 task_result <- function(obj, task_id, follow_redirect=FALSE, sanitise=FALSE) {
@@ -160,17 +160,34 @@ tasks_times <- function(obj, task_ids, unit_elapsed="secs") {
   ret
 }
 
-task_wait <- function(obj, task_id, timeout, every=0.5) {
-  t <- time_checker(timeout)
+task_wait <- function(obj, task_id, timeout, every=0.5, progress=TRUE) {
+  t <- time_checker(timeout, TRUE)
   every <- min(every, timeout)
+
+  fmt <- sprintf("waiting for %s, giving up in :remaining s",
+                 trim_id(task_id, 7, 3), timeout)
+  if (progress && progress_has_spin()) {
+    fmt <- paste("(:spin)", fmt)
+  }
+
+  digits <- if (every < 1) abs(floor(log10(every))) else 0
+  total <- timeout / every + 1
+  p <- progress(total, show=progress, fmt=fmt)
+
   repeat {
     res <- task_result(obj, task_id, sanitise=TRUE)
     if (!inherits(res, "UnfetchableTask")) {
+      p(total, update=TRUE)
       return(res)
-    } else if (t()) {
-      stop("task not returned in time")
     } else {
-      Sys.sleep(every)
+      rem <- t()
+      if (rem < 0) {
+        p(total, update=TRUE)
+        stop("task not returned in time")
+      } else {
+        p(tokens=list(remaining=formatC(rem, digits=digits, format="f")))
+        Sys.sleep(every)
+      }
     }
   }
 }
