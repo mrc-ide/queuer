@@ -68,11 +68,7 @@ queue_base <- function(context) {
       enqueue_=function(expr, ..., envir=parent.frame(), submit=TRUE) {
         task <- context::task_save(expr, self$context, envir)
         if (submit) {
-          withCallingHandlers(self$submit(task$id),
-                              error=function(e) {
-                                message("Deleting task as submission failed")
-                                context::task_delete(task)
-                              })
+          self$submit_or_delete(task)
         }
         invisible(task(self, task$id))
       },
@@ -80,5 +76,14 @@ queue_base <- function(context) {
       ## These exist only as a stub for now, for other classes to
       ## override.
       submit=function(task_ids) {},
-      unsubmit=function(task_ids) {}
+      unsubmit=function(task_ids) {},
+
+      ## Internal wrapper
+      submit_or_delete=function(task) {
+        withCallingHandlers(self$submit(task$id),
+                            error=function(e) {
+                              message("Deleting task as submission failed")
+                              context::task_delete(task)
+                            })
+      }
     ))

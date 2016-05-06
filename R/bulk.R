@@ -136,11 +136,15 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
 
   message("saving ", msg)
   res <- context::task_save_list(tasks, obj$context, envir)
+  ## NOTE: This probably is in the wrong place but the overwrite logic
+  ## is here (so we throw on task bundle collision).  But that means
+  ## that the bundle will exist with bad names if the submission fails
+  ## which is not ideal either.
   ret <- task_bundle_create(obj, setNames(res$id, names(XX)), name, X,
                             overwrite)
 
   message("submitting ", msg)
-  obj$submit(res$id)
+  obj$submit_or_delete(res)
 
   ret
 }
