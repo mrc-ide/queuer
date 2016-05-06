@@ -52,6 +52,10 @@ test_that("task_bundles", {
   obj <- queue_local(ctx)
 
   expect_equal(obj$task_bundles_list(), character(0))
+  info <- obj$task_bundles_info()
+  expect_is(info, "data.frame")
+  expect_equal(nrow(info), 0L)
+  expect_equal(names(info), c("name", "length", "created"))
 
   x <- setNames(runif(4, max=0.1), letters[1:4])
 
@@ -59,6 +63,11 @@ test_that("task_bundles", {
   expect_equal(obj$task_bundles_list(), res1$name)
   expect_equal(res1$names, names(x))
   expect_equal(res1$X, x)
+
+  info <- obj$task_bundles_info()
+  expect_equal(nrow(info), 1L)
+  expect_equal(info$name, res1$name)
+  expect_equal(info$length, length(res1$ids))
 
   res2 <- enqueue_bulk_submit(obj, unname(x), "slow_double")
   expect_equal(sort(obj$task_bundles_list()),
@@ -93,4 +102,15 @@ test_that("task_bundles", {
   expect_equal(res6$name, "mygroup")
   expect_equal(sort(c(t, res6$ids)), sort(obj$tasks_list()))
   expect_equal(intersect(res5$ids, res6$ids), character(0))
+
+  cmp <- c(res1$name, res2$name, res3$name, res4$name, res6$name)
+
+  expect_equal(obj$task_bundles_list(), sort(cmp))
+
+  info <- obj$task_bundles_info()
+  expect_equal(info$name, cmp)
+  expect_equal(info$length,
+               c(length(res1$ids), length(res2$ids), length(res3$ids),
+                 length(res4$ids), length(res6$ids)))
+  expect_gte(min(as.numeric(diff(info$created))), 0)
 })

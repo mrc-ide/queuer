@@ -148,7 +148,3 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
 
   ret
 }
-
-task_bundles_list <- function(obj) {
-  context::context_db(obj)$list("task_bundles")
-}

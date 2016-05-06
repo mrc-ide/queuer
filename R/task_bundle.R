@@ -95,6 +95,25 @@ task_bundle_get <- function(obj, name) {
     ## TODO: delete(), overview()
   ))
 
+task_bundles_list <- function(obj) {
+  context::context_db(obj)$list("task_bundles")
+}
+
+task_bundles_info <- function(obj) {
+  bundles <- task_bundles_list(obj)
+  db <- context::context_db(obj)
+
+  task_ids <- lapply(bundles, db$get, "task_bundles")
+  task_times <-
+    unlist_times(lapply(task_ids, function(x) db$get(x[[1L]], "task_time_sub")))
+
+  i <- order(task_times)
+  data.frame(name=bundles[i],
+             length=lengths(task_ids[i]),
+             created=unlist_times(task_times[i]),
+             stringsAsFactors=FALSE)
+}
+
 task_bundle_wait <- function(bundle, timeout, time_poll, progress_bar) {
   ## NOTE: For Redis we'd probably implement this differently due to
   ## the availability of BLPOP.  Note that would require *nonzero

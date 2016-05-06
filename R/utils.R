@@ -72,3 +72,15 @@ trim_id <- function(x, head=7, tail=0) {
   }
   x
 }
+
+## The R time objects really want me poke my eyes out.  Perhaps there
+## is a better way of doing this?  Who knows?
+unlist_times <- function(x) {
+  if (length(x) == 0L) {
+    structure(numeric(0), class=c("POSIXct", "POSIXt"), tzone="UTC")
+  } else {
+    tmp <- unlist(x)
+    attributes(tmp) <- attributes(x[[1L]])
+    tmp
+  }
+}
