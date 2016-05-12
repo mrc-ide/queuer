@@ -206,7 +206,7 @@ task_bundle_fetch1 <- function(db, task_ids, timeout) {
 create_bundle_name <- function(name, overwrite, db) {
   if (is.null(name)) {
     repeat {
-      name <- ids::aa(1)()
+      name <- ids::adjective_animal()
       if (!db$exists(name, "task_bundles")) {
         break
       }

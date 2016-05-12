@@ -13,6 +13,7 @@ Depends:
 Imports:
     R6,
     context,
+    ids (>= 0.0.2),
     lazyeval,
     progress
 Suggests:
