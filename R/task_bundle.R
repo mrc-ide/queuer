@@ -103,15 +103,23 @@ task_bundles_info <- function(obj) {
   bundles <- task_bundles_list(obj)
   db <- context::context_db(obj)
 
+  task_function <- function(id) {
+    paste(deparse(task_expr(obj, id, FALSE)[[1]]), collapse=" ")
+  }
+
   task_ids <- lapply(bundles, db$get, "task_bundles")
   task_times <-
     unlist_times(lapply(task_ids, function(x) db$get(x[[1L]], "task_time_sub")))
+  task_function <-
+    vapply(task_ids, function(x) task_function(x[[1L]]), character(1))
 
   i <- order(task_times)
   data.frame(name=bundles[i],
+             "function"=task_function[i],
              length=lengths(task_ids[i]),
              created=unlist_times(task_times[i]),
-             stringsAsFactors=FALSE)
+             stringsAsFactors=FALSE,
+             check.names=FALSE)
 }
 
 task_bundle_wait <- function(bundle, timeout, time_poll, progress_bar) {

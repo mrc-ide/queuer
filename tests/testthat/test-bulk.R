@@ -55,7 +55,7 @@ test_that("task_bundles", {
   info <- obj$task_bundles_info()
   expect_is(info, "data.frame")
   expect_equal(nrow(info), 0L)
-  expect_equal(names(info), c("name", "length", "created"))
+  expect_equal(names(info), c("name", "function", "length", "created"))
 
   x <- setNames(runif(4, max=0.1), letters[1:4])
 
@@ -68,6 +68,7 @@ test_that("task_bundles", {
   expect_equal(nrow(info), 1L)
   expect_equal(info$name, res1$name)
   expect_equal(info$length, length(res1$ids))
+  expect_equal(info$"function", "slow_double")
 
   res2 <- enqueue_bulk_submit(obj, unname(x), "slow_double")
   expect_equal(sort(obj$task_bundles_list()),
@@ -112,5 +113,7 @@ test_that("task_bundles", {
   expect_equal(info$length,
                c(length(res1$ids), length(res2$ids), length(res3$ids),
                  length(res4$ids), length(res6$ids)))
+  expect_equal(info$"function",
+               rep(c("slow_double", "base::list"), c(2, 3)))
   expect_gte(min(as.numeric(diff(info$created))), 0)
 })
