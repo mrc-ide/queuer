@@ -10,7 +10,7 @@
 ##' @param obj An observer or queue object; something that can be
 ##'   passed through to \code{\link{context_db}}.
 ##'
-##' @param tasks A list of tasks.
+##' @param task_ids A vector of task ids
 ##'
 ##' @param name Group name
 ##'
@@ -25,8 +25,11 @@
 ##'
 ##' @export
 ##' @rdname task_bundle
-task_bundle_create <- function(obj, task_ids=NULL, name=NULL, X=NULL,
+task_bundle_create <- function(obj, task_ids, name=NULL, X=NULL,
                                overwrite=FALSE) {
+  if (length(task_ids) < 1L) {
+    stop("task_ids must be nonempty")
+  }
   db <- context::context_db(obj)
   name <- create_bundle_name(name, overwrite, db)
   db$set(name, task_ids, "task_bundles")

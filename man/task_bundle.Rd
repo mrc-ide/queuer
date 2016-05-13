@@ -5,7 +5,7 @@
 \alias{task_bundle_get}
 \title{Create a task bundle}
 \usage{
-task_bundle_create(obj, task_ids = NULL, name = NULL, X = NULL,
+task_bundle_create(obj, task_ids, name = NULL, X = NULL,
   overwrite = FALSE)
 
 task_bundle_get(obj, name)
@@ -13,6 +13,8 @@ task_bundle_get(obj, name)
 \arguments{
 \item{obj}{An observer or queue object; something that can be
 passed through to \code{\link{context_db}}.}
+
+\item{task_ids}{A vector of task ids}
 
 \item{name}{Group name}
 
@@ -24,8 +26,6 @@ the bundle).}
 \item{overwrite}{Logical indicating if an existing bundle with the
 same name should be overwritten.  If \code{FALSE} and a bundle
 with this name already exists, an error will be thrown.}
-
-\item{tasks}{A list of tasks.}
 }
 \description{
 Create a task bundle.  Generally these are not created manually,

@@ -1,5 +1,5 @@
 queue_base <- function(context) {
-  .R6_queue$new(context)
+  .R6_queue_base$new(context)
 }
 
 .R6_queue_base <- R6::R6Class(

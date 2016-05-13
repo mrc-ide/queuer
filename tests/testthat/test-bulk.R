@@ -1,6 +1,7 @@
 context("bulk")
 
 test_that("single process", {
+  Sys.setenv(R_TESTS="")
   ctx <- context::context_save(root=tempfile(), storage_type="environment")
   obj <- queue_local(ctx)
   res <- enqueue_bulk_submit(obj, 1:10, quote(sin))
@@ -118,4 +119,11 @@ test_that("task_bundles", {
   expect_equal(info$"function",
                rep(c("slow_double", "base::list"), c(2, 3)))
   expect_gte(min(as.numeric(diff(info$created))), 0)
+})
+
+test_that("task_bundles", {
+  ctx <- context::context_save(root=tempfile(), storage_type="environment")
+  obj <- queue_local(ctx)
+  expect_error(task_bundle_create(obj, character(0)),
+               "task_ids must be nonempty")
 })

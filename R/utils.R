@@ -1,3 +1,6 @@
+## Base imports:
+##' @importFrom stats setNames
+##' @importFrom utils packageVersion
 time_checker <- function(timeout, remaining=FALSE) {
   t0 <- Sys.time()
   timeout <- as.difftime(timeout, units="secs")

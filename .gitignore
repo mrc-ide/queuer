@@ -1,3 +1,5 @@
 .Rproj.user
 .Rhistory
 .RData
+queuer_*.tar.gz
+queuer.Rcheck

@@ -102,12 +102,3 @@ task_wait <- function(handle, task_id, timeout, every=0.5, progress=TRUE) {
     }
   }
 }
-
-pretty_context_log <- function(x) {
-  yellow <- crayon::make_style("yellow")$bold
-  green <- crayon::make_style("blue")$bold
-  x$str <- green(x$str)
-  i <- vapply(x$body, length, integer(1)) > 0L
-  x$body[i] <- lapply(x$body[i], yellow)
-  x
-}
