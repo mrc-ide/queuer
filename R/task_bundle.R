@@ -51,9 +51,11 @@ task_bundle_get <- function(obj, name) {
     ids=NULL,
     done=NULL,
     X=NULL,
+    root=NULL,
 
     initialize=function(obj, name) {
       self$db <- context::context_db(obj)
+      self$root <- context::context_root(obj)
       task_ids <- self$db$get(name, "task_bundles")
       self$name <- name
       self$tasks <- setNames(lapply(task_ids, task, obj=obj), task_ids)
@@ -73,7 +75,7 @@ task_bundle_get <- function(obj, name) {
     },
 
     times=function(unit_elapsed="secs") {
-      tasks_times(self, self$ids, unit_elapsed)
+      context::tasks_times(self$to_handle(), unit_elapsed)
     },
 
     results=function(partial=FALSE) {
@@ -91,6 +93,10 @@ task_bundle_get <- function(obj, name) {
     check=function() {
       self$status()
       self$done
+    },
+
+    to_handle=function() {
+      context::task_handle(self, self$ids, FALSE)
     }
     ## TODO: delete(), overview()
   ))
@@ -104,20 +110,23 @@ task_bundles_info <- function(obj) {
   db <- context::context_db(obj)
 
   task_function <- function(id) {
-    paste(deparse(task_expr(obj, id, FALSE)[[1]]), collapse=" ")
+    expr <- context::task_expr(context::task_handle(obj, id, FALSE), FALSE)
+    paste(deparse(expr[[1L]]), collapse=" ")
   }
 
   task_ids <- lapply(bundles, db$get, "task_bundles")
-  task_times <-
+  ## TODO: don't do it this way; make a handle of the _first_ element
+  ## of each.
+  task_time_sub <-
     unlist_times(lapply(task_ids, function(x) db$get(x[[1L]], "task_time_sub")))
   task_function <-
     vapply(task_ids, function(x) task_function(x[[1L]]), character(1))
 
-  i <- order(task_times)
+  i <- order(task_time_sub)
   data.frame(name=bundles[i],
              "function"=task_function[i],
              length=lengths(task_ids[i]),
-             created=unlist_times(task_times[i]),
+             created=unlist_times(task_time_sub[i]),
              stringsAsFactors=FALSE,
              check.names=FALSE)
 }

@@ -35,23 +35,24 @@ queue_base <- function(context) {
       },
 
       tasks_list=function() {
-        tasks_list(self)
+        context::tasks_list(self)
       },
-      tasks_status=function(task_ids=NULL, follow_redirect=FALSE, named=TRUE) {
-        tasks_status(self, task_ids, follow_redirect, named)
+      tasks_status=function(task_ids=NULL, named=TRUE) {
+        context::task_status(make_task_handle(self, task_ids), named=named)
       },
       tasks_times=function(task_ids=NULL, unit_elapsed="secs") {
-        tasks_times(self, task_ids, unit_elapsed)
+        context::tasks_times(make_task_handle(self, task_ids), unit_elapsed)
       },
       task_get=function(task_id) {
         task(self, task_id)
       },
-      task_result=function(task_id, follow_redirect=FALSE) {
-        task_result(self, task_id, follow_redirect)
+      task_result=function(task_id) {
+        context::task_result(context::task_handle(self, task_id))
       },
-      tasks_drop=function(task_ids) {
-        tasks_drop(self, task_ids)
-        unsubmit(self, task_ids)
+      tasks_delete=function(task_ids) {
+        ## NOTE: This is subject to a race condition.
+        context::task_delete(context::task_handle(self, task_ids, FALSE))
+        self$unsubmit(task_ids)
       },
 
       task_bundles_list=function() {

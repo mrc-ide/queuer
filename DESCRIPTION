@@ -12,7 +12,7 @@ Depends:
     R (>= 3.2.2)
 Imports:
     R6,
-    context,
+    context (>= 0.0.7),
     ids (>= 0.0.2),
     lazyeval,
     progress

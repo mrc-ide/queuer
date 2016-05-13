@@ -16,13 +16,15 @@ test_that("single process", {
     cat("\n")
   }
 
+  expect_is(res$to_handle(), "task_handle")
+  expect_is(res$times(), "data.frame")
+
   done <- obj$run_all()
   dat <- res$wait(0)
   expect_equal(dat, as.list(sin(1:10)))
+  expect_equal(done, res$ids)
 })
 
-## OK, this _was_ working and now the worker is not seeing any tasks.
-## So something terrible has happened!
 test_that("worker", {
   ctx <- context::context_save(root=tempfile(), sources="functions.R")
   obj <- queue_local(ctx)
