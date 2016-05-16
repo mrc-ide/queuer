@@ -79,7 +79,6 @@ task_wait <- function(handle, task_id, timeout, every=0.5, progress=TRUE) {
 
   digits <- if (every < 1) abs(floor(log10(every))) else 0
   p <- progress(total, show=progress && timeout > 0, fmt=fmt)
-  p()
   repeat {
     res <- context::task_result(handle, sanitise=TRUE)
     if (!inherits(res, "UnfetchableTask")) {
