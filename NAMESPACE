@@ -2,6 +2,7 @@
 
 export(enqueue_bulk)
 export(qlapply)
+export(task_bundle_combine)
 export(task_bundle_create)
 export(task_bundle_get)
 importFrom(stats,setNames)

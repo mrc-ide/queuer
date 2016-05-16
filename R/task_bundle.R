@@ -43,6 +43,60 @@ task_bundle_get <- function(obj, name) {
   .R6_task_bundle$new(obj, name)
 }
 
+##' Combine two or more task bundles
+##'
+##' For now task bundles must have the same function to be combined.
+##' @title Combine task bundles
+##' @param ... Any number of task bundles
+##'
+##' @param bundles A list of bundles (used in place of \code{...} and
+##'   probably more useful for programming).
+##'
+##' @inheritParams task_bundle_create
+##' @export
+task_bundle_combine <- function(..., bundles=list(...),
+                                name=NULL, overwrite=FALSE) {
+  if (length(bundles) == 0L) {
+    stop("Provide at least one task bundle")
+  }
+  names(bundles) <- NULL
+
+  ok <- vlapply(bundles, inherits, "task_bundle")
+  if (any(!ok)) {
+    stop("All elements of ... or bundles must be task_bundle objects")
+  }
+
+  ## Check that the functions of each bundle job are the same.
+  fns <- vcapply(bundles, function(x) x$function_name())
+  if (length(unique(fns)) != 1L) {
+    stop("task bundles must have same function to combine")
+  }
+
+  task_ids <- unlist(lapply(bundles, function(x) x$ids), FALSE, FALSE)
+
+  named <- vlapply(bundles, function(x) !is.null(x$names))
+  if (all(named)) {
+    names(task_ids) <- unlist(lapply(bundles, function(x) x$names), FALSE, FALSE)
+  } else if (any(named)) {
+    tmp <- lapply(bundles, function(x) x$names)
+    tmp[!named] <- lapply(bundles[!named], function(x) rep("", length(x$ids)))
+    names(task_ids) <- unlist(tmp, FALSE, FALSE)
+  }
+
+  X <- lapply(bundles, function(x) x$X)
+  is_df <- vlapply(X, is.data.frame)
+  if (all(is_df)) {
+    X <- do.call("rbind", X)
+  } else {
+    if (any(is_df)) {
+      X[is_df] <- lapply(X[is_df], df_to_list)
+    }
+    X <- unlist(X, FALSE)
+  }
+
+  task_bundle_create(bundles[[1]], task_ids, name, X, overwrite)
+}
+
 .R6_task_bundle <- R6::R6Class(
   "task_bundle",
 
@@ -106,6 +160,9 @@ task_bundle_get <- function(obj, name) {
       lapply(self$ids, function(id)
         context::task_log(context::task_handle(self, id, FALSE)))
     },
+    function_name=function() {
+      context::task_function_name(context::task_handle(self, self$ids[[1]]))
+    },
 
     to_handle=function() {
       context::task_handle(self, self$ids, FALSE)
@@ -122,8 +179,7 @@ task_bundles_info <- function(obj) {
   db <- context::context_db(obj)
 
   task_function <- function(id) {
-    expr <- context::task_expr(context::task_handle(obj, id, FALSE), FALSE)
-    paste(deparse(expr[[1L]]), collapse=" ")
+    context::task_function_name(context::task_handle(obj, id, FALSE))
   }
 
   task_ids <- lapply(bundles, db$get, "task_bundles")

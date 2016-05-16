@@ -87,3 +87,10 @@ unlist_times <- function(x) {
     tmp
   }
 }
+
+vlapply <- function(X, FUN, ...) {
+  vapply(X, FUN, logical(1), ...)
+}
+vcapply <- function(X, FUN, ...) {
+  vapply(X, FUN, character(1), ...)
+}
