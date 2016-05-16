@@ -69,14 +69,6 @@ task_bundle_get <- function(obj, name) {
       self$check()
     },
 
-    status=function(named=TRUE) {
-      ## TODO: Only need to check the undone ones here...
-      ret <- tasks_status(self, self$ids, named=named)
-      self$done <- setNames(!(ret %in% c("PENDING", "RUNNING", "ORPHAN")),
-                            self$ids)
-      ret
-    },
-
     times=function(unit_elapsed="secs") {
       context::tasks_times(self$to_handle(), unit_elapsed)
     },
@@ -96,6 +88,23 @@ task_bundle_get <- function(obj, name) {
     check=function() {
       self$status()
       self$done
+    },
+
+    status=function(named=TRUE) {
+      ## TODO: Only need to check the undone ones here?
+      ret <- context::task_status(self$to_handle(), named=named)
+      self$done <- setNames(!(ret %in% c("PENDING", "RUNNING", "ORPHAN")),
+                            self$ids)
+      ret
+    },
+
+    expr=function() {
+      lapply(self$ids, function(id)
+        context::task_expr(context::task_handle(self, id, FALSE)))
+    },
+    log=function() {
+      lapply(self$ids, function(id)
+        context::task_log(context::task_handle(self, id, FALSE)))
     },
 
     to_handle=function() {

@@ -60,11 +60,6 @@ make_task_handle <- function(obj, task_ids, check_exists=TRUE) {
   context::task_handle(obj, task_ids, check_exists)
 }
 
-## TODO: Could remove?
-tasks_status <- function(obj, task_ids, named=TRUE) {
-  context::task_status(make_task_handle(obj, task_ids), named=named)
-}
-
 task_wait <- function(handle, task_id, timeout, every=0.5, progress=TRUE) {
   t <- time_checker(timeout, TRUE)
   every <- min(every, timeout)
