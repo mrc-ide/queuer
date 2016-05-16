@@ -5,12 +5,12 @@
 \alias{qlapply}
 \title{Run tasks in a queue}
 \usage{
-qlapply(X, FUN, obj, ..., envir = parent.frame(), timeout = Inf,
+qlapply(X, FUN, obj, ..., envir = parent.frame(), timeout = 0,
   time_poll = 1, progress_bar = TRUE, name = NULL, overwrite = FALSE)
 
-enqueue_bulk(obj, X, FUN, ..., do.call = FALSE, timeout = Inf,
-  time_poll = 1, progress_bar = TRUE, envir = parent.frame(),
-  name = NULL, use_names = TRUE, overwrite = FALSE)
+enqueue_bulk(obj, X, FUN, ..., do.call = TRUE, timeout = 0, time_poll = 1,
+  progress_bar = TRUE, envir = parent.frame(), name = NULL,
+  use_names = TRUE, overwrite = FALSE)
 }
 \arguments{
 \item{X}{A vector (atomic or list) to evaluate \code{FUN} on each
@@ -36,11 +36,13 @@ after \code{...} will acquire a leading dot.}
 
 \item{envir}{Environment to search for functions in.  This might change.}
 
-\item{timeout}{Time to wait for tasks to be returned.  The default
-is to wait forever.  If \code{0} (or a negative value) is given
-then \code{qlapply} will not block but will instead return a
-\code{task_bundle} object which can be used to inspect the
-task status.}
+\item{timeout}{Time to wait for tasks to be returned.  The
+default, 0, will not block but will instead return a
+\code{task_bundle} object which can be used to inspect the task
+status.  Give a value greater than 0 (including \code{Inf}) to
+wait.  If you do wait, you can interrupt R at any time (with
+Ctrl-C or Esc depending on platform) and it will return the
+\code{task_bundle}.}
 
 \item{time_poll}{How often to check for task completion.  The
 default is every second.  This is an \emph{approximate} time and

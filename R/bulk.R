@@ -37,11 +37,13 @@
 ##'
 ##' @param envir Environment to search for functions in.  This might change.
 ##'
-##' @param timeout Time to wait for tasks to be returned.  The default
-##'   is to wait forever.  If \code{0} (or a negative value) is given
-##'   then \code{qlapply} will not block but will instead return a
-##'   \code{task_bundle} object which can be used to inspect the
-##'   task status.
+##' @param timeout Time to wait for tasks to be returned.  The
+##'   default, 0, will not block but will instead return a
+##'   \code{task_bundle} object which can be used to inspect the task
+##'   status.  Give a value greater than 0 (including \code{Inf}) to
+##'   wait.  If you do wait, you can interrupt R at any time (with
+##'   Ctrl-C or Esc depending on platform) and it will return the
+##'   \code{task_bundle}.
 ##'
 ##' @param time_poll How often to check for task completion.  The
 ##'   default is every second.  This is an \emph{approximate} time and
@@ -60,13 +62,13 @@
 ##' @export
 qlapply <- function(X, FUN, obj, ...,
                     envir=parent.frame(),
-                    timeout=Inf, time_poll=1, progress_bar=TRUE,
+                    timeout=0, time_poll=1, progress_bar=TRUE,
                     name=NULL, overwrite=FALSE) {
   ## TODO: The dots here are going to cause grief at some point.  I
   ## may need a more robust way of passing additional arguments in,
   ## but not sure what that looks like...
   enqueue_bulk(obj, X, FUN, ...,
-               do.call=FALSE,
+               do.call=TRUE,
                timeout=timeout, time_poll=time_poll, progress_bar=progress_bar,
                envir=envir, name=name, overwrite=overwrite)
 }
@@ -88,8 +90,8 @@ qlapply <- function(X, FUN, obj, ...,
 ##'   \code{TRUE} and \code{X} is a \code{data.frame}, if
 ##'   \code{use_names=FALSE}, then names will be stripped off each row
 ##'   of the data.frame before the function call is composed.
-enqueue_bulk <- function(obj, X, FUN, ..., do.call=FALSE,
-                         timeout=Inf, time_poll=1, progress_bar=TRUE,
+enqueue_bulk <- function(obj, X, FUN, ..., do.call=TRUE,
+                         timeout=0, time_poll=1, progress_bar=TRUE,
                          envir=parent.frame(), name=NULL, use_names=TRUE,
                          overwrite=FALSE) {
   obj <- enqueue_bulk_submit(obj, X, FUN, ..., do.call=do.call, envir=envir,
