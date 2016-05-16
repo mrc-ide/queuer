@@ -94,3 +94,19 @@ vlapply <- function(X, FUN, ...) {
 vcapply <- function(X, FUN, ...) {
   vapply(X, FUN, character(1), ...)
 }
+
+capture_log <- function(expr, filename, suppress_messages=FALSE) {
+  con <- file(filename, "w")
+  sink(con, split=FALSE)
+  on.exit({
+    sink(NULL)
+    close(con)
+    ## close(con2)
+  })
+  handle_message <- function(e) cat(e$message, file=stdout())
+  if (suppress_messages) {
+    suppressMessages(withCallingHandlers(expr, message=handle_message))
+  } else {
+    withCallingHandlers(expr, message=handle_message)
+  }
+}
