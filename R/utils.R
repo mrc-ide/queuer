@@ -42,12 +42,12 @@ progress <- function(total, ..., show=TRUE, prefix="", fmt=NULL) {
                     "[:bar] :percent")
     }
     pb <- progress::progress_bar$new(fmt, total=total)
-    function(len=1, ..., update=FALSE) {
-      if (update) {
-        invisible(pb$update(len, ...))
-      } else {
-        invisible(pb$tick(len, ...))
+    pb_private <- environment(pb$tick)$private
+    function(len=1, ..., clear=FALSE) {
+      if (clear) {
+        len <- pb_private$total - pb_private$current
       }
+      invisible(pb$tick(len, ...))
     }
   } else {
     function(...) {}

@@ -82,12 +82,12 @@ task_wait <- function(handle, task_id, timeout, every=0.5, progress=TRUE) {
   repeat {
     res <- context::task_result(handle, sanitise=TRUE)
     if (!inherits(res, "UnfetchableTask")) {
-      p(1, update=TRUE, tokens=list(remaining="0s"))
+      p(clear=TRUE, tokens=list(remaining="0s"))
       return(res)
     } else {
       rem <- t()
       if (rem < 0) {
-        p(1, update=TRUE, tokens=list(remaining="0s"))
+        p(clear=TRUE, tokens=list(remaining="0s"))
         stop("task not returned in time")
       } else {
         p(tokens=list(remaining=formatC(rem, digits=digits, format="f")))
