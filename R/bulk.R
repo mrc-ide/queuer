@@ -116,6 +116,7 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
     stop("X must be a data.frame or list")
   }
 
+  obj$initialise_context()
   fun <- find_fun_queue(FUN, envir, obj$context_envir)
   n <- length(XX)
 

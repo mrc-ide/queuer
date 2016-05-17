@@ -1,5 +1,5 @@
-queue_base <- function(context) {
-  .R6_queue_base$new(context)
+queue_base <- function(context, initialise=TRUE) {
+  .R6_queue_base$new(context, initialise)
 }
 
 .R6_queue_base <- R6::R6Class(
@@ -11,7 +11,7 @@ queue_base <- function(context) {
       root=NULL,
       db=NULL,
       workdir=NULL,
-      initialize=function(context) {
+      initialize=function(context, initialise=TRUE) {
         if (!inherits(context, "context_handle")) {
           stop("Expected a context object")
         }
@@ -27,9 +27,17 @@ queue_base <- function(context) {
         ctx <- context::context_read(context)
         if (ctx$auto) {
           stop("auto environments not yet supported")
-        } else {
+        }
+        self$context <- ctx
+
+        if (initialise) {
+          self$initialise_context()
+        }
+      },
+
+      initialise_context=function() {
+        if (is.null(self$context_envir)) {
           message("Loading context ", context$id)
-          self$context <- ctx
           self$context_envir <- context::context_load(context)
         }
       },
@@ -70,6 +78,7 @@ queue_base <- function(context) {
       },
       ## I don't know that these always want to be submitted.
       enqueue_=function(expr, ..., envir=parent.frame(), submit=TRUE) {
+        self$initialise_context()
         task <- context::task_save(expr, self$context, envir)
         if (submit) {
           self$submit_or_delete(task)
