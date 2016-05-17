@@ -13,8 +13,8 @@
 ## wait because we need two event loops.  Might have to switch locally
 ## there.
 
-queue_local <- function(context) {
-  .R6_queue_local$new(context)
+queue_local <- function(context, logdir=NULL) {
+  .R6_queue_local$new(context, logdir)
 }
 
 .R6_queue_local <- R6::R6Class(
@@ -22,9 +22,10 @@ queue_local <- function(context) {
   inherit=.R6_queue_base,
 
   public=list(
+    logdir=NULL,
     lockfile=NULL,
     timeout=NULL,
-    initialize=function(context) {
+    initialize=function(context, logdir) {
       loadNamespace("seagull")
       super$initialize(context)
       ## This can probably be relaxed to allow environment storage
@@ -46,13 +47,26 @@ queue_local <- function(context) {
         ## will need a general interface for the lockfile.
       }
       self$timeout <- 10.0
+      if (!is.null(logdir)) {
+        dir.create(logdir, FALSE, TRUE)
+        self$logdir <- logdir
+      }
     },
 
     ## This is the running half of the system; these will shortly move
     ## into workers, but the queue_local case might be weird enough to
     ## warrant keeping them here too.
     run_task=function(task_id, ...) {
-      context::task_run(self$task_get(task_id)$handle, ...)
+      h <- self$task_get(task_id)$handle
+      if (is.null(self$logdir)) {
+        ## there's plenty of printing here without printing any extra
+        context::task_run(h, ...)
+      } else {
+        log <- file.path(self$logdir, task_id)
+        message(sprintf("*** Running %s -> %s", task_id, log))
+        ## Suppress messages I think.
+        capture_log(context::task_run(h, ...), log, TRUE)
+      }
     },
     run_next=function() {
       ## TODO: It is possible for the task to be lost here if
@@ -98,6 +112,12 @@ queue_local <- function(context) {
     ## one queue.  but for the local queue these are the same.
     submit=function(task_ids) {
       self$queue_op(local_queue_push, task_ids)
+      if (!is.null(self$logdir)) {
+        db <- context::context_db(self)
+        for (id in task_ids) {
+          db$set(id, file.path(self$logdir, id), "log_path")
+        }
+      }
     },
     unsubmit=function(task_ids) {
       self$queue_op(local_queue_del, task_ids)
