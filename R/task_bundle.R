@@ -171,7 +171,8 @@ task_bundle_combine <- function(..., bundles=list(...),
     to_handle=function() {
       context::task_handle(self, self$ids, FALSE)
     }
-    ## TODO: delete(), overview()
+
+    ## TODO: overview()
   ))
 
 task_bundles_list <- function(obj) {

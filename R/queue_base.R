@@ -74,27 +74,27 @@ queue_base <- function(context, initialise=TRUE) {
         task_bundles_info(self)
       },
 
-      enqueue=function(expr, ..., envir=parent.frame(), submit=TRUE) {
-        self$enqueue_(substitute(expr), ..., envir=envir, submit=submit)
+      enqueue=function(expr, envir=parent.frame(), submit=TRUE, name=NULL) {
+        self$enqueue_(substitute(expr), envir=envir, submit=submit, name=name)
       },
       ## I don't know that these always want to be submitted.
-      enqueue_=function(expr, ..., envir=parent.frame(), submit=TRUE) {
+      enqueue_=function(expr, envir=parent.frame(), submit=TRUE, name=NULL) {
         self$initialise_context()
         task <- context::task_save(expr, self$context, envir)
         if (submit) {
-          self$submit_or_delete(task)
+          self$submit_or_delete(task, name)
         }
         invisible(task(self, task$id))
       },
 
       ## These exist only as a stub for now, for other classes to
       ## override.
-      submit=function(task_ids) {},
+      submit=function(task_ids, names=NULL) {},
       unsubmit=function(task_ids) {},
 
       ## Internal wrapper
-      submit_or_delete=function(task) {
-        withCallingHandlers(self$submit(task$id),
+      submit_or_delete=function(task, name=NULL) {
+        withCallingHandlers(self$submit(task$id, name),
                             error=function(e) {
                               message("Deleting task as submission failed")
                               context::task_delete(task)

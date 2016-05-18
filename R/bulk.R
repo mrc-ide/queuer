@@ -147,7 +147,7 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
                             overwrite)
 
   message("submitting ", msg)
-  obj$submit_or_delete(res)
+  obj$submit_or_delete(res, names(XX))
 
   ret
 }

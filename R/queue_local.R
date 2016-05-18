@@ -110,7 +110,7 @@ queue_local <- function(context, logdir=NULL, initialise=TRUE) {
 
     ## Ordinarily there would be two objects created; one worker and
     ## one queue.  but for the local queue these are the same.
-    submit=function(task_ids) {
+    submit=function(task_ids, names=NULL) {
       self$queue_op(local_queue_push, task_ids)
       if (!is.null(self$logdir)) {
         db <- context::context_db(self)
