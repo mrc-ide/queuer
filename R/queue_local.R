@@ -120,7 +120,7 @@ queue_local <- function(context, logdir=NULL, initialise=TRUE) {
       }
     },
     unsubmit=function(task_ids) {
-      self$queue_op(local_queue_del, task_ids)
+      invisible(self$queue_op(local_queue_del, task_ids))
     },
     ## NOTE: not protected by lock, and duplication of key/ns names
     queue_list=function() {

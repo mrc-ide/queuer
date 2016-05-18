@@ -84,3 +84,16 @@ test_that("task_bundle_combine, incompatible functions", {
 
   expect_error(task_bundle_combine(x, y), "must have same function")
 })
+
+test_that("task_bundle, delete", {
+  ctx <- context::context_save(root=tempfile(), storage_type="environment")
+  obj <- queue_local(ctx)
+  x <- qlapply(1:5, list, obj)
+  expect_true(x$delete())
+  expect_false(x$delete())
+
+  obj <- queue_local(ctx)
+  x <- qlapply(1:5, list, obj)
+  expect_equal(obj$tasks_delete(x$ids), rep(TRUE, 5))
+  expect_equal(obj$tasks_delete(x$ids), rep(FALSE, 5))
+})

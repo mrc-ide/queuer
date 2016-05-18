@@ -164,6 +164,10 @@ task_bundle_combine <- function(..., bundles=list(...),
       context::task_function_name(context::task_handle(self, self$ids[[1]]))
     },
 
+    delete=function() {
+      context::task_delete(self$to_handle())
+    },
+
     to_handle=function() {
       context::task_handle(self, self$ids, FALSE)
     }
