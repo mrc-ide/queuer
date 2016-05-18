@@ -1,6 +1,6 @@
 Package: queuer
 Title: Queue Tasks
-Version: 0.0.2
+Version: 0.0.3
 Author: Rich FitzJohn
 Maintainer: Rich FitzJohn <rich.fitzjohn@gmail.com>
 Description: Queue tasks to number of backends.
@@ -12,7 +12,7 @@ Depends:
     R (>= 3.2.2)
 Imports:
     R6,
-    context (>= 0.0.7),
+    context (>= 0.0.8),
     ids (>= 0.0.2),
     lazyeval,
     progress

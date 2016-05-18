@@ -13,8 +13,8 @@
 ## wait because we need two event loops.  Might have to switch locally
 ## there.
 
-queue_local <- function(context, logdir=NULL) {
-  .R6_queue_local$new(context, logdir)
+queue_local <- function(context, logdir=NULL, initialise=TRUE) {
+  .R6_queue_local$new(context, logdir, initialise)
 }
 
 .R6_queue_local <- R6::R6Class(
@@ -25,9 +25,9 @@ queue_local <- function(context, logdir=NULL) {
     logdir=NULL,
     lockfile=NULL,
     timeout=NULL,
-    initialize=function(context, logdir) {
+    initialize=function(context, logdir, initialise) {
       loadNamespace("seagull")
-      super$initialize(context)
+      super$initialize(context, initialise)
       ## This can probably be relaxed to allow environment storage
       ## actually, though that would not survive a fork meaningfully.
       ## Redis storage can't be assumed to have the same filesystem,

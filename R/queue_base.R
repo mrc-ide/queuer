@@ -37,8 +37,8 @@ queue_base <- function(context, initialise=TRUE) {
 
       initialise_context=function() {
         if (is.null(self$context_envir)) {
-          message("Loading context ", context$id)
-          self$context_envir <- context::context_load(context)
+          message("Loading context ", self$context$id)
+          self$context_envir <- context::context_load(self$context)
         }
       },
 

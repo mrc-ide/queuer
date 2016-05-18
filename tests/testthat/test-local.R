@@ -83,3 +83,16 @@ test_that("environment storage", {
   expect_equal(lapply(res, function(x) obj$task_get(x)$result()),
                as.list(sin(1:10)))
 })
+
+test_that("initialise later", {
+  ctx <- context::context_save(root=tempfile(), storage_type="environment")
+  on.exit(unlink(ctx$db$destroy()))
+  obj <- queue_local(ctx, initialise=FALSE)
+  expect_null(obj$context_envir)
+
+  expect_message(t <- obj$enqueue(sin(1)), "Loading context")
+  expect_is(obj$context_envir, "environment")
+  expect_is(t, "task")
+  res <- obj$run_next()
+  expect_equal(res, list(task_id=t$id, value=t$result()))
+})
