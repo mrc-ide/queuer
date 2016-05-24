@@ -40,6 +40,11 @@ queue_base <- function(context, initialise=TRUE) {
           message("Loading context ", self$context$id)
           self$context_envir <-
             context::context_load(self$context, install=FALSE)
+          worker_runner <- system.file(context::context_root(self$context),
+                                       "bin", "worker_runner")
+          if (!file.exists(worker_runner)) {
+            file.copy(system.file("worker_runner"), worker_runner)
+          }
         }
       },
 
