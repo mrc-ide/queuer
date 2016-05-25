@@ -5,12 +5,15 @@ local({
   np <- length(args)
   if (np == 0L || np > 3L) {
     stop("Usage: worker_runner <root> <context> [<loop>=FALSE]")
-  } else {
-    CONTEXT_ROOT <- args[[1L]]
-    context <- args[[2L]]
-    loop <- if (np == 3L) as.logical(args[[3L]]) else FALSE
   }
+  CONTEXT_ROOT <- args[[1L]]
+  context <- args[[2L]]
+  loop <- if (np == 3L) as.logical(args[[3L]]) else FALSE
+  ## TODO: For now this assumes a hardcoded log dir.  I'll need to get
+  ## docopt in here to do more than this, and to get docopt we have to
+  ## bootstrap things which is awkward.
+  log_path <- "logs"
   source(file.path(CONTEXT_ROOT, "bin", "context_bootstrap"), TRUE)
   message("bootstrap complete")
-  queuer:::queue_local_worker(CONTEXT_ROOT, context, loop)
+  queuer:::queue_local_worker(CONTEXT_ROOT, context, loop, log_path)
 })

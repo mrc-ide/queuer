@@ -17,8 +17,10 @@ test_that("empty queue", {
 test_that("enqueue", {
   ctx <- context::context_save(root=tempfile())
   on.exit(unlink(ctx$db$destroy()))
-  logdir <- file.path(ctx$root, "logs")
-  obj <- queue_local(ctx, logdir)
+  log_path <- "logs"
+  obj <- queue_local(ctx, log_path)
+
+  log_path_full <- file.path(ctx$root, log_path)
 
   context::context_log_start()
   t <- obj$enqueue_(quote(sin(1)))
@@ -34,8 +36,8 @@ test_that("enqueue", {
   expect_equal(obj$tasks_list(), t$id)
   expect_equal(obj$queue_list(), character(0))
 
-  expect_true(file.exists(file.path(logdir, t$id)))
-  readLines(file.path(logdir, t$id))
+  expect_true(file.exists(file.path(log_path_full, t$id)))
+  readLines(file.path(log_path_full, t$id))
   expect_is(t$log(), "context_log")
 
   for (i in seq_len(10)) {

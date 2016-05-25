@@ -17,8 +17,8 @@
 ## redis, which we can easily lock with SETX, but will need a general
 ## interface for the lockfile.
 
-queue_local <- function(context, logdir=NULL, initialise=TRUE) {
-  .R6_queue_local$new(context, logdir, initialise)
+queue_local <- function(context, log_path=NULL, initialise=TRUE) {
+  .R6_queue_local$new(context, log_path, initialise)
 }
 
 .R6_queue_local <- R6::R6Class(
@@ -26,9 +26,9 @@ queue_local <- function(context, logdir=NULL, initialise=TRUE) {
   inherit=.R6_queue_base,
 
   public=list(
-    logdir=NULL,
+    log_path=NULL,
     timeout=NULL,
-    initialize=function(context, logdir, initialise) {
+    initialize=function(context, log_path, initialise) {
       loadNamespace("seagull")
       super$initialize(context, initialise)
       ## This can probably be relaxed to allow environment storage
@@ -41,12 +41,15 @@ queue_local <- function(context, logdir=NULL, initialise=TRUE) {
       ## seagull dependency in storr.
       db <- context::context_db(self$context)
 
-      if (db$driver$type() == "rds") {
-      }
-      self$timeout <- 10.0
-      if (!is.null(logdir)) {
-        dir.create(logdir, FALSE, TRUE)
-        self$logdir <- logdir
+      self$timeout <- 10.0 # Eh. needs dealing with
+      if (!is.null(log_path)) {
+        if (context::is_absolute_path(log_path)) {
+          dir.create(log_path, FALSE, TRUE)
+        } else {
+          root <- context::context_root(self)
+          dir.create(file.path(root, log_path), FALSE, TRUE)
+        }
+        self$log_path <- log_path
       }
     },
 
@@ -55,11 +58,12 @@ queue_local <- function(context, logdir=NULL, initialise=TRUE) {
     ## warrant keeping them here too.
     run_task=function(task_id, ...) {
       h <- self$task_get(task_id)$handle
-      if (is.null(self$logdir)) {
+      if (is.null(self$log_path)) {
         ## there's plenty of printing here without printing any extra
         context::task_run(h, ...)
       } else {
-        log <- file.path(self$logdir, task_id)
+        log <- file.path(context::context_root(self), self$log_path, task_id)
+        context::context_db(self)$set(task_id, self$log_path, "log_path")
         message(sprintf("*** Running %s -> %s", task_id, log))
         ## Suppress messages I think.
         capture_log(context::task_run(h, ...), log, TRUE)
@@ -110,11 +114,11 @@ queue_local <- function(context, logdir=NULL, initialise=TRUE) {
     ## Ordinarily there would be two objects created; one worker and
     ## one queue.  but for the local queue these are the same.
     submit=function(task_ids, names=NULL) {
-      ## NOTE: Need to set the logdir first or risk a race condition.
-      if (!is.null(self$logdir)) {
+      ## NOTE: Need to set the log_path first or risk a race condition.
+      if (!is.null(self$log_path)) {
         db <- context::context_db(self)
         for (id in task_ids) {
-          db$set(id, file.path(self$logdir, id), "log_path")
+          db$set(id, self$log_path, "log_path")
         }
       }
       queue_local_submit(self, task_ids)
