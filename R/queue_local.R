@@ -140,12 +140,13 @@ queue_local_submit <- function(obj, task_ids) {
   ## it's OK here.
   timeout <- obj$timeout %||% 120
   db <- context::context_db(obj)
-  lockfile <- file.path(context::context_root(obj), "lockfile")
+  context_id <- obj$context$id
+  lockfile <- path_lockfile(context::context_root(obj), context_id)
 
   seagull::with_flock(lockfile, {
-    queue <- queue_local_read(db)
+    queue <- queue_local_read(obj)
     tot <- c(queue, task_ids)
-    db$set(QUEUE_NAME, tot, QUEUE_NAMESPACE)
+    db$set(context_id, tot, QUEUE_NAMESPACE)
     invisible(length(tot))
   }, timeout=timeout)
 }
@@ -153,12 +154,13 @@ queue_local_submit <- function(obj, task_ids) {
 queue_local_pop <- function(obj) {
   timeout <- obj$timeout %||% 120
   db <- context::context_db(obj)
-  lockfile <- file.path(context::context_root(obj), "lockfile")
+  context_id <- obj$context$id
+  lockfile <- path_lockfile(context::context_root(obj), context_id)
 
   seagull::with_flock(lockfile, {
-    queue <- queue_local_read(db)
+    queue <- queue_local_read(obj)
     if (length(queue) > 0L) {
-      db$set(QUEUE_NAME, queue[-1L], QUEUE_NAMESPACE)
+      db$set(context_id, queue[-1L], QUEUE_NAMESPACE)
       queue[[1]]
     } else {
       NULL
@@ -172,12 +174,13 @@ queue_local_unsubmit <- function(obj, task_ids) {
   ## it's OK here.
   timeout <- obj$timeout %||% 120
   db <- context::context_db(obj)
-  lockfile <- file.path(context::context_root(obj), "lockfile")
+  context_id <- obj$context$id
+  lockfile <- path_lockfile(context::context_root(obj), context_id)
 
   seagull::with_flock(lockfile, {
-    queue <- queue_local_read(db)
+    queue <- queue_local_read(obj)
     if (length(queue) > 0L) {
-      db$set(QUEUE_NAME, setdiff(queue, task_ids), QUEUE_NAMESPACE)
+      db$set(context_id, setdiff(queue, task_ids), QUEUE_NAMESPACE)
     }
     invisible(task_ids %in% queue)
   }, timeout=timeout)
@@ -186,10 +189,11 @@ queue_local_unsubmit <- function(obj, task_ids) {
 ## NOTE: not protected by file lock
 queue_local_read <- function(obj) {
   db <- context::context_db(obj)
-  tryCatch(db$get(QUEUE_NAME, QUEUE_NAMESPACE),
+  context_id <- obj$context$id
+  tryCatch(db$get(context_id, QUEUE_NAMESPACE),
            KeyError=function(e) character(0))
 }
 
-path_lockfile <- function(root) {
-  file.path(root, "lockfile")
+path_lockfile <- function(root, id) {
+  file.path(root, "lockfiles", id)
 }

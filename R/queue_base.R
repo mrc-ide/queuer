@@ -23,6 +23,12 @@ queue_base <- function(context, initialise=TRUE) {
         self$db <- context::context_db(context)
         self$workdir <- getwd()
 
+        ## NOTE: this is not always wanted, but seems generally
+        ## harmless enough to always create.  Because both the worker
+        ## and queue could read from this it's nicest to just create
+        ## it and never test for existence.
+        dir.create(path_lockfile(self$root, ""), FALSE, TRUE)
+
         ## Consider making this optional?
         ctx <- context::context_read(context)
         if (ctx$auto) {
