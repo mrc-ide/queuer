@@ -15,5 +15,5 @@ local({
   log_path <- "logs"
   source(file.path(CONTEXT_ROOT, "bin", "context_bootstrap"), TRUE)
   message("bootstrap complete")
-  queuer:::queue_local_worker(CONTEXT_ROOT, context, loop, log_path)
+  queuer:::queue_local_worker(CONTEXT_ROOT, context, loop=loop, log_dir=log_dir)
 })
