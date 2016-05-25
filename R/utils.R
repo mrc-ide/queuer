@@ -110,3 +110,7 @@ capture_log <- function(expr, filename, suppress_messages=FALSE) {
     withCallingHandlers(expr, message=handle_message)
   }
 }
+
+`%||%` <- function(a, b) {
+  if (is.null(a)) b else a
+}

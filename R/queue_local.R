@@ -13,6 +13,10 @@
 ## wait because we need two event loops.  Might have to switch locally
 ## there.
 
+## NOTE: No lockfile for environment storage, won't be possible for
+## redis, which we can easily lock with SETX, but will need a general
+## interface for the lockfile.
+
 queue_local <- function(context, logdir=NULL, initialise=TRUE) {
   .R6_queue_local$new(context, logdir, initialise)
 }
@@ -23,7 +27,6 @@ queue_local <- function(context, logdir=NULL, initialise=TRUE) {
 
   public=list(
     logdir=NULL,
-    lockfile=NULL,
     timeout=NULL,
     initialize=function(context, logdir, initialise) {
       loadNamespace("seagull")
@@ -39,12 +42,6 @@ queue_local <- function(context, logdir=NULL, initialise=TRUE) {
       db <- context::context_db(self$context)
 
       if (db$driver$type() == "rds") {
-        ## NOTE: So far, this is the only part that makes an explicit
-        ## reference to the root, so that's nice.
-        self$lockfile <- file.path(self$context$root, "lockfile")
-        ## NOTE: No lockfile for environment storage, won't be
-        ## possible for redis, which we can easily lock with SETX, but
-        ## will need a general interface for the lockfile.
       }
       self$timeout <- 10.0
       if (!is.null(logdir)) {
@@ -74,7 +71,7 @@ queue_local <- function(context, logdir=NULL, initialise=TRUE) {
       ## doing something within the queue code to indicate where the
       ## task has gone.  Otherwise task stays as PENDING (rather than
       ## RUNNING) but is not in the queue.
-      task_id <- self$queue_op(local_queue_pop)
+      task_id <- queue_local_pop(self)
       if (is.null(task_id)) {
         value <- NULL
       } else {
@@ -83,10 +80,12 @@ queue_local <- function(context, logdir=NULL, initialise=TRUE) {
       invisible(list(task_id=task_id, value=value))
     },
     run_all=function() {
+      ## TODO: run_all and run_loop together perhaps
       res <- character(0)
       repeat {
         task_id <- self$run_next()$task_id
         if (is.null(task_id)) {
+          message("All tasks complete")
           break
         } else {
           res <- c(res, task_id)
@@ -111,66 +110,86 @@ queue_local <- function(context, logdir=NULL, initialise=TRUE) {
     ## Ordinarily there would be two objects created; one worker and
     ## one queue.  but for the local queue these are the same.
     submit=function(task_ids, names=NULL) {
-      self$queue_op(local_queue_push, task_ids)
+      ## NOTE: Need to set the logdir first or risk a race condition.
       if (!is.null(self$logdir)) {
         db <- context::context_db(self)
         for (id in task_ids) {
           db$set(id, file.path(self$logdir, id), "log_path")
         }
       }
+      queue_local_submit(self, task_ids)
     },
     unsubmit=function(task_ids) {
-      invisible(self$queue_op(local_queue_del, task_ids))
+      queue_local_unsubmit(self, task_ids)
     },
-    ## NOTE: not protected by lock, and duplication of key/ns names
     queue_list=function() {
-      local_queue_read(context::context_db(self), "queue", "queue_local")
-    },
-
-    queue_op=function(f, ...) {
-      f(self$lockfile, context::context_db(self), "queue", "queue_local",
-        ..., timeout=self$timeout)
+      queue_local_read(self)
     }
 ))
 
-## Run queue operations through a locked queue; these all do a read
-## and and a write, though the write is conditional.  The lockfile
-## ensures that the read/write avoids a race condition.  Because the
-## read/write is likely to be quite quick this should be fairly free
-## of nasty deadlocks; I would expect everything resolved in well
-## under a second as we're just storing a vector of small strings.
-local_queue_push <- function(lockfile, db, key, namespace, ids, ...) {
+## Constants.  Can probably be made variables by stuffing them inside
+## the context db but it's not very obvious why that's a good thing.
+## An alternative (probably better) is to use the context id as the
+## QUEUE_NAME leaving only the namespace one hanging.
+QUEUE_NAME <- "queue"
+QUEUE_NAMESPACE <- "queue_local"
+
+queue_local_submit <- function(obj, task_ids) {
+  ## TODO: This is not ideal, but the timeout does need to be
+  ## specified.  I don't see that this should ever take two minutes so
+  ## it's OK here.
+  timeout <- obj$timeout %||% 120
+  db <- context::context_db(obj)
+  lockfile <- file.path(context::context_root(obj), "lockfile")
+
   seagull::with_flock(lockfile, {
-    queue <- local_queue_read(db, key, namespace)
-    tot <- c(queue, ids)
-    db$set(key, tot, namespace)
-    length(tot)
-  }, ...)
+    queue <- queue_local_read(db)
+    tot <- c(queue, task_ids)
+    db$set(QUEUE_NAME, tot, QUEUE_NAMESPACE)
+    invisible(length(tot))
+  }, timeout=timeout)
 }
 
-local_queue_pop <- function(lockfile, db, key, namespace, ...) {
+queue_local_pop <- function(obj) {
+  timeout <- obj$timeout %||% 120
+  db <- context::context_db(obj)
+  lockfile <- file.path(context::context_root(obj), "lockfile")
+
   seagull::with_flock(lockfile, {
-    queue <- local_queue_read(db, key, namespace)
+    queue <- queue_local_read(db)
     if (length(queue) > 0L) {
-      db$set(key, queue[-1], namespace)
+      db$set(QUEUE_NAME, queue[-1L], QUEUE_NAMESPACE)
       queue[[1]]
     } else {
       NULL
     }
-  }, ...)
+  }, timeout=timeout)
 }
 
-local_queue_del <- function(lockfile, db, key, namespace, ids, ...) {
+queue_local_unsubmit <- function(obj, task_ids) {
+  ## TODO: This is not ideal, but the timeout does need to be
+  ## specified.  I don't see that this should ever take two minutes so
+  ## it's OK here.
+  timeout <- obj$timeout %||% 120
+  db <- context::context_db(obj)
+  lockfile <- file.path(context::context_root(obj), "lockfile")
+
   seagull::with_flock(lockfile, {
-    queue <- local_queue_read(db, key, namespace)
+    queue <- queue_local_read(db)
     if (length(queue) > 0L) {
-      db$set(key, setdiff(queue, ids), namespace)
+      db$set(QUEUE_NAME, setdiff(queue, task_ids), QUEUE_NAMESPACE)
     }
-    invisible(ids %in% queue)
-  }, ...)
+    invisible(task_ids %in% queue)
+  }, timeout=timeout)
 }
 
-local_queue_read <- function(db, key, namespace) {
-  tryCatch(db$get(key, namespace),
+## NOTE: not protected by file lock
+queue_local_read <- function(obj) {
+  db <- context::context_db(obj)
+  tryCatch(db$get(QUEUE_NAME, QUEUE_NAMESPACE),
            KeyError=function(e) character(0))
+}
+
+path_lockfile <- function(root) {
+  file.path(root, "lockfile")
 }

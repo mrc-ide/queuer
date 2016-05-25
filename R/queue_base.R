@@ -17,7 +17,7 @@ queue_base <- function(context, initialise=TRUE) {
         }
         ## NOTE: The root is needed so that tasks can run correctly;
         ## we need this to set the local library.
-        self$root <- context$root
+        self$root <- context::context_root(context)
         ## NOTE: We need a copy of the db within the object for
         ## context::context_db() elsewhere to work correctly.
         self$db <- context::context_db(context)
@@ -40,10 +40,11 @@ queue_base <- function(context, initialise=TRUE) {
           message("Loading context ", self$context$id)
           self$context_envir <-
             context::context_load(self$context, install=FALSE)
-          worker_runner <- system.file(context::context_root(self$context),
-                                       "bin", "worker_runner")
+          worker_runner <- file.path(context::context_root(self$context),
+                                     "bin", "worker_runner")
           if (!file.exists(worker_runner)) {
-            file.copy(system.file("worker_runner"), worker_runner)
+            file.copy(system.file("bin/worker_runner", package="queuer"),
+                      worker_runner)
           }
         }
       },
