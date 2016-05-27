@@ -72,8 +72,8 @@ queue_base <- function(context, initialise=TRUE) {
       },
       tasks_delete=function(task_ids) {
         ## NOTE: This is subject to a race condition.
-        context::task_delete(context::task_handle(self, task_ids, FALSE))
         self$unsubmit(task_ids)
+        context::task_delete(context::task_handle(self, task_ids, FALSE))
       },
 
       task_bundles_list=function() {
