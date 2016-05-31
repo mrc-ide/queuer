@@ -178,6 +178,18 @@ match_fun_queue <- function(fun, envir, envir_queue) {
 
 ## TODO: This needs to deal with hidden functions; they should be OK
 ## to call.  Once that is done fix buildr.
+
+## TODO: How do we deal with anonymous functions?  Should actually be
+## OK I think but will depend somewhat on capturing the environment
+## appropriately, and I don't think that happens yet.
+
+##' Find functions in various places.  Probably best not to use this...
+##'
+##' @title Find a function
+##' @param FUN A function; as a quoted symbol, a character string or as value.
+##' @param envir The parent environment
+##' @param envir_queue The queue environment
+##' @export
 find_fun_queue <- function(FUN, envir, envir_queue) {
   dat <- match_fun_queue(FUN, envir, envir_queue)
   if (dat[[1]] == "") {
