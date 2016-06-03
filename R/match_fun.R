@@ -153,7 +153,6 @@ find_fun_by_value <- function(fun, envir, stopat=emptyenv()) {
 ## Determine the name of a function, given it's value and an
 ## environment to find it in.
 find_fun_in_envir <- function(fun, envir) {
-  message(".")
   pos <- ls(envir)
   i <- scapply(pos, function(x) identical(fun, envir[[x]]), NULL)
   if (is.null(i)) i else pos[[i]]
