@@ -119,12 +119,10 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
   obj$initialise_context()
   fun_dat <- match_fun_queue(FUN, envir, obj$context_envir)
 
-  if (is.null(fun_dat$name)) {
+  if (is.null(fun_dat$name_symbol)) {
     stop("Not yet supported")
-  } else if (is.null(fun_dat$namespace)) {
-    fun <- as.name(fun_dat$name)
   } else {
-    fun <- call("::", as.name(fun_dat$namespace), as.name(fun_dat$name))
+    fun <- fun_dat$name_symbol
   }
 
   n <- length(XX)

@@ -68,15 +68,22 @@ match_fun_queue <- function(fun, envir=parent.frame(), envir_queue=.GlobalEnv) {
         exists_function(name, envir_queue) &&
         identical(deparse(dat$envir[[name]]),
                   deparse(get(name, envir_queue, mode="function")))
-      if (!ok) {
-        dat$name <- NULL
+      if (!ok && !is.null(dat$name)) {
+        dat["name"] <- list(NULL)
       }
     }
   }
 
+  if (is.null(dat$name)) {
+    dat["name_symbol"] <- list(NULL)
+  } else if (is.null(dat$namespace)) {
+    dat$name_symbol <- as.name(dat[[2]])
+  } else {
+    dat$name_symbol <- call("::", as.name(dat[[1]]), as.name(dat[[2]]))
+  }
+
   dat
 }
-
 
 ## TODO: consider `<global>::` and `<local>::` as special names?
 ## NOTE: This differs from match_fun_symbol because it allows skipping

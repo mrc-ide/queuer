@@ -9,7 +9,6 @@ context("match_fun")
 ## can assume that contexts always have a global root.  But here I'll
 ## assume that.
 
-## local({
 test_that("match_fun", {
   ctx <- context::context_save(tempfile(), sources="scope.R")
   context::context_load(ctx)
@@ -100,10 +99,14 @@ test_that("match_fun", {
   })
   expect_identical(res, cmp)
 
-  ## ## Now, the fun starts.
-  ## res <- local({
-  ##   e <- environment()
-  ##   f <- function(x) x + 1
-  ##   match_fun_queue(f, e, .GlobalEnv)
-  ## })
+})
+
+## Now, the fun starts.
+test_that("match_fun_queue", {
+  res <- local({
+    e <- environment()
+    f <- function(x) x + 1
+    match_fun_queue(f, e, .GlobalEnv)
+  })
+  expect_null(res$name)
 })
