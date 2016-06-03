@@ -16,7 +16,7 @@
 ##'
 ##' @title Find a function
 ##'
-##' @param FUN A function; as a quoted symbol, a character string or
+##' @param fun A function; as a quoted symbol, a character string or
 ##'   as value.
 ##'
 ##' @param envir The environment where the search should start from.

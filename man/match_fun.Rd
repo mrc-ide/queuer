@@ -10,14 +10,14 @@ match_fun(fun, envir)
 match_fun_queue(fun, envir = parent.frame(), envir_queue = .GlobalEnv)
 }
 \arguments{
+\item{fun}{A function; as a quoted symbol, a character string or
+as value.}
+
 \item{envir}{The environment where the search should start from.}
 
 \item{envir_queue}{The queue environment.  This is used to
 determine if the function can be reasonably expected to be found
 in the context environment.}
-
-\item{FUN}{A function; as a quoted symbol, a character string or
-as value.}
 }
 \description{
 Find functions in various places.  Probably best not to use this...
