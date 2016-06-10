@@ -4,13 +4,21 @@
 time_checker <- function(timeout, remaining=FALSE) {
   t0 <- Sys.time()
   timeout <- as.difftime(timeout, units="secs")
-  if (remaining) {
-    function() {
-      as.double(timeout - (Sys.time() - t0), "secs")
+  if (is.finite(timeout)) {
+    if (remaining) {
+      function() {
+        as.double(timeout - (Sys.time() - t0), "secs")
+      }
+    } else {
+      function() {
+        Sys.time() - t0 > timeout
+      }
     }
   } else {
-    function() {
-      Sys.time() - t0 > timeout
+    if (remaining) {
+      function() Inf
+    } else {
+      function() FALSE
     }
   }
 }
