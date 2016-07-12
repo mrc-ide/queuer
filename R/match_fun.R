@@ -35,10 +35,14 @@ match_fun <- function(fun, envir) {
     ## TODO: handle the quoted :: case without going via deparse.
     match_fun_name(deparse(fun), envir)
   } else if (is.primitive(fun)) {
+    ## This used to work with lazyeval, but there's been a breaking
+    ## change.  Yay, but not terribly surprising.  As a result, we
+    ## need to search through base and try and find it, which can be
+    ## quite slow.
     if (is.symbol(fun_lazy$expr)) {
       match_fun_name(deparse(fun_lazy$expr), envir)
     } else {
-      stop("Not yet implemented: renamed, out of environment, primative")
+      match_fun_value(fun, envir)
     }
   } else if (is.function(fun)) {
     if (is_function_definition(fun_lazy$expr)) {

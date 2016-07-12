@@ -110,3 +110,9 @@ test_that("match_fun_queue", {
   })
   expect_null(res$name)
 })
+
+test_that("primative", {
+  e <- environment()
+  res <- match_fun(list, e)
+  expect_equal(res$name, "list")
+})
