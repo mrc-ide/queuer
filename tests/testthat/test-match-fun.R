@@ -116,3 +116,8 @@ test_that("primative", {
   res <- match_fun(list, e)
   expect_equal(res$name, "list")
 })
+
+test_that("primative, 2", {
+  res <- match_fun(list, .GlobalEnv)
+  expect_equal(res$name, "list")
+})

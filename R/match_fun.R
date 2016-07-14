@@ -42,7 +42,7 @@ match_fun <- function(fun, envir) {
     if (is.symbol(fun_lazy$expr)) {
       match_fun_name(deparse(fun_lazy$expr), envir)
     } else {
-      match_fun_value(fun, envir)
+      match_fun_value(fun, envir, emptyenv())
     }
   } else if (is.function(fun)) {
     if (is_function_definition(fun_lazy$expr)) {
@@ -118,13 +118,13 @@ match_fun_name <- function(str, envir) {
 ## TODO: This is going to miss things like extra attributes added to a
 ## function, but that's going in the category of "users making things
 ## difficult".
-match_fun_value <- function(fun, envir) {
+match_fun_value <- function(fun, envir, stopat=.GlobalEnv) {
   nm <- environmentName(environment(fun))
   if (nzchar(nm)) {
     e <- if (nm == "R_GlobalEnv") .GlobalEnv else asNamespace(nm)
     match_fun_sanitise(find_fun_in_envir(fun, e), e)
   } else {
-    res <- find_fun_by_value(fun, envir, .GlobalEnv)
+    res <- find_fun_by_value(fun, envir, stopat)
     match_fun_sanitise(res$name, res$envir)
   }
 }
