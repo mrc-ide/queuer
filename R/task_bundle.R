@@ -157,8 +157,8 @@ task_bundle_combine <- function(..., bundles=list(...),
         context::task_expr(context::task_handle(self, id, FALSE)))
     },
     log=function() {
-      lapply(self$ids, function(id)
-        context::task_log(context::task_handle(self, id, FALSE)))
+      setNames(lapply(self$ids, context::task_log, root=self$root),
+               self$names)
     },
     function_name=function() {
       context::task_function_name(context::task_handle(self, self$ids[[1]]))
