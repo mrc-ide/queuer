@@ -114,7 +114,10 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
     XX <- as.list(X)
   } else if (!is.list(X)) {
     stop("X must be a data.frame or list")
+  } else {
+    XX <- X
   }
+  
 
   obj$initialise_context()
   fun_dat <- match_fun_queue(FUN, envir, obj$context_envir)
