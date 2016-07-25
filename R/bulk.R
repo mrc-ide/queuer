@@ -68,7 +68,7 @@ qlapply <- function(X, FUN, obj, ...,
   ## may need a more robust way of passing additional arguments in,
   ## but not sure what that looks like...
   enqueue_bulk(obj, X, FUN, ...,
-               do.call=TRUE,
+               do.call=FALSE,
                timeout=timeout, time_poll=time_poll, progress_bar=progress_bar,
                envir=envir, name=name, overwrite=overwrite)
 }
@@ -114,7 +114,10 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
     XX <- as.list(X)
   } else if (!is.list(X)) {
     stop("X must be a data.frame or list")
+  } else {
+    XX <- X
   }
+  
 
   obj$initialise_context()
   fun_dat <- match_fun_queue(FUN, envir, obj$context_envir)
