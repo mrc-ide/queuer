@@ -68,7 +68,7 @@ qlapply <- function(X, FUN, obj, ...,
   ## may need a more robust way of passing additional arguments in,
   ## but not sure what that looks like...
   enqueue_bulk(obj, X, FUN, ...,
-               do.call=TRUE,
+               do.call=FALSE,
                timeout=timeout, time_poll=time_poll, progress_bar=progress_bar,
                envir=envir, name=name, overwrite=overwrite)
 }
