@@ -118,7 +118,6 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
     XX <- X
   }
   
-
   obj$initialise_context()
   fun_dat <- match_fun_queue(FUN, envir, obj$context_envir)
 
@@ -129,7 +128,6 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
   }
 
   n <- length(XX)
-
   ## It is important not to use list(...) here and instead capture the
   ## symbols.  Otherwise later when we print the expression bad things
   ## will happen!
@@ -140,7 +138,7 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
     if (do.call) {
       tasks[[i]] <- as.call(c(list(fun), XX[[i]], DOTS))
     } else {
-      tasks[[i]] <- as.call(c(list(fun), XX[i], DOTS))
+      tasks[[i]] <- as.call(c(list(fun), unname(XX[i]), DOTS))
     }
   }
 

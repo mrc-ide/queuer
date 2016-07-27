@@ -127,3 +127,20 @@ test_that("task_bundles", {
   expect_error(task_bundle_create(obj, character(0)),
                "task_ids must be nonempty")
 })
+
+test_that("named qlapply", {
+
+  ctx <- context::context_save(root=tempfile())
+  obj <- queue_local(ctx)
+  bundle <- qlapply(setNames(as.list(1:3), letters[1:3]), I, obj)
+  expect_equal(bundle$tasks[[1]]$expr(),
+               quote(base::I(1L)))
+  res <- obj$run_next() # throws
+  expect_equal(res$value, I(1L))
+  expect_equal(bundle$names, letters[1:3])
+
+  obj$run_all()
+
+  ## Check names are returned:
+  expect_equal(bundle$results(), lapply(bundle$X, I))
+})
