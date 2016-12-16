@@ -62,7 +62,8 @@ match_fun <- function(fun, envir) {
 
 ##' @export
 ##' @rdname match_fun
-match_fun_queue <- function(fun, envir=parent.frame(), envir_queue=.GlobalEnv) {
+match_fun_queue <- function(fun, envir = parent.frame(),
+                            envir_queue = .GlobalEnv) {
   dat <- match_fun(fun, envir)
   if (is.null(dat$namespace) && !identical(envir, envir_queue)) {
     ## Now, try to find the function in the queue's environment:
@@ -71,7 +72,7 @@ match_fun_queue <- function(fun, envir=parent.frame(), envir_queue=.GlobalEnv) {
       ok <-
         exists_function(name, envir_queue) &&
         identical(deparse(dat$envir[[name]]),
-                  deparse(get(name, envir_queue, mode="function")))
+                  deparse(get(name, envir_queue, mode = "function")))
       if (!ok && !is.null(dat$name)) {
         dat["name"] <- list(NULL)
       }
@@ -118,7 +119,7 @@ match_fun_name <- function(str, envir) {
 ## TODO: This is going to miss things like extra attributes added to a
 ## function, but that's going in the category of "users making things
 ## difficult".
-match_fun_value <- function(fun, envir, stopat=.GlobalEnv) {
+match_fun_value <- function(fun, envir, stopat = .GlobalEnv) {
   nm <- environmentName(environment(fun))
   if (nzchar(nm)) {
     e <- if (nm == "R_GlobalEnv") .GlobalEnv else asNamespace(nm)
@@ -142,13 +143,13 @@ find_fun_by_name <- function(name, envir) {
   }
 }
 
-find_fun_by_value <- function(fun, envir, stopat=emptyenv()) {
+find_fun_by_value <- function(fun, envir, stopat = emptyenv()) {
   if (identical(envir, stopat)) {
     stop("Did not find function")
   }
   name <- find_fun_in_envir(fun, envir)
   if (!is.null(name)) {
-    list(name=name, envir=envir)
+    list(name = name, envir = envir)
   } else {
     find_fun_by_value(fun, parent.env(envir))
   }
@@ -170,7 +171,7 @@ find_fun_in_envir <- function(fun, envir) {
 ##   other env
 ## TODO: Might also return the environment here as a named list so
 ## that we can do some further faffing?
-match_fun_sanitise <- function(name, fun_envir, value=NULL) {
+match_fun_sanitise <- function(name, fun_envir, value = NULL) {
   if (is.null(name)) {
     name <- ns <- NULL
   } else {
@@ -193,23 +194,23 @@ match_fun_sanitise <- function(name, fun_envir, value=NULL) {
       fun_envir <- asNamespace(sub("^package:", "", fun_envir_name))
     }
   }
-  list(namespace=ns,
-       name=name,
-       envir=fun_envir,
-       value=value %||% get(name, fun_envir))
+  list(namespace = ns,
+       name = name,
+       envir = fun_envir,
+       value = value %||% get(name, fun_envir))
 }
 
 ## Will be prone to false positives but worth a shot
 has_namespace <- function(str) {
   ## TODO: Here, and split_namespace, this is do-able but requires
   ## some trickery so we can tell that the function is hidden.
-  ## grepl(":::?", str, fixed=TRUE)
-  grepl("::", str, fixed=TRUE)
+  ## grepl(":::?", str, fixed = TRUE)
+  grepl("::", str, fixed = TRUE)
 }
 
 split_namespace <- function(str) {
-  ## res <- strsplit(str, ":::?", fixed=TRUE)[[1]]
-  res <- strsplit(str, "::", fixed=TRUE)[[1]]
+  ## res <- strsplit(str, ":::?", fixed = TRUE)[[1]]
+  res <- strsplit(str, "::", fixed = TRUE)[[1]]
   if (length(res) != 2L) {
     stop("Not a namespace-qualified variable")
   }
@@ -217,10 +218,10 @@ split_namespace <- function(str) {
 }
 
 exists_function <- function(name, envir) {
-  exists(name, envir, mode="function")
+  exists(name, envir, mode = "function")
 }
 exists_function_here <- function(name, envir) {
-  exists(name, envir, mode="function", inherits=FALSE)
+  exists(name, envir, mode = "function", inherits = FALSE)
 }
 exists_function_ns <- function(name, ns) {
   if (ns %in% .packages()) {

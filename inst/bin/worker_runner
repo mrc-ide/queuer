@@ -1,6 +1,20 @@
 #!/usr/bin/env Rscript
 library(methods)
 local({
+  ## This needs redoing to use the next version of context which
+  ## bootstraps differently.  I'll have to add a context API function
+  ## for generating the boostrap code, I think.  Or possibly we can
+  ## add just the bootstrap script to the bin directory and source it
+  ## directly (which is what we'd do previously).  If the function
+  ## there returned context root it would be ideal I think.
+  ##
+  ## TODO: This is a bit fucked anyway, because the queue needs
+  ## tweaking to only take jobs that are written to the particular
+  ## context and not to any old context (because we might not have
+  ## loaded up all contexts).  That'll be fun to get right.
+  ## Practically this affects only the "local" queue, so I have some
+  ## flexibility here.
+  stop("rewrite me")
   args <- commandArgs(TRUE)
   np <- length(args)
   if (np == 0L || np > 3L) {
@@ -15,6 +29,6 @@ local({
   log_path <- "logs"
   source(file.path(CONTEXT_ROOT, "bin", "context_bootstrap"), TRUE)
   message("bootstrap complete")
-  queuer:::queue_local_worker(CONTEXT_ROOT, context, loop=loop,
-                              log_path=log_path)
+  queuer:::queue_local_worker(CONTEXT_ROOT, context, loop = loop,
+                              log_path = log_path)
 })

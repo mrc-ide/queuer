@@ -17,73 +17,70 @@
 ## redis, which we can easily lock with SETX, but will need a general
 ## interface for the lockfile.
 
-queue_local <- function(context, log_path=NULL, initialise=TRUE) {
-  .R6_queue_local$new(context, log_path, initialise)
+queue_local <- function(context_id, root = NULL, initialize = TRUE,
+                        log = FALSE) {
+  .R6_queue_local$new(context_id, root, initialize, log)
 }
 
 .R6_queue_local <- R6::R6Class(
   "queue_local",
-  inherit=.R6_queue_base,
+  inherit = .R6_queue_base,
 
-  public=list(
-    log_path=NULL,
-    timeout=NULL,
-    initialize=function(context, log_path, initialise) {
-      loadNamespace("seagull")
-      super$initialize(context, initialise)
-      ## This can probably be relaxed to allow environment storage
-      ## actually, though that would not survive a fork meaningfully.
-      ## Redis storage can't be assumed to have the same filesystem,
-      ## though rrlite can.
-      ##
-      ## What would be nicer is if storr allowed some way of generally
-      ## locking but that's getting a bit far out and would induce a
-      ## seagull dependency in storr.
-      db <- context::context_db(self$context)
+  public = list(
+    log_path = NULL,
+    timeout = 10.0, # TODO: configurable...
+    fifo = NULL,
 
-      self$timeout <- 10.0 # Eh. needs dealing with
-      if (!is.null(log_path)) {
-        if (context::is_absolute_path(log_path)) {
-          dir.create(log_path, FALSE, TRUE)
-        } else {
-          root <- context::context_root(self)
-          dir.create(file.path(root, log_path), FALSE, TRUE)
-        }
-        self$log_path <- log_path
+    initialize = function(context_id, root, initialize, log) {
+      super$initialize(context_id, root, initialize)
+
+      lockfile <- path_lockfile(self$root$path, self$context$id)
+      dir.create(dirname(lockfile), FALSE, TRUE)
+      self$fifo <- fifo_seagull(self$db, self$context$id, "queue_local",
+                                lockfile, self$timeout)
+
+      if (isTRUE(log)) {
+        self$log_path <- file.path(self$root$path, "logs")
+        dir.create(self$log_path, FALSE, TRUE)
+      }
+
+      worker_runner <- file.path(self$root$path, "bin", "worker_runner")
+      if (!file.exists(worker_runner)) {
+        file.copy(system.file("bin/worker_runner", package = "queuer"),
+                  worker_runner)
       }
     },
 
     ## This is the running half of the system; these will shortly move
     ## into workers, but the queue_local case might be weird enough to
     ## warrant keeping them here too.
-    run_task=function(task_id, ...) {
-      h <- self$task_get(task_id)$handle
+    run_task = function(task_id, ...) {
       if (is.null(self$log_path)) {
         ## there's plenty of printing here without printing any extra
-        context::task_run(h, ...)
+        context::task_run(task_id, self$context, self$context_envir, ...)
       } else {
-        log <- file.path(context::context_root(self), self$log_path, task_id)
-        context::context_db(self)$set(task_id, self$log_path, "log_path")
+        log <- file.path(self$log_path, task_id)
         message(sprintf("*** Running %s -> %s", task_id, log))
-        ## Suppress messages I think.
-        capture_log(context::task_run(h, ...), log, TRUE)
+        context::task_run(task_id, self$context, self$context_envir, log)
       }
     },
-    run_next=function() {
+
+    run_next = function() {
       ## TODO: It is possible for the task to be lost here if
       ## context::task_run throws an error.  We should be atomically
       ## doing something within the queue code to indicate where the
       ## task has gone.  Otherwise task stays as PENDING (rather than
       ## RUNNING) but is not in the queue.
-      task_id <- queue_local_pop(self)
+      task_id <- self$fifo$pop()
       if (is.null(task_id)) {
         value <- NULL
       } else {
         value <- self$run_task(task_id)
       }
-      invisible(list(task_id=task_id, value=value))
+      invisible(list(task_id = task_id, value = value))
     },
-    run_all=function() {
+
+    run_all = function() {
       ## TODO: run_all and run_loop together perhaps
       res <- character(0)
       repeat {
@@ -97,7 +94,8 @@ queue_local <- function(context, log_path=NULL, initialise=TRUE) {
       }
       res
     },
-    run_loop=function(interval=0.5) {
+
+    run_loop = function(interval = 0.5) {
       ## TODO: Until messaging is implemented, this will need to run
       ## until interrupted.
       ##
@@ -113,21 +111,19 @@ queue_local <- function(context, log_path=NULL, initialise=TRUE) {
 
     ## Ordinarily there would be two objects created; one worker and
     ## one queue.  but for the local queue these are the same.
-    submit=function(task_ids, names=NULL) {
-      ## NOTE: Need to set the log_path first or risk a race condition.
+    submit = function(task_ids, names = NULL) {
       if (!is.null(self$log_path)) {
-        db <- context::context_db(self)
-        for (id in task_ids) {
-          db$set(id, self$log_path, "log_path")
-        }
+        self$db$mset(task_ids, self$log_path, "log_path")
       }
-      queue_local_submit(self, task_ids)
+      self$fifo$push(task_ids)
     },
-    unsubmit=function(task_ids) {
-      queue_local_unsubmit(self, task_ids)
+
+    unsubmit = function(task_ids) {
+      self$fifo$drop(task_ids)
     },
-    queue_list=function() {
-      queue_local_read(self)
+
+    queue_list = function() {
+      self$fifo$read()
     }
 ))
 
@@ -143,7 +139,7 @@ queue_local_submit <- function(obj, task_ids) {
   ## specified.  I don't see that this should ever take two minutes so
   ## it's OK here.
   timeout <- obj$timeout %||% 120
-  db <- context::context_db(obj)
+  db <- obj$db
   context_id <- obj$context$id
   lockfile <- path_lockfile(context::context_root(obj), context_id)
 
@@ -152,50 +148,15 @@ queue_local_submit <- function(obj, task_ids) {
     tot <- c(queue, task_ids)
     db$set(context_id, tot, QUEUE_NAMESPACE)
     invisible(length(tot))
-  }, timeout=timeout)
-}
-
-queue_local_pop <- function(obj) {
-  timeout <- obj$timeout %||% 120
-  db <- context::context_db(obj)
-  context_id <- obj$context$id
-  lockfile <- path_lockfile(context::context_root(obj), context_id)
-
-  seagull::with_flock(lockfile, {
-    queue <- queue_local_read(obj)
-    if (length(queue) > 0L) {
-      db$set(context_id, queue[-1L], QUEUE_NAMESPACE)
-      queue[[1]]
-    } else {
-      NULL
-    }
-  }, timeout=timeout)
-}
-
-queue_local_unsubmit <- function(obj, task_ids) {
-  ## TODO: This is not ideal, but the timeout does need to be
-  ## specified.  I don't see that this should ever take two minutes so
-  ## it's OK here.
-  timeout <- obj$timeout %||% 120
-  db <- context::context_db(obj)
-  context_id <- obj$context$id
-  lockfile <- path_lockfile(context::context_root(obj), context_id)
-
-  seagull::with_flock(lockfile, {
-    queue <- queue_local_read(obj)
-    if (length(queue) > 0L) {
-      db$set(context_id, setdiff(queue, task_ids), QUEUE_NAMESPACE)
-    }
-    invisible(task_ids %in% queue)
-  }, timeout=timeout)
+  }, timeout = timeout)
 }
 
 ## NOTE: not protected by file lock
 queue_local_read <- function(obj) {
-  db <- context::context_db(obj)
+  db <- obj$db
   context_id <- obj$context$id
   tryCatch(db$get(context_id, QUEUE_NAMESPACE),
-           KeyError=function(e) character(0))
+           KeyError = function(e) character(0))
 }
 
 path_lockfile <- function(root, id) {

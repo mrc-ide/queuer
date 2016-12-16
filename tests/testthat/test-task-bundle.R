@@ -1,99 +1,70 @@
 context("task bundle")
 
-test_that("task_bundle_combine -- none", {
-  expect_error(task_bundle_combine(), "Provide at least one task bundle")
-  expect_error(task_bundle_combine(bundles=list()),
-               "Provide at least one task bundle")
+## This tests the lifecycle of a pair of tasks in a bundle:
+test_that("task_bundle", {
+  ctx <- context::context_save(tempfile(), storage_type = "environment")
+  on.exit(unlink(ctx$root$path, recursive = TRUE))
+
+  id1 <- context::task_save(sin(1), ctx)
+  id2 <- context::task_save(sin(2), ctx)
+  ids <- c(id1, id2)
+
+  grp <- task_bundle_create(ids, ctx)
+
+  expect_is(grp, "task_bundle")
+
+  expect_equal(grp$done, setNames(c(FALSE, FALSE), ids))
+
+  tt <- grp$times()
+  expect_equal(tt[-5], context::task_times(ids, ctx)[-5])
+
+  expect_error(grp$results(FALSE), "Tasks not yet completed")
+  expect_equal(grp$results(TRUE), list(NULL, NULL))
+
+  expect_error(grp$wait(0), "Tasks not yet completed")
+
+  t0 <- Sys.time()
+  expect_error(grp$wait(0.1, progress_bar = FALSE), "Exceeded maximum time")
+  t1 <- Sys.time()
+  expect_lt(as.numeric(t1 - t0, "secs"), 1)
+
+  context::task_run(id1, ctx)
+  expect_equal(grp$results(TRUE), list(sin(1), NULL))
+  expect_error(grp$results(FALSE), "Tasks not yet completed")
+
+  context::task_run(id2, ctx)
+  expect_equal(grp$results(), list(sin(1), sin(2)))
+  t0 <- Sys.time()
+  expect_equal(grp$wait(10, progress_bar = FALSE), list(sin(1), sin(2)))
+  t1 <- Sys.time()
+  expect_lt(as.numeric(t1 - t0, "secs"), 1)
 })
 
-test_that("task_bundle_combine -- single", {
-  ctx <- context::context_save(root=tempfile(), storage_type="environment")
-  obj <- queue_local(ctx)
+test_that("bundle name", {
+  db <- storr::storr_environment()
 
-  x <- qlapply(1:5, list, obj)
-  xx <- task_bundle_combine(x)
+  ## Avoid collisions:
+  set.seed(1)
+  nm <- create_bundle_name(NULL, TRUE, db)
+  db$set(nm, NULL, "task_bundles")
+  set.seed(1)
+  expect_equal(ids::adjective_animal(), nm)
+  set.seed(1)
+  expect_true(create_bundle_name(NULL, TRUE, db) != nm)
 
-  expect_identical(x$ids, xx$ids)
-  expect_identical(x$X, xx$X)
-  expect_identical(x$names, xx$names)
+  ## Don't overwrite:
+  expect_error(create_bundle_name(nm, FALSE, db),
+               "Task bundle already exists")
+
+  nm <- ids::adjective_animal(n_adjectives = 2)
+  expect_equal(create_bundle_name(nm, TRUE, db), nm)
+  ## No database access in this situation:
+  expect_silent(create_bundle_name(nm, TRUE, NULL))
 })
 
-test_that("task_bundle_combine -- single, named", {
-  ctx <- context::context_save(root=tempfile(), storage_type="environment")
+test_that("empty bundle", {
+  ctx <- context::context_save(tempfile(), storage_type = "environment")
   obj <- queue_local(ctx)
-
-  els <- setNames(1:5, letters[1:5])
-  x <- qlapply(els, list, obj)
-  xx <- task_bundle_combine(x)
-
-  expect_is(xx$names, "character")
-  expect_identical(x$ids, xx$ids)
-  expect_identical(x$X, xx$X)
-  expect_identical(x$names, xx$names)
-})
-
-test_that("task_bundle_combine, two", {
-  ctx <- context::context_save(root=tempfile(), storage_type="environment")
-  obj <- queue_local(ctx)
-
-  x <- qlapply(1:5, list, obj)
-  y <- qlapply(6:10, list, obj)
-
-  z <- task_bundle_combine(x, y)
-
-  expect_equal(z$ids, c(x$ids, y$ids))
-  expect_equal(z$X, c(x$X, y$X))
-})
-
-test_that("task_bundle_combine, two, named", {
-  ctx <- context::context_save(root=tempfile(), storage_type="environment")
-  obj <- queue_local(ctx)
-
-  X1 <- setNames(1:5, letters[1:5])
-  X2 <- setNames(6:10, letters[6:10])
-  x <- qlapply(X1, list, obj)
-  y <- qlapply(X2, list, obj)
-
-  z <- task_bundle_combine(x, y)
-
-  expect_equal(z$ids, c(x$ids, y$ids))
-  expect_equal(z$X, c(x$X, y$X))
-})
-
-test_that("task bundle, dfs", {
-  ctx <- context::context_save(root=tempfile(), storage_type="environment")
-  obj <- queue_local(ctx)
-  X1 <- data.frame(a=1:2, b=runif(2))
-  X2 <- data.frame(a=3:6, b=runif(4))
-
-  x <- enqueue_bulk(obj, X1, list)
-  y <- enqueue_bulk(obj, X2, list)
-
-  z <- task_bundle_combine(x, y)
-
-  expect_equal(z$ids, c(x$ids, y$ids))
-  expect_equal(z$X, rbind(x$X, y$X))
-})
-
-test_that("task_bundle_combine, incompatible functions", {
-  ctx <- context::context_save(root=tempfile(), storage_type="environment")
-  obj <- queue_local(ctx)
-
-  x <- qlapply(1:5, list, obj)
-  y <- qlapply(6:10, head, obj)
-
-  expect_error(task_bundle_combine(x, y), "must have same function")
-})
-
-test_that("task_bundle, delete", {
-  ctx <- context::context_save(root=tempfile(), storage_type="environment")
-  obj <- queue_local(ctx)
-  x <- qlapply(1:5, list, obj)
-  expect_true(x$delete())
-  expect_false(x$delete())
-
-  obj <- queue_local(ctx)
-  x <- qlapply(1:5, list, obj)
-  expect_equal(obj$tasks_delete(x$ids), TRUE)
-  expect_equal(obj$tasks_delete(x$ids), FALSE)
+  expect_error(task_bundle_create(character(0), obj),
+               "task_ids must be nonempty")
 })

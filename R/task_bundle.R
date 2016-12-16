@@ -8,7 +8,7 @@
 ##' @title Create a task bundle
 ##'
 ##' @param obj An observer or queue object; something that can be
-##'   passed through to \code{\link{context_db}}.
+##'   passed through to \code{\link{context_root_get}}.
 ##'
 ##' @param task_ids A vector of task ids
 ##'
@@ -25,109 +25,71 @@
 ##'
 ##' @export
 ##' @rdname task_bundle
-task_bundle_create <- function(obj, task_ids, name=NULL, X=NULL,
-                               overwrite=FALSE) {
+task_bundle_create <- function(task_ids, obj, name = NULL, X = NULL,
+                               overwrite = FALSE) {
+  ## TODO: flag if the task is homogeneous; we do this by setting a
+  ## flag homogeneous.  If NULL, then check by looking at the
+  ## expressions of all tasks.  If TRUE or FALSE set as such.  This
+  ## will impact things like function_name
   if (length(task_ids) < 1L) {
     stop("task_ids must be nonempty")
   }
-  db <- context::context_db(obj)
+  root <- context::context_root_get(obj)
+  db <- root$db
   name <- create_bundle_name(name, overwrite, db)
-  db$set(name, task_ids, "task_bundles")
-  db$set(name, X, "task_bundles_X")
-  task_bundle_get(obj, name)
+  db$mset(name, list(task_ids, X), c("task_bundles", "task_bundles_X"))
+  task_bundle_get(name, root)
 }
 
 ##' @export
 ##' @rdname task_bundle
-task_bundle_get <- function(obj, name) {
-  .R6_task_bundle$new(obj, name)
+task_bundle_get <- function(name, obj) {
+  R6_task_bundle$new(name, obj)
 }
 
-##' Combine two or more task bundles
-##'
-##' For now task bundles must have the same function to be combined.
-##' @title Combine task bundles
-##' @param ... Any number of task bundles
-##'
-##' @param bundles A list of bundles (used in place of \code{...} and
-##'   probably more useful for programming).
-##'
-##' @inheritParams task_bundle_create
-##' @export
-task_bundle_combine <- function(..., bundles=list(...),
-                                name=NULL, overwrite=FALSE) {
-  if (length(bundles) == 0L) {
-    stop("Provide at least one task bundle")
-  }
-  names(bundles) <- NULL
-
-  ok <- vlapply(bundles, inherits, "task_bundle")
-  if (any(!ok)) {
-    stop("All elements of ... or bundles must be task_bundle objects")
-  }
-
-  ## Check that the functions of each bundle job are the same.
-  fns <- vcapply(bundles, function(x) x$function_name())
-  if (length(unique(fns)) != 1L) {
-    stop("task bundles must have same function to combine")
-  }
-
-  task_ids <- unlist(lapply(bundles, function(x) x$ids), FALSE, FALSE)
-
-  named <- vlapply(bundles, function(x) !is.null(x$names))
-  if (all(named)) {
-    names(task_ids) <- unlist(lapply(bundles, function(x) x$names), FALSE, FALSE)
-  } else if (any(named)) {
-    tmp <- lapply(bundles, function(x) x$names)
-    tmp[!named] <- lapply(bundles[!named], function(x) rep("", length(x$ids)))
-    names(task_ids) <- unlist(tmp, FALSE, FALSE)
-  }
-
-  X <- lapply(bundles, function(x) x$X)
-  is_df <- vlapply(X, is.data.frame)
-  if (all(is_df)) {
-    X <- do.call("rbind", X)
-  } else {
-    if (any(is_df)) {
-      X[is_df] <- lapply(X[is_df], df_to_list)
-    }
-    X <- unlist(X, FALSE)
-  }
-
-  task_bundle_create(bundles[[1]], task_ids, name, X, overwrite)
-}
-
-.R6_task_bundle <- R6::R6Class(
+R6_task_bundle <- R6::R6Class(
   "task_bundle",
 
-  public=list(
-    db=NULL,
-    tasks=NULL,
-    name=NULL,
-    names=NULL,
-    ids=NULL,
-    done=NULL,
-    X=NULL,
-    root=NULL,
+  public = list(
+    name = NULL,
+    root = NULL,
+    ids = NULL,
+    tasks = NULL,
+    names = NULL,
+    done = NULL,
+    X = NULL,
+    db = NULL,
 
-    initialize=function(obj, name) {
-      self$db <- context::context_db(obj)
-      self$root <- context::context_root(obj)
-      task_ids <- self$db$get(name, "task_bundles")
+    initialize=function(name, obj) {
       self$name <- name
-      self$tasks <- setNames(lapply(task_ids, task, obj=obj), task_ids)
+      self$root <- context::context_root_get(obj)
+      self$db <- self$root$db
 
+      task_ids <- self$db$get(name, "task_bundles")
       self$ids <- unname(task_ids)
       self$names <- names(task_ids)
+
+      ## TODO: is there any reason why this needs access to the root,
+      ## and not simply to the context (or even the db).
+
+      ## This does not do a db read
+      self$tasks <- setNames(lapply(task_ids, queuer_task, self$root, FALSE),
+                             task_ids)
       self$X <- self$db$get(name, "task_bundles_X")
+
       self$check()
     },
 
-    times=function(unit_elapsed="secs") {
-      context::tasks_times(self$to_handle(), unit_elapsed)
+    check = function() {
+      self$status()
+      self$done
     },
 
-    results=function(partial=FALSE) {
+    times = function(unit_elapsed = "secs") {
+      context::task_times(self$ids, self$root, unit_elapsed)
+    },
+
+    results = function(partial = FALSE) {
       if (partial) {
         task_bundle_partial(self)
       } else {
@@ -135,73 +97,59 @@ task_bundle_combine <- function(..., bundles=list(...),
       }
     },
 
-    wait=function(timeout=60, time_poll=1, progress_bar=TRUE) {
+    wait = function(timeout = 60, time_poll = 1, progress_bar = TRUE) {
       task_bundle_wait(self, timeout, time_poll, progress_bar)
     },
 
-    check=function() {
-      self$status()
-      self$done
-    },
-
-    status=function(named=TRUE) {
+    status = function(named = TRUE) {
       ## TODO: Only need to check the undone ones here?
-      ret <- context::task_status(self$to_handle(), named=named)
+      ret <- context::task_status(self$ids, self$root, named)
       self$done <- setNames(!(ret %in% c("PENDING", "RUNNING", "ORPHAN")),
                             self$ids)
       ret
     },
 
-    expr=function() {
-      lapply(self$ids, function(id)
-        context::task_expr(context::task_handle(self, id, FALSE)))
+    expr = function(locals = FALSE) {
+      setNames(lapply(self$ids, context::task_expr, self$root, locals),
+               self$ids)
     },
-    log=function() {
-      setNames(lapply(self$ids, context::task_log, root=self$root),
+
+    log = function() {
+      setNames(lapply(self$ids, context::task_log, self$root),
                self$names)
     },
-    function_name=function() {
-      context::task_function_name(context::task_handle(self, self$ids[[1]]))
+
+    function_name = function() {
+      context::task_function_name(self$ids[[1]], self$root)
     },
 
-    delete=function() {
-      context::task_delete(self$to_handle())
-    },
-
-    to_handle=function() {
-      context::task_handle(self, self$ids, FALSE)
+    delete = function() {
+      context::task_delete(self$id, self$root)
     }
-
-    ## TODO: overview()
   ))
 
-task_bundles_list <- function(obj) {
-  context::context_db(obj)$list("task_bundles")
+task_bundle_list <- function(obj) {
+  obj$db$list("task_bundles")
 }
 
-task_bundles_info <- function(obj) {
-  bundles <- task_bundles_list(obj)
-  db <- context::context_db(obj)
+task_bundle_info <- function(obj) {
+  bundles <- task_bundle_list(obj)
+  db <- obj$db
 
-  task_function <- function(id) {
-    context::task_function_name(context::task_handle(obj, id, FALSE))
-  }
+  task_ids <- db$mget(bundles, "task_bundles")
+  task_id1 <- vcapply(task_ids, "[[", 1L)
 
-  task_ids <- lapply(bundles, db$get, "task_bundles")
-  ## TODO: don't do it this way; make a handle of the _first_ element
-  ## of each.
-  task_time_sub <-
-    unlist_times(lapply(task_ids, function(x) db$get(x[[1L]], "task_time_sub")))
-  task_function <-
-    vapply(task_ids, function(x) task_function(x[[1L]]), character(1))
+  task_time_sub <- unlist_times(db$mget(task_id1, "task_time_sub"))
+  task_function <- context::task_function_name(task_id1, obj$root)
 
   i <- order(task_time_sub)
-  data.frame(name=bundles[i],
-             "function"=task_function[i],
-             length=lengths(task_ids[i]),
-             created=unlist_times(task_time_sub[i]),
-             stringsAsFactors=FALSE,
-             check.names=FALSE)
+
+  data.frame(name = bundles[i],
+             "function" = task_function[i],
+             length = lengths(task_ids)[i],
+             created = task_time_sub[i],
+             stringsAsFactors = FALSE,
+             check.names = FALSE)
 }
 
 task_bundle_wait <- function(bundle, timeout, time_poll, progress_bar) {
@@ -211,49 +159,55 @@ task_bundle_wait <- function(bundle, timeout, time_poll, progress_bar) {
   ## would block forever.
   task_ids <- bundle$ids
   done <- bundle$check()
+  db <- bundle$db
+
+  if (timeout == 0 && !all(done)) {
+    stop(sprintf("Tasks not yet completed (%d / %d tasks pending)",
+                 sum(!done), length(done)))
+  }
 
   ## Immediately collect all completed results:
   results <- setNames(vector("list", length(task_ids)), task_ids)
-  if (any(done)) {
-    results[done] <- lapply(bundle$tasks[done], function(t) t$result())
+  cleanup <- function(results) {
+    bundle$done <- done
+    setNames(results, bundle$names)
   }
 
-  cleanup <- function(results) {
-    setNames(results, bundle$names)
+  if (any(done)) {
+    results[done] <- db$mget(task_ids[done], "task_results")
   }
   if (all(done)) {
     return(cleanup(results))
-  } else if (timeout == 0) {
-    stop("Tasks not yet completed; can't be immediately returned")
   }
 
-  p <- progress(total=length(bundle$tasks), show=progress_bar)
+  p <- progress(total = length(bundle$tasks), show = progress_bar)
   p(sum(done))
-  i <- 1L
+  time_poll <- min(time_poll, timeout)
   times_up <- time_checker(timeout)
-  db <- context::context_db(bundle)
   while (!all(done)) {
-    if (times_up()) {
-      bundle$done <- done
-      if (progress_bar) {
-        message()
-      }
-      stop(sprintf("Exceeded maximum time (%d / %d tasks pending)",
-                   sum(!done), length(done)))
-    }
     res <- task_bundle_fetch1(db, task_ids[!done], time_poll)
     if (is.null(res$id)) {
       p(0)
+      ## This is put here so that we never abort while actively
+      ## collecting jobs.
+      if (times_up()) {
+        ## Even though we're aborting, because bundles are a reference
+        ## class, updating the done-ness should be done before failing
+        ## here.
+        bundle$done <- done
+        if (progress_bar) {
+          message()
+        }
+        stop(sprintf("Exceeded maximum time (%d / %d tasks pending)",
+                     sum(!done), length(done)))
+      }
+      Sys.sleep(timeout)
     } else {
-      p(1)
       task_id <- res[[1]]
       result <- res[[2]]
-      done[[task_id]] <- TRUE
-      ## NOTE: This conditional is needed to avoid deleting the
-      ## element in results if we get a NULL result.
-      if (!is.null(result)) {
-        results[[task_id]] <- result
-      }
+      p(length(task_id))
+      done[task_id] <- TRUE
+      results[task_id] <- result
     }
   }
   cleanup(results)
@@ -264,7 +218,7 @@ task_bundle_partial <- function(bundle) {
   done <- bundle$check()
   results <- setNames(vector("list", length(task_ids)), task_ids)
   if (any(done)) {
-    results[done] <- lapply(bundle$tasks[done], function(t) t$result())
+    results[done] <- bundle$db$mget(task_ids[done], "task_results")
   }
   setNames(results, bundle$names)
 }
@@ -275,21 +229,20 @@ task_bundle_partial <- function(bundle) {
 ## quickly will cause filesystem overuse here.  Could do this with a
 ## growing timeout, perhaps.
 task_bundle_fetch1 <- function(db, task_ids, timeout) {
-  ## TODO: ideally exists() would be vectorisable.  That would require
-  ## the underlying driver to express some traits about what it can
-  ## do.
-  ##
-  ## In the absence of being able to do them in bulk, it might be
-  ## worth explicitly looping over the set with a break?
-  done <- vapply(task_ids, db$exists, logical(1), "task_results",
-                 USE.NAMES=FALSE)
+  done <- db$exists(task_ids, "task_results")
   if (any(done)) {
-    id <- task_ids[[which(done)[[1]]]]
-    list(id=id, value=db$get(id, "task_results"))
+    id <- task_ids[done]
+    list(id = id, value = db$mget(id, "task_results"))
   } else {
-    Sys.sleep(timeout)
     NULL
   }
+}
+
+task_bundle_delete <- function(name, db, delete_tasks = FALSE) {
+  if (delete_tasks) {
+    context::task_delete(db$get(name, "task_bundles"), db)
+  }
+  db$del(name, c("task_bundles", "task_bundles_X"))
 }
 
 create_bundle_name <- function(name, overwrite, db) {

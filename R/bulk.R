@@ -61,23 +61,26 @@
 ##'
 ##' @export
 qlapply <- function(X, FUN, obj, ...,
-                    envir=parent.frame(),
-                    timeout=0, time_poll=1, progress_bar=TRUE,
-                    name=NULL, overwrite=FALSE) {
+                    envir = parent.frame(),
+                    timeout = 0, time_poll = 1, progress_bar = TRUE,
+                    name = NULL, overwrite = FALSE) {
   ## TODO: The dots here are going to cause grief at some point.  I
   ## may need a more robust way of passing additional arguments in,
   ## but not sure what that looks like...
   enqueue_bulk(obj, X, FUN, ...,
-               do.call=FALSE,
-               timeout=timeout, time_poll=time_poll, progress_bar=progress_bar,
-               envir=envir, name=name, overwrite=overwrite)
+               do.call = FALSE,
+               timeout = timeout, time_poll = time_poll,
+               progress_bar = progress_bar, name = name,
+               envir = envir, overwrite = overwrite)
 }
 
 ## A downside of the current treatment of dots is there are quite a
 ## few arguments on the RHS of it; if a function uses any of these
 ## they're not going to be allowed access to them.  Usually this seems
-## solved by something like progress_bar.=TRUE but I think that looks
+## solved by something like progress_bar. = TRUE but I think that looks
 ## horrid.  So for now leave it as-is and we'll see what happens.
+##
+## TODO: Consider allowing DOTS as an argument itself.
 
 ##' @export
 ##' @rdname qlapply
@@ -88,38 +91,58 @@ qlapply <- function(X, FUN, obj, ...,
 ##'
 ##' @param use_names Only meaningful when \code{do.call} is
 ##'   \code{TRUE} and \code{X} is a \code{data.frame}, if
-##'   \code{use_names=FALSE}, then names will be stripped off each row
+##'   \code{use_names = FALSE}, then names will be stripped off each row
 ##'   of the data.frame before the function call is composed.
-enqueue_bulk <- function(obj, X, FUN, ..., do.call=TRUE,
-                         timeout=0, time_poll=1, progress_bar=TRUE,
-                         envir=parent.frame(), name=NULL, use_names=TRUE,
-                         overwrite=FALSE) {
-  obj <- enqueue_bulk_submit(obj, X, FUN, ..., do.call=do.call, envir=envir,
-                             progress_bar=progress_bar, name=name,
-                             use_names=use_names, overwrite=overwrite)
+enqueue_bulk <- function(obj, X, FUN, ..., do.call = TRUE,
+                         timeout = 0, time_poll = 1, progress_bar = TRUE,
+                         envir = parent.frame(), name = NULL, use_names = TRUE,
+                         overwrite = FALSE) {
+  obj <- enqueue_bulk_submit(obj, X, FUN, ..., do.call = do.call, envir = envir,
+                             progress_bar = progress_bar, name = name,
+                             use_names = use_names, overwrite = overwrite)
   if (timeout > 0) {
+    ## TODO: this is possibly going to change as interrupt changes in
+    ## current R-devel (as of 3.3.x)
     tryCatch(obj$wait(timeout, time_poll, progress_bar),
-             interrupt=function(e) obj)
+             interrupt = function(e) obj)
   } else {
     obj
   }
 }
 
-enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
-                                envir=parent.frame(), progress_bar=TRUE,
-                                name=NULL, use_names=TRUE, overwrite=FALSE) {
+enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call = FALSE,
+                                envir = parent.frame(), progress_bar = TRUE,
+                                name = NULL, use_names = TRUE,
+                                overwrite = FALSE) {
+  if (!inherits(obj, "queue_base")) {
+    stop("'obj' must be a queue object (inheriting from queue_base)")
+  }
+
+  ## TODO: Consider moving this into context as part of the
+  ## preparation?  It's not ideal as the idx/len bits are tangled up
+  ## in here.  However, I could shift the templating there too and
+  ## pass DOTS through directly.
   if (is.data.frame(X)) {
+    len <- ncol(X)
     XX <- df_to_list(X, use_names)
   } else if (is.atomic(X)) {
+    len <- 1L
     XX <- as.list(X)
   } else if (!is.list(X)) {
     stop("X must be a data.frame or list")
   } else {
+    ## TODO: this does not gracefully handle the zero length case.
+    len <- lengths(X)
+    if (length(unique(len)) != 1L) {
+      stop("Every element of 'X' must have the same length")
+    }
+    len <- len[[1L]]
     XX <- X
   }
-  
-  obj$initialise_context()
+
+  obj$initialize_context()
   fun_dat <- match_fun_queue(FUN, envir, obj$context_envir)
+  name <- create_bundle_name(name, overwrite, obj$db)
 
   if (is.null(fun_dat$name_symbol)) {
     stop("Not yet supported")
@@ -133,29 +156,33 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call=FALSE,
   ## will happen!
   DOTS <- lapply(lazyeval::lazy_dots(...), "[[", "expr")
 
-  tasks <- vector("list", n)
-  for (i in seq_len(n)) {
-    if (do.call) {
-      tasks[[i]] <- as.call(c(list(fun), XX[[i]], DOTS))
-    } else {
-      tasks[[i]] <- as.call(c(list(fun), unname(XX[i]), DOTS))
-    }
+  ## Bunch of wrangling here:
+  if (len != 1L && !do.call) {
+    XX <- lapply(XX, list)
+  }
+  if (do.call) {
+    template <- as.call(c(list(fun), rep(list(NULL), len), DOTS))
+    idx <- seq_len(len)
+  } else {
+    template <- as.call(c(list(fun), list(NULL), DOTS))
+    idx <- 1L
   }
 
-  name <- create_bundle_name(name, overwrite, context::context_db(obj))
-  msg <- sprintf("%d task%s...", n, ngettext(n, "", "s"))
+  ids <- context::task_save_bulk(template, X, idx, obj$context, envir)
 
-  message("saving ", msg)
-  res <- context::task_save_list(tasks, obj$context, envir)
   ## NOTE: This probably is in the wrong place but the overwrite logic
   ## is here (so we throw on task bundle collision).  But that means
   ## that the bundle will exist with bad names if the submission fails
   ## which is not ideal either.
-  ret <- task_bundle_create(obj, setNames(res$id, names(XX)), name, X,
-                            overwrite)
+  ##
+  ## NOTE: The overwriter logic is duplicated here, so can be ignored;
+  ## can probably be removed from the create part, or set to be a
+  ## check argument
+  ##
+  ## TODO: see the "homogeneous" bundle problem in task_bundle
 
-  message("submitting ", msg)
-  obj$submit_or_delete(res, names(XX))
+  message(sprintf("submitting %s tasks", n))
+  obj$submit_or_delete(ids, names(XX))
 
-  ret
+  task_bundle_create(setNames(ids, names(XX)), obj, name, X, TRUE)
 }

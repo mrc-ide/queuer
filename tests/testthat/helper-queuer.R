@@ -66,3 +66,7 @@ PSKILL_SUCCESS <- tools::pskill(Sys.getpid(), 0)
 pid_exists <- function(pid) {
   tools::pskill(pid, 0) == PSKILL_SUCCESS
 }
+
+empty_named_character <- function() {
+  setNames(character(0), character(0))
+}

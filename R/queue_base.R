@@ -1,115 +1,137 @@
-queue_base <- function(context, initialise=TRUE) {
-  .R6_queue_base$new(context, initialise)
+queue_base <- function(context_id, root = NULL, initialize = TRUE) {
+  .R6_queue_base$new(context_id, root, initialize)
 }
 
 .R6_queue_base <- R6::R6Class(
   "queue_base",
-  public=
+  public =
     list(
-      context=NULL,
-      context_envir=NULL,
-      root=NULL,
-      db=NULL,
-      workdir=NULL,
-      initialize=function(context, initialise=TRUE) {
-        if (!inherits(context, "context_handle")) {
-          stop("Expected a context object")
+      context = NULL,
+      context_envir = NULL,
+      root = NULL,
+      db = NULL,
+      workdir = NULL,
+
+      initialize = function(context_id, root, initialize = TRUE) {
+        if (inherits(context_id, "context")) {
+          if (!is.null(root)) {
+            stop("'root' must be NULL if 'context_id' is a context object")
+          }
+          self$context <- context_id
+          self$root <- self$context$root
+        } else {
+          self$root <- context::context_root_get(root)
+          self$context <- context::context_read(context_id, self$root)
         }
-        ## NOTE: The root is needed so that tasks can run correctly;
-        ## we need this to set the local library.
-        self$root <- context::context_root(context)
-        ## NOTE: We need a copy of the db within the object for
-        ## context::context_db() elsewhere to work correctly.
-        self$db <- context::context_db(context)
+        self$db <- self$root$db
         self$workdir <- getwd()
 
-        ## NOTE: this is not always wanted, but seems generally
-        ## harmless enough to always create.  Because both the worker
-        ## and queue could read from this it's nicest to just create
-        ## it and never test for existence.
-        dir.create(path_lockfile(self$root, ""), FALSE, TRUE)
-
-        ## Consider making this optional?
-        ctx <- context::context_read(context)
-        if (ctx$auto) {
+        if (self$context$auto) {
           stop("auto environments not yet supported")
         }
-        self$context <- ctx
 
-        if (initialise) {
-          self$initialise_context()
+        if (initialize) {
+          self$initialize_context()
         }
       },
 
-      initialise_context=function() {
+      initialize_context = function() {
+        ## TODO: it might be useful to allow a different environment
+        ## here, rather than requiring the global environment?  The
+        ## interface for doing that is tricky though because we need
+        ## to pass the environment around from the beginning and pass
+        ## it in whenever this is called.
         if (is.null(self$context_envir)) {
           message("Loading context ", self$context$id)
-          self$context_envir <-
-            context::context_load(self$context, install=FALSE)
-          worker_runner <- file.path(context::context_root(self$context),
-                                     "bin", "worker_runner")
-          if (!file.exists(worker_runner)) {
-            file.copy(system.file("bin/worker_runner", package="queuer"),
-                      worker_runner)
-          }
-        }
+          self$context_envir <- context::context_load(self$context)
+       }
       },
 
-      tasks_list=function() {
-        context::tasks_list(self)
+      ## Some pluralisations:
+      ## TODO: enable these
+      ## tasks_list = function(...) with_deprecated(self, "task_list", ...),
+      ## tasks_status = function(...) with_deprecated(self, "task_status", ...),
+      ## tasks_times = function(...) with_deprecated(self, "task_times", ...),
+
+      task_list = function() {
+        context::task_list(self$root)
       },
-      tasks_status=function(task_ids=NULL, named=TRUE) {
-        context::task_status(make_task_handle(self, task_ids), named=named)
+
+      task_status = function(task_ids = NULL, named = TRUE) {
+        if (is.null(task_ids)) {
+          task_ids <- context::task_list(self$root)
+        }
+        context::task_status(task_ids, self$root, named)
       },
-      tasks_times=function(task_ids=NULL, unit_elapsed="secs") {
-        context::tasks_times(make_task_handle(self, task_ids), unit_elapsed)
+
+      task_times = function(task_ids = NULL, unit_elapsed = "secs",
+                             sorted = TRUE) {
+        if (is.null(task_ids)) {
+          task_ids <- context::task_list(self$root)
+        }
+        context::task_times(task_ids, self$root, unit_elapsed, sorted)
       },
-      task_get=function(task_id) {
-        task(self, task_id)
+
+      task_get = function(task_id, check_exists = TRUE) {
+        queuer_task(task_id, self$root, check_exists)
       },
-      task_result=function(task_id) {
-        context::task_result(context::task_handle(self, task_id))
+
+      task_result = function(task_id) {
+        context::task_result(task_id, self$root)
       },
-      tasks_delete=function(task_ids) {
-        ## NOTE: This is subject to a race condition.
+
+      task_delete = function(task_ids) {
         self$unsubmit(task_ids)
-        context::task_delete(context::task_handle(self, task_ids, FALSE))
+        context::task_delete(task_ids, self$root)
       },
 
-      task_bundles_list=function() {
-        task_bundles_list(self)
-      },
-      task_bundle_get=function(id) {
-        task_bundle_get(self, id)
-      },
-      task_bundles_info=function() {
-        task_bundles_info(self)
+      task_bundle_list = function() {
+        task_bundle_list(self$root)
       },
 
-      enqueue=function(expr, envir=parent.frame(), submit=TRUE, name=NULL) {
-        self$enqueue_(substitute(expr), envir=envir, submit=submit, name=name)
+      task_bundle_info = function() {
+        task_bundle_info(self$root)
       },
-      ## I don't know that these always want to be submitted.
-      enqueue_=function(expr, envir=parent.frame(), submit=TRUE, name=NULL) {
-        self$initialise_context()
-        task <- context::task_save(expr, self$context, envir)
+
+      task_bundle_get = function(name) {
+        task_bundle_get(name, self$root)
+      },
+
+      enqueue = function(expr, envir = parent.frame(), submit = TRUE,
+                         name = NULL) {
+        self$enqueue_(substitute(expr), envir, submit, name)
+      },
+
+      enqueue_ = function(expr, envir = parent.frame(), submit = TRUE,
+                          name = NULL) {
+        self$initialize_context()
+        task_id <- context::task_save(expr, self$context, envir)
         if (submit) {
-          self$submit_or_delete(task, name)
+          self$submit_or_delete(task_id, name)
         }
-        invisible(task(self, task$id))
+        invisible(queuer_task(task_id, self$root))
+      },
+
+      ## I'm finally moving these in here.
+      enqueue_bulk = function(X, FUN, ...) {
+        enqueue_bulk(self, X, FUN, ...)
+      },
+      lapply = function(X, FUN, ...) {
+        qlapply(X, FUN, self, ...)
       },
 
       ## These exist only as a stub for now, for other classes to
       ## override.
-      submit=function(task_ids, names=NULL) {},
-      unsubmit=function(task_ids) {},
+      submit = function(task_ids, names = NULL) {},
+      unsubmit = function(task_ids) {},
 
       ## Internal wrapper
-      submit_or_delete=function(task, name=NULL) {
-        withCallingHandlers(self$submit(task$id, name),
-                            error=function(e) {
-                              message("Deleting task as submission failed")
-                              context::task_delete(task)
-                            })
+      submit_or_delete = function(task_ids, name = NULL) {
+        delete_these_tasks <- function(e) {
+          message("Deleting task as submission failed")
+          context::task_delete(task_ids, self$root)
+        }
+        withCallingHandlers(self$submit(task_ids, name),
+                            error = delete_these_tasks)
       }
     ))

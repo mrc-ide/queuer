@@ -10,10 +10,10 @@ context("match_fun")
 ## assume that.
 
 test_that("match_fun", {
-  ctx <- context::context_save(tempfile(), sources="scope.R")
+  ctx <- context::context_save(tempfile(), sources = "scope.R")
   context::context_load(ctx)
 
-  cmp <- list(namespace=NULL, name="f1", envir=.GlobalEnv, value=f1)
+  cmp <- list(namespace = NULL, name = "f1", envir = .GlobalEnv, value = f1)
   res <- local({
     e <- environment()
     match_fun(quote(f1), e)
@@ -37,7 +37,7 @@ test_that("match_fun", {
     f <- function(x) x + 2
     match_fun(f, e)
   })
-  expect_equal(res[c("namespace", "name")], list(namespace=NULL, name="f"))
+  expect_equal(res[c("namespace", "name")], list(namespace = NULL, name = "f"))
   expect_is(res$envir, "environment")
   expect_is(res$value, "function")
   expect_identical(res$envir, environment(res$value))
@@ -47,14 +47,14 @@ test_that("match_fun", {
     e <- environment()
     match_fun(function(x) x + 2, e)
   })
-  expect_equal(res[c("namespace", "name")], list(namespace=NULL, name=NULL))
+  expect_equal(res[c("namespace", "name")], list(namespace = NULL, name = NULL))
   expect_is(res$envir, "environment")
   expect_is(res$value, "function")
   expect_identical(res$envir, environment(res$value))
   expect_equal(res$value, function(x) x + 2)
 
-  cmp <- list(namespace="stats", name="dnorm",
-              envir=asNamespace("stats"), value=dnorm)
+  cmp <- list(namespace = "stats", name = "dnorm",
+              envir = asNamespace("stats"), value = dnorm)
 
   res <- local({
     e <- environment()
@@ -98,7 +98,6 @@ test_that("match_fun", {
     match_fun(f, e)
   })
   expect_identical(res, cmp)
-
 })
 
 ## Now, the fun starts.
