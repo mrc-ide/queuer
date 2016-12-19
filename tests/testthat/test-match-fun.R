@@ -120,3 +120,12 @@ test_that("primative, 2", {
   res <- match_fun(list, .GlobalEnv)
   expect_equal(res$name, "list")
 })
+
+test_that("symbol", {
+  expect_identical(match_fun(quote(sin), .GlobalEnv),
+                   match_fun("sin", .GlobalEnv))
+})
+
+test_that("error case", {
+  expect_error(match_fun(1, .GlobalEnv), "Invalid input")
+})
