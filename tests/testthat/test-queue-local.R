@@ -112,3 +112,32 @@ test_that("initialise later", {
   res <- obj$run_next()
   expect_equal(res, list(task_id = t$id, value = t$result()))
 })
+
+test_that("unsubmit", {
+  ctx <- context::context_save(tempfile(), storage_type = "environment")
+  on.exit(unlink(ctx$db$destroy()))
+
+  obj <- queue_local(ctx)
+  for (i in seq_len(10)) {
+    obj$enqueue(sin(i))
+  }
+
+  ids <- obj$queue_list()
+  rem <- sample(ids, 4)
+  expect_equal(obj$unsubmit(rem), rep(TRUE, length(rem)))
+  expect_equal(obj$queue_list(), setdiff(ids, rem))
+
+  res <- obj$task_delete(ids)
+  expect_equal(res, rep(TRUE, length(ids)))
+  expect_equal(obj$queue_list(), character(0))
+})
+
+test_that("submit_or_delete", {
+  ctx <- context::context_save(tempfile(), storage_type = "environment")
+  on.exit(unlink(ctx$db$destroy()))
+
+  obj <- queue_local(ctx)
+  ## Then we sabotage the queue to test that submit_or_delete works:
+  obj$fifo <- NULL
+  expect_message(try(obj$enqueue(sin(1)), silent = TRUE), "Deleting task")
+})

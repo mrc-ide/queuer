@@ -120,7 +120,7 @@ test_that("named group", {
   expect_equal(res$name, nm)
 })
 
-test_that("named qlapply", {
+test_that("named lapply", {
   ctx <- context::context_save(tempfile())
   obj <- queue_local(ctx)
   bundle <- obj$lapply(setNames(as.list(1:3), letters[1:3]), I)
@@ -135,4 +135,12 @@ test_that("named qlapply", {
 
   ## Check names are returned:
   expect_equal(bundle$results(), setNames(lapply(bundle$X, I), letters[1:3]))
+})
+
+test_that("$enqueue_bulk", {
+  ctx <- context::context_save(tempfile())
+  obj <- queue_local(ctx)
+  bundle <- obj$enqueue_bulk(1:3, quote(I))
+  expect_is(bundle, "task_bundle")
+  expect_equal(bundle$function_name(), "base::I")
 })

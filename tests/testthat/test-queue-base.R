@@ -40,3 +40,19 @@ test_that("enqueue", {
   expect_equal(t$status(), "COMPLETE")
   expect_equal(t$result(), sin(1))
 })
+
+test_that("create by id", {
+  ctx <- context::context_save(tempfile(), storage_type = "environment")
+  obj <- queue_base(ctx$id, ctx$root)
+  expect_equal(obj$context$id, ctx$id)
+})
+
+test_that("invalid creation", {
+  ctx <- context::context_save(tempfile(), storage_type = "environment")
+  expect_error(queue_base(ctx, ctx$root),
+               "'root' must be NULL")
+
+  ctx <- context::context_save(tempfile(), storage_type = "environment",
+                               auto = TRUE)
+  expect_error(queue_base(ctx), "auto environments not yet supported")
+})
