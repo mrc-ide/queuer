@@ -1,0 +1,5 @@
+local({
+  args <- context:::parse_command_args("worker_runner", 1:2)
+  loop <- length(args$args) == 2L && as.logical(args$args[[2L]])
+  queuer:::queue_local_worker(args$root, args$args[[1L]], loop)
+})

@@ -44,11 +44,7 @@ R6_queue_local <- R6::R6Class(
         dir.create(self$log_path, FALSE, TRUE)
       }
 
-      worker_runner <- file.path(self$root$path, "bin", "worker_runner")
-      if (!file.exists(worker_runner)) {
-        file.copy(system.file("bin/worker_runner", package = "queuer"),
-                  worker_runner)
-      }
+      write_queue_local_worker(self$root$path)
     },
 
     ## This is the running half of the system; these will shortly move
