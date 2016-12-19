@@ -19,12 +19,12 @@
 
 queue_local <- function(context_id, root = NULL, initialize = TRUE,
                         log = FALSE) {
-  .R6_queue_local$new(context_id, root, initialize, log)
+  R6_queue_local$new(context_id, root, initialize, log)
 }
 
-.R6_queue_local <- R6::R6Class(
+R6_queue_local <- R6::R6Class(
   "queue_local",
-  inherit = .R6_queue_base,
+  inherit = R6_queue_base,
 
   public = list(
     log_path = NULL,
@@ -34,7 +34,7 @@ queue_local <- function(context_id, root = NULL, initialize = TRUE,
     initialize = function(context_id, root, initialize, log) {
       super$initialize(context_id, root, initialize)
 
-      lockfile <- path_lockfile(self$root$path, self$context$id)
+      lockfile <- file.path(self$root$path, "lockfiles", self$context$id)
       dir.create(dirname(lockfile), FALSE, TRUE)
       self$fifo <- fifo_seagull(self$db, self$context$id, "queue_local",
                                 lockfile, self$timeout)
@@ -126,39 +126,3 @@ queue_local <- function(context_id, root = NULL, initialize = TRUE,
       self$fifo$read()
     }
 ))
-
-## Constants.  Can probably be made variables by stuffing them inside
-## the context db but it's not very obvious why that's a good thing.
-## An alternative (probably better) is to use the context id as the
-## QUEUE_NAME leaving only the namespace one hanging.
-QUEUE_NAME <- "queue"
-QUEUE_NAMESPACE <- "queue_local"
-
-queue_local_submit <- function(obj, task_ids) {
-  ## TODO: This is not ideal, but the timeout does need to be
-  ## specified.  I don't see that this should ever take two minutes so
-  ## it's OK here.
-  timeout <- obj$timeout %||% 120
-  db <- obj$db
-  context_id <- obj$context$id
-  lockfile <- path_lockfile(context::context_root(obj), context_id)
-
-  seagull::with_flock(lockfile, {
-    queue <- queue_local_read(obj)
-    tot <- c(queue, task_ids)
-    db$set(context_id, tot, QUEUE_NAMESPACE)
-    invisible(length(tot))
-  }, timeout = timeout)
-}
-
-## NOTE: not protected by file lock
-queue_local_read <- function(obj) {
-  db <- obj$db
-  context_id <- obj$context$id
-  tryCatch(db$get(context_id, QUEUE_NAMESPACE),
-           KeyError = function(e) character(0))
-}
-
-path_lockfile <- function(root, id) {
-  file.path(root, "lockfiles", id)
-}

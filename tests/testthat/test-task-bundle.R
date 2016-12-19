@@ -5,8 +5,8 @@ test_that("task_bundle", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   on.exit(unlink(ctx$root$path, recursive = TRUE))
 
-  id1 <- context::task_save(sin(1), ctx)
-  id2 <- context::task_save(sin(2), ctx)
+  id1 <- context::task_save(quote(sin(1)), ctx)
+  id2 <- context::task_save(quote(sin(2)), ctx)
   ids <- c(id1, id2)
 
   grp <- task_bundle_create(ids, ctx)
@@ -14,6 +14,11 @@ test_that("task_bundle", {
   expect_is(grp, "task_bundle")
 
   expect_equal(grp$done, setNames(c(FALSE, FALSE), ids))
+  expect_true(grp$homogeneous)
+
+  expect_equal(grp$expr(),
+               setNames(list(quote(sin(1)), quote(sin(2))), ids))
+  expect_equal(grp$function_name(), "sin")
 
   tt <- grp$times()
   expect_equal(tt[-5], context::task_times(ids, ctx)[-5])
@@ -67,4 +72,35 @@ test_that("empty bundle", {
   obj <- queue_local(ctx)
   expect_error(task_bundle_create(character(0), obj),
                "task_ids must be nonempty")
+})
+
+test_that("nonhomogeneous bundle", {
+  ctx <- context::context_save(tempfile(), storage_type = "environment")
+  on.exit(unlink(ctx$root$path, recursive = TRUE))
+
+  id1 <- context::task_save(quote(sin(1)), ctx)
+  id2 <- context::task_save(quote(cos(2)), ctx)
+  ids <- c(id1, id2)
+
+  grp <- task_bundle_create(ids, ctx)
+  expect_false(grp$homogeneous)
+  expect_equal(grp$function_name(), NA_character_)
+
+  expect_equal(grp$expr(),
+               setNames(list(quote(sin(1)), quote(cos(2))), ids))
+})
+
+test_that("delete", {
+  ctx <- context::context_save(tempfile(), storage_type = "environment")
+  on.exit(unlink(ctx$root$path, recursive = TRUE))
+
+  id1 <- context::task_save(quote(sin(1)), ctx)
+  id2 <- context::task_save(quote(cos(2)), ctx)
+  ids <- c(id1, id2)
+
+  grp <- task_bundle_create(ids, ctx)
+  expect_true(grp$name %in% task_bundle_list(ctx))
+  task_bundle_delete(grp$name, ctx$db)
+  expect_false(grp$name %in% task_bundle_list(ctx))
+  expect_true(all(context::task_exists(ids, ctx)))
 })

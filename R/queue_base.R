@@ -1,8 +1,8 @@
 queue_base <- function(context_id, root = NULL, initialize = TRUE) {
-  .R6_queue_base$new(context_id, root, initialize)
+  R6_queue_base$new(context_id, root, initialize)
 }
 
-.R6_queue_base <- R6::R6Class(
+R6_queue_base <- R6::R6Class(
   "queue_base",
   public =
     list(

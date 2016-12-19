@@ -12,4 +12,8 @@ test_that("seagull", {
   expect_equal(q$pop(), "b")
   expect_equal(q$pop(), "c")
   expect_null(q$pop())
+
+  expect_equal(q$push(c("a", "b", "c")), 3)
+  expect_equal(q$drop(c("b", "d", "f")), c(TRUE, FALSE, FALSE))
+  expect_equal(q$read(), c("a", "c"))
 })

@@ -1,5 +1,73 @@
 context("bulk")
 
+test_that("enqueue_bulk_prepare", {
+  x <- 1:4
+  expect_equal(enqueue_bulk_prepare(x, quote(list), NULL, TRUE, FALSE),
+               list(template = quote(list(NULL)), X = as.list(x),
+                    idx = 1L))
+  expect_equal(enqueue_bulk_prepare(x, quote(list), NULL, FALSE, FALSE),
+               list(template = quote(list(NULL)), X = as.list(x),
+                    idx = 1L))
+
+  ## preserve names:
+  x <- c(a = 1, b = 2)
+  expect_equal(enqueue_bulk_prepare(x, quote(list), NULL, FALSE, FALSE),
+               list(template = quote(list(NULL)), X = as.list(x),
+                    idx = 1L))
+
+  ## preserve names for a list
+  x <- as.list(c(a = 1, b = 2))
+  expect_equal(enqueue_bulk_prepare(x, quote(list), NULL, FALSE, FALSE),
+               list(template = quote(list(NULL)), X = x, idx = 1L))
+
+  ## data.frame:
+  df <- data.frame(a = 1:5, b = runif(5))
+  expect_equal(enqueue_bulk_prepare(df, quote(list), NULL, FALSE, TRUE),
+               list(template = quote(list(NULL)),
+                    X = lapply(df_to_list(df, TRUE), list),
+                    idx = 1L))
+  expect_equal(enqueue_bulk_prepare(df, quote(list), NULL, TRUE, TRUE),
+               list(template = quote(list(NULL, NULL)),
+                    X = df_to_list(df, TRUE),
+                    idx = 1:2))
+  expect_equal(enqueue_bulk_prepare(df, quote(list), NULL, TRUE, FALSE),
+               list(template = quote(list(NULL, NULL)),
+                    X = df_to_list(df, FALSE),
+                    idx = 1:2))
+
+  ## Uneven length lists:
+  expect_equal(enqueue_bulk_prepare(list(1, 1:2), quote(list), NULL,
+                                    FALSE, TRUE),
+               list(template = quote(list(NULL)), X = list(1, 1:2),
+                    idx = 1L))
+  expect_error(enqueue_bulk_prepare(list(1, 1:2), quote(list), NULL,
+                                    TRUE, TRUE),
+               "Every element of 'X' must have the same length")
+
+  ## Invalid types:
+  expect_error(enqueue_bulk_prepare(NULL, quote(list), NULL, TRUE, TRUE),
+               "X must be a data.frame or list")
+  expect_error(enqueue_bulk_prepare(quote(sin), quote(list), NULL, TRUE, TRUE),
+               "X must be a data.frame or list")
+  expect_error(enqueue_bulk_prepare(quote(1 + 2), quote(list), NULL,
+                                    TRUE, TRUE),
+               "X must be a data.frame or list")
+
+  ## Zero length
+  expect_error(
+    enqueue_bulk_prepare(df[integer(0), ], quote(list), NULL, FALSE, TRUE),
+    "'X' must have at least one row")
+  expect_error(
+    enqueue_bulk_prepare(df[, integer(0)], quote(list), NULL, FALSE, TRUE),
+    "'X' must have at least one column")
+  expect_error(
+    enqueue_bulk_prepare(list(), quote(list), NULL, FALSE, TRUE),
+    "'X' must have at least one element")
+  expect_error(
+    enqueue_bulk_prepare(list(list(), list()), quote(list), NULL, TRUE, TRUE),
+    "Elements of 'X' must have at least one element")
+})
+
 test_that("submit", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   obj <- queue_base(ctx)
@@ -51,7 +119,6 @@ test_that("named group", {
   res <- obj$lapply(1:30, quote(sin), name = nm)
   expect_equal(res$name, nm)
 })
-
 
 test_that("named qlapply", {
   ctx <- context::context_save(tempfile())

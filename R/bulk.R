@@ -110,79 +110,96 @@ enqueue_bulk <- function(obj, X, FUN, ..., do.call = TRUE,
   }
 }
 
-enqueue_bulk_submit <- function(obj, X, FUN, ..., do.call = FALSE,
-                                envir = parent.frame(), progress_bar = TRUE,
-                                name = NULL, use_names = TRUE,
-                                overwrite = FALSE) {
-  if (!inherits(obj, "queue_base")) {
-    stop("'obj' must be a queue object (inheriting from queue_base)")
-  }
-
+enqueue_bulk_prepare <- function(X, FUN, dots, do.call, use_names) {
   ## TODO: Consider moving this into context as part of the
   ## preparation?  It's not ideal as the idx/len bits are tangled up
   ## in here.  However, I could shift the templating there too and
-  ## pass DOTS through directly.
+  ## pass dots through directly.
   if (is.data.frame(X)) {
     len <- ncol(X)
     XX <- df_to_list(X, use_names)
-  } else if (is.atomic(X)) {
+    if (len == 0L) {
+      stop("'X' must have at least one column")
+    }
+    if (nrow(X) == 0L) {
+      stop("'X' must have at least one row")
+    }
+  } else if (is.atomic(X) && !is.null(X)) {
     len <- 1L
     XX <- as.list(X)
   } else if (!is.list(X)) {
     stop("X must be a data.frame or list")
   } else {
-    ## TODO: this does not gracefully handle the zero length case.
-    len <- lengths(X)
-    if (length(unique(len)) != 1L) {
-      stop("Every element of 'X' must have the same length")
+    if (do.call) {
+      len <- lengths(X)
+      if (length(unique(len)) != 1L) {
+        stop("Every element of 'X' must have the same length")
+      }
+      len <- len[[1L]]
+      if (len == 0L) {
+        stop("Elements of 'X' must have at least one element")
+      }
+    } else {
+      len <- 1L
     }
-    len <- len[[1L]]
     XX <- X
   }
 
-  obj$initialize_context()
-  fun_dat <- match_fun_queue(FUN, envir, obj$context_envir)
-  name <- create_bundle_name(name, overwrite, obj$db)
-
-  if (is.null(fun_dat$name_symbol)) {
-    stop("Not yet supported")
-  } else {
-    fun <- fun_dat$name_symbol
+  if (length(XX) == 0L) {
+    stop("'X' must have at least one element")
   }
-
-  n <- length(XX)
-  ## It is important not to use list(...) here and instead capture the
-  ## symbols.  Otherwise later when we print the expression bad things
-  ## will happen!
-  DOTS <- lapply(lazyeval::lazy_dots(...), "[[", "expr")
 
   ## Bunch of wrangling here:
   if (len != 1L && !do.call) {
     XX <- lapply(XX, list)
   }
   if (do.call) {
-    template <- as.call(c(list(fun), rep(list(NULL), len), DOTS))
+    template <- as.call(c(list(FUN), rep(list(NULL), len), dots))
     idx <- seq_len(len)
   } else {
-    template <- as.call(c(list(fun), list(NULL), DOTS))
+    template <- as.call(c(list(FUN), list(NULL), dots))
     idx <- 1L
   }
 
-  ids <- context::task_save_bulk(template, X, idx, obj$context, envir)
+  list(template = template, X = XX, idx = idx)
+}
 
-  ## NOTE: This probably is in the wrong place but the overwrite logic
-  ## is here (so we throw on task bundle collision).  But that means
-  ## that the bundle will exist with bad names if the submission fails
-  ## which is not ideal either.
-  ##
-  ## NOTE: The overwriter logic is duplicated here, so can be ignored;
-  ## can probably be removed from the create part, or set to be a
-  ## check argument
-  ##
-  ## TODO: see the "homogeneous" bundle problem in task_bundle
+enqueue_bulk_submit <- function(obj, X, FUN, ..., DOTS = NULL, do.call = FALSE,
+                                envir = parent.frame(), progress_bar = TRUE,
+                                name = NULL, use_names = TRUE,
+                                overwrite = FALSE) {
+  ## TODO: If I push this to *only* be a method, then the assertion is
+  ## not needed.
+  if (!inherits(obj, "queue_base")) {
+    stop("'obj' must be a queue object (inheriting from queue_base)")
+  }
 
-  message(sprintf("submitting %s tasks", n))
-  obj$submit_or_delete(ids, names(XX))
+  name <- create_bundle_name(name, overwrite, obj$db)
 
-  task_bundle_create(setNames(ids, names(XX)), obj, name, X, TRUE)
+  ## TODO: why is there so much work done here just to drop down to
+  ## getting the "name_symbol" out?
+  obj$initialize_context()
+  fun_dat <- match_fun_queue(FUN, envir, obj$context_envir)
+  if (is.null(fun_dat$name_symbol)) {
+    stop("Not yet supported")
+  } else {
+    FUN <- fun_dat$name_symbol
+  }
+
+  ## It is important not to use list(...) here and instead capture the
+  ## symbols.  Otherwise later when we print the expression bad things
+  ## will happen!
+  if (is.null(DOTS)) {
+    DOTS <- lapply(lazyeval::lazy_dots(...), "[[", "expr")
+  }
+  dat <- enqueue_bulk_prepare(X, FUN, DOTS, do.call, use_names)
+
+  ids <- context::task_save_bulk(dat$template, dat$X, dat$idx,
+                                 obj$context, envir)
+
+  message(sprintf("submitting %s tasks", length(ids)))
+  obj$submit_or_delete(ids, names(dat$X))
+
+  task_bundle_create(setNames(ids, names(dat$X)), obj, name, X,
+                     overwrite = TRUE, homogeneous = TRUE)
 }

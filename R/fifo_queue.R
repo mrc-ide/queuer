@@ -42,7 +42,7 @@ fifo_seagull <- function(db, key, namespace, lockfile, timeout) {
   push <- function(x) {
     seagull::with_flock(lockfile, {
       tot <- c(read(), x)
-      db$set(key, tot, namespace)
+      write(tot)
       invisible(length(tot))
     }, timeout = timeout)
   }
@@ -51,7 +51,7 @@ fifo_seagull <- function(db, key, namespace, lockfile, timeout) {
     seagull::with_flock(lockfile, {
       queue <- read()
       if (length(queue) > 0L) {
-        db$set(key, queue[-1L], namespace)
+        write(queue[-1L])
         queue[[1]]
       } else {
         NULL
@@ -63,7 +63,7 @@ fifo_seagull <- function(db, key, namespace, lockfile, timeout) {
     seagull::with_flock(lockfile, {
       queue <- read()
       if (length(queue) > 0L) {
-        db$set(key, setdiff(queue, x), namespace)
+        write(setdiff(queue, x))
       }
       invisible(x %in% queue)
     }, timeout = timeout)

@@ -26,7 +26,7 @@
 ##' @export
 ##' @rdname task_bundle
 task_bundle_create <- function(task_ids, obj, name = NULL, X = NULL,
-                               overwrite = FALSE) {
+                               overwrite = FALSE, homogeneous = NULL) {
   ## TODO: flag if the task is homogeneous; we do this by setting a
   ## flag homogeneous.  If NULL, then check by looking at the
   ## expressions of all tasks.  If TRUE or FALSE set as such.  This
@@ -37,7 +37,14 @@ task_bundle_create <- function(task_ids, obj, name = NULL, X = NULL,
   root <- context::context_root_get(obj)
   db <- root$db
   name <- create_bundle_name(name, overwrite, db)
-  db$mset(name, list(task_ids, X), c("task_bundles", "task_bundles_X"))
+
+  if (is.null(homogeneous)) {
+    task_names <- context::task_function_name(task_ids, root)
+    homogeneous <- length(unique(task_names)) == 1L
+  }
+
+  db$mset(name, list(task_ids, homogeneous, X),
+          c("task_bundles", "task_bundles_homogeneous", "task_bundles_X"))
   task_bundle_get(name, root)
 }
 
@@ -59,6 +66,7 @@ R6_task_bundle <- R6::R6Class(
     done = NULL,
     X = NULL,
     db = NULL,
+    homogeneous = NULL,
 
     initialize=function(name, obj) {
       self$name <- name
@@ -68,6 +76,7 @@ R6_task_bundle <- R6::R6Class(
       task_ids <- self$db$get(name, "task_bundles")
       self$ids <- unname(task_ids)
       self$names <- names(task_ids)
+      self$homogeneous <- self$db$get(name, "task_bundles_homogeneous")
 
       ## TODO: is there any reason why this needs access to the root,
       ## and not simply to the context (or even the db).
@@ -114,18 +123,36 @@ R6_task_bundle <- R6::R6Class(
                self$ids)
     },
 
-    log = function() {
-      setNames(lapply(self$ids, context::task_log, self$root),
-               self$names)
-    },
+    ## This is disabled for now, because it's not really clear how
+    ## best to run it.
+    ##
+    ## log = function() {
+    ##   setNames(lapply(self$ids, context::task_log, self$root),
+    ##            self$names)
+    ## },
 
     function_name = function() {
-      context::task_function_name(self$ids[[1]], self$root)
-    },
-
-    delete = function() {
-      context::task_delete(self$id, self$root)
+      if (self$homogeneous) {
+        context::task_function_name(self$ids[[1]], self$root)
+      } else {
+        NA_character_
+      }
     }
+
+    ## TODO: this is not enabled because it's problematic:
+    ##
+    ## * does not allow unsubmission
+    ## * leaves an invalid pointer to the task bundle
+    ##
+    ## delete = function(tasks = FALSE) {
+    ##   if (tasks) {
+    ##     ## NOTE: This is not ideal because we can't undelete the tasks
+    ##     ## here unless the 'obj' that we're composed with will support
+    ##     ## unsubmission.
+    ##     context::task_delete(self$ids, self$root)
+    ##   }
+    ##   task_bundle_delete(self$name, self$db)
+    ## }
   ))
 
 task_bundle_list <- function(obj) {
@@ -238,11 +265,9 @@ task_bundle_fetch1 <- function(db, task_ids, timeout) {
   }
 }
 
-task_bundle_delete <- function(name, db, delete_tasks = FALSE) {
-  if (delete_tasks) {
-    context::task_delete(db$get(name, "task_bundles"), db)
-  }
-  db$del(name, c("task_bundles", "task_bundles_X"))
+task_bundle_delete <- function(name, db) {
+  ns <- c("task_bundles", "task_bundles_homogeneous", "task_bundles_X")
+  db$del(name, ns)
 }
 
 create_bundle_name <- function(name, overwrite, db) {
