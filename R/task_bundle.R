@@ -50,8 +50,8 @@ task_bundle_create <- function(task_ids, obj, name = NULL, X = NULL,
 
 ##' @export
 ##' @rdname task_bundle
-task_bundle_get <- function(name, obj) {
-  R6_task_bundle$new(name, obj)
+task_bundle_get <- function(name, root) {
+  R6_task_bundle$new(name, root)
 }
 
 R6_task_bundle <- R6::R6Class(
@@ -68,9 +68,9 @@ R6_task_bundle <- R6::R6Class(
     db = NULL,
     homogeneous = NULL,
 
-    initialize=function(name, obj) {
+    initialize=function(name, root) {
       self$name <- name
-      self$root <- context::context_root_get(obj)
+      self$root <- context::context_root_get(root)
       self$db <- self$root$db
 
       task_ids <- self$db$get(name, "task_bundles")
@@ -95,7 +95,7 @@ R6_task_bundle <- R6::R6Class(
     },
 
     times = function(unit_elapsed = "secs") {
-      context::task_times(self$ids, self$root, unit_elapsed)
+      context::task_times(self$ids, self$db, unit_elapsed)
     },
 
     results = function(partial = FALSE) {
@@ -112,14 +112,14 @@ R6_task_bundle <- R6::R6Class(
 
     status = function(named = TRUE) {
       ## TODO: Only need to check the undone ones here?
-      ret <- context::task_status(self$ids, self$root, named)
+      ret <- context::task_status(self$ids, self$db, named)
       self$done <- setNames(!(ret %in% c("PENDING", "RUNNING", "ORPHAN")),
                             self$ids)
       ret
     },
 
     expr = function(locals = FALSE) {
-      setNames(lapply(self$ids, context::task_expr, self$root, locals),
+      setNames(lapply(self$ids, context::task_expr, self$db, locals),
                self$ids)
     },
 
@@ -133,7 +133,7 @@ R6_task_bundle <- R6::R6Class(
 
     function_name = function() {
       if (self$homogeneous) {
-        context::task_function_name(self$ids[[1]], self$root)
+        context::task_function_name(self$ids[[1]], self$db)
       } else {
         NA_character_
       }
@@ -149,34 +149,35 @@ R6_task_bundle <- R6::R6Class(
     ##     ## NOTE: This is not ideal because we can't undelete the tasks
     ##     ## here unless the 'obj' that we're composed with will support
     ##     ## unsubmission.
-    ##     context::task_delete(self$ids, self$root)
+    ##     context::task_delete(self$ids, self$db)
     ##   }
     ##   task_bundle_delete(self$name, self$db)
     ## }
   ))
 
-task_bundle_list <- function(obj) {
-  obj$db$list("task_bundles")
+task_bundle_list <- function(db) {
+  db$list("task_bundles")
 }
 
 task_bundle_info <- function(obj) {
-  bundles <- task_bundle_list(obj)
+  bundles <- task_bundle_list(obj$db)
   db <- obj$db
 
   task_ids <- db$mget(bundles, "task_bundles")
   task_id1 <- vcapply(task_ids, "[[", 1L)
 
-  task_time_sub <- unlist_times(db$mget(task_id1, "task_time_sub"))
-  task_function <- context::task_function_name(task_id1, obj$root)
-
+  task_time_sub <- context::task_times(task_id1, db, sorted = FALSE)$submitted
+  task_function <- context::task_function_name(task_id1, obj$db)
   i <- order(task_time_sub)
 
-  data.frame(name = bundles[i],
-             "function" = task_function[i],
-             length = lengths(task_ids)[i],
-             created = task_time_sub[i],
-             stringsAsFactors = FALSE,
-             check.names = FALSE)
+  ret <- data.frame(name = bundles[i],
+                    "function" = task_function[i],
+                    length = lengths(task_ids)[i],
+                    created = task_time_sub[i],
+                    stringsAsFactors = FALSE,
+                    check.names = FALSE)
+  rownames(ret) <- NULL
+  ret
 }
 
 task_bundle_wait <- function(bundle, timeout, time_poll, progress_bar) {

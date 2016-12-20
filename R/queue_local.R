@@ -53,11 +53,11 @@ R6_queue_local <- R6::R6Class(
     run_task = function(task_id, ...) {
       if (is.null(self$log_path)) {
         ## there's plenty of printing here without printing any extra
-        context::task_run(task_id, self$context, self$context_envir, ...)
+        context::task_run(task_id, self$root, self$context_envir, ...)
       } else {
         log <- file.path(self$log_path, task_id)
         context::context_log("running", task_id)
-        context::task_run(task_id, self$context, self$context_envir, log)
+        context::task_run(task_id, self$root, self$context_envir, log)
       }
     },
 

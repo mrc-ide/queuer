@@ -29,7 +29,6 @@ test_that("runner loop", {
   path_worker <- file.path(ctx$root$path, "bin", "queue_local_worker")
   args <- c(ctx$root$path, ctx$id, TRUE)
 
-
   px <- processx::process$new(path_worker, args)
   on.exit({
     if (px$is_alive()) px$kill(0)
@@ -47,7 +46,7 @@ test_that("runner loop", {
   expect_is(grp, "task_bundle")
   expect_equal(grp$results(), as.list(x * 2))
 
-  pid <- obj$enqueue(Sys.getpid())$wait(10, 0.02, FALSE)
+  pid <- obj$enqueue(Sys.getpid())$wait(Inf, 0.02, FALSE)
 
   tools::pskill(pid, tools::SIGINT)
   times_up <- time_checker(1)

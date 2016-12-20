@@ -54,22 +54,22 @@ R6_queue_base <- R6::R6Class(
       ## tasks_times = function(...) with_deprecated(self, "task_times", ...),
 
       task_list = function() {
-        context::task_list(self$root)
+        context::task_list(self$db)
       },
 
       task_status = function(task_ids = NULL, named = TRUE) {
         if (is.null(task_ids)) {
-          task_ids <- context::task_list(self$root)
+          task_ids <- context::task_list(self$db)
         }
-        context::task_status(task_ids, self$root, named)
+        context::task_status(task_ids, self$db, named)
       },
 
       task_times = function(task_ids = NULL, unit_elapsed = "secs",
                              sorted = TRUE) {
         if (is.null(task_ids)) {
-          task_ids <- context::task_list(self$root)
+          task_ids <- context::task_list(self$db)
         }
-        context::task_times(task_ids, self$root, unit_elapsed, sorted)
+        context::task_times(task_ids, self$db, unit_elapsed, sorted)
       },
 
       task_get = function(task_id, check_exists = TRUE) {
@@ -77,7 +77,7 @@ R6_queue_base <- R6::R6Class(
       },
 
       task_result = function(task_id) {
-        context::task_result(task_id, self$root)
+        context::task_result(task_id, self$db)
       },
 
       task_delete = function(task_ids) {
@@ -86,11 +86,11 @@ R6_queue_base <- R6::R6Class(
       },
 
       task_bundle_list = function() {
-        task_bundle_list(self$root)
+        task_bundle_list(self$db)
       },
 
       task_bundle_info = function() {
-        task_bundle_info(self$root)
+        task_bundle_info(self)
       },
 
       task_bundle_get = function(name) {

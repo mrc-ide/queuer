@@ -99,8 +99,27 @@ test_that("delete", {
   ids <- c(id1, id2)
 
   grp <- task_bundle_create(ids, ctx)
-  expect_true(grp$name %in% task_bundle_list(ctx))
+  expect_true(grp$name %in% task_bundle_list(ctx$db))
   task_bundle_delete(grp$name, ctx$db)
-  expect_false(grp$name %in% task_bundle_list(ctx))
+  expect_false(grp$name %in% task_bundle_list(ctx$db))
   expect_true(all(context::task_exists(ids, ctx)))
+})
+
+test_that("info", {
+  ctx <- context::context_save(tempfile(), storage_type = "environment")
+  on.exit(unlink(ctx$root$path, recursive = TRUE))
+
+  obj <- queue_local(ctx)
+  grp1 <- obj$lapply(runif(4), quote(sin))
+  grp2 <- obj$lapply(runif(10), quote(cos))
+
+  expect_equal(sort(obj$task_bundle_list()),
+               sort(c(grp1$name, grp2$name)))
+
+  dat <- obj$task_bundle_info()
+  expect_equal(dat$name, c(grp1$name, grp2$name))
+  expect_equal(dat[["function"]], c("base::sin", "base::cos"))
+  expect_equal(dat$length, c(4L, 10L))
+  expect_is(dat$created, "POSIXt")
+  expect_gte(as.numeric(diff(dat$created)), 0)
 })
