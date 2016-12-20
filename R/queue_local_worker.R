@@ -12,6 +12,7 @@
 queue_local_worker <- function(root, context_id, loop) {
   context::context_log_start()
   on.exit(context::context_log_stop())
+  obj <- queue_local(context_id, root, log = TRUE)
   if (loop) {
     obj$run_loop()
   } else {

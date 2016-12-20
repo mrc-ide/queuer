@@ -212,7 +212,7 @@ task_bundle_wait <- function(bundle, timeout, time_poll, progress_bar) {
   time_poll <- min(time_poll, timeout)
   times_up <- time_checker(timeout)
   while (!all(done)) {
-    res <- task_bundle_fetch1(db, task_ids[!done], time_poll)
+    res <- task_bundle_fetch1(db, task_ids[!done])
     if (is.null(res$id)) {
       p(0)
       ## This is put here so that we never abort while actively
@@ -228,7 +228,7 @@ task_bundle_wait <- function(bundle, timeout, time_poll, progress_bar) {
         stop(sprintf("Exceeded maximum time (%d / %d tasks pending)",
                      sum(!done), length(done)))
       }
-      Sys.sleep(timeout)
+      Sys.sleep(time_poll)
     } else {
       task_id <- res[[1]]
       result <- res[[2]]
@@ -255,7 +255,7 @@ task_bundle_partial <- function(bundle) {
 ## will always be a lot nicer than filesystem polling.  Polling too
 ## quickly will cause filesystem overuse here.  Could do this with a
 ## growing timeout, perhaps.
-task_bundle_fetch1 <- function(db, task_ids, timeout) {
+task_bundle_fetch1 <- function(db, task_ids) {
   done <- db$exists(task_ids, "task_results")
   if (any(done)) {
     id <- task_ids[done]

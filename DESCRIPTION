@@ -17,7 +17,10 @@ Imports:
     lazyeval,
     progress (>= 1.1.1)
 Suggests:
-    parallel,
+    processx,
     seagull,
     testthat
 RoxygenNote: 5.0.1
+Remotes:
+    dide-tools/context,
+    r-pkgs/processx
