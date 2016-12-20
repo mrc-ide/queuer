@@ -56,7 +56,7 @@ R6_queue_local <- R6::R6Class(
         context::task_run(task_id, self$context, self$context_envir, ...)
       } else {
         log <- file.path(self$log_path, task_id)
-        message(sprintf("*** Running %s -> %s", task_id, log))
+        context::context_log("running", task_id)
         context::task_run(task_id, self$context, self$context_envir, log)
       }
     },
@@ -82,7 +82,7 @@ R6_queue_local <- R6::R6Class(
       repeat {
         task_id <- self$run_next()$task_id
         if (is.null(task_id)) {
-          message("All tasks complete")
+          context::context_log("done", "All tasks complete")
           break
         } else {
           res <- c(res, task_id)
@@ -93,16 +93,22 @@ R6_queue_local <- R6::R6Class(
 
     run_loop = function(interval = 0.5) {
       ## TODO: Until messaging is implemented, this will need to run
-      ## until interrupted.
+      ## until interrupted.  Messaging should be fairly easy to
+      ## implement because we can just poll a key with exists().
       ##
       ## TODO: get a growing timeout in here too (abstract away the
       ## one I have in seagull:R/util.R:retry()
-      repeat {
-        res <- self$run_next()
-        if (is.null(res$task_id)) {
-          Sys.sleep(interval)
-        }
-      }
+      tryCatch(
+        repeat {
+          res <- self$run_next()
+          if (is.null(res$task_id)) {
+            Sys.sleep(interval)
+          }
+        },
+        interrupt = function(e) {
+          context::context_log("interrupt", Sys.time())
+        })
+      context::context_log("done", "interrupted")
     },
 
     ## Ordinarily there would be two objects created; one worker and
