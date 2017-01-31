@@ -14,7 +14,7 @@ test_that("runner", {
     unlink(ctx$root$path)
   })
 
-  ans <- res$wait(100, time_poll = 0.02, progress_bar = interactive())
+  ans <- res$wait(100, time_poll = 0.02, progress = interactive())
   expect_equal(ans, as.list(x * 2))
 })
 
@@ -38,7 +38,7 @@ test_that("runner loop", {
   x <- runif(4, max = 0.1)
   id <- ids::sentence()
   res <- obj$lapply(x, "slow_double", timeout = 100, time_poll = 0.02,
-                    progress_bar = interactive(), name = id)
+                    progress = interactive(), name = id)
   expect_equal(res, as.list(x * 2))
 
   ## Can also get things this way:

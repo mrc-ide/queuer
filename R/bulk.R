@@ -49,7 +49,7 @@
 ##'   default is every second.  This is an \emph{approximate} time and
 ##'   should be seen as a lower limit.
 ##'
-##' @param progress_bar Display a progress bar as tasks are polled.
+##' @param progress Display a progress bar as tasks are polled.
 ##'
 ##' @param name Name for the task bundle.  If not provided a
 ##'   human-recognisable random name will be generated and printed to
@@ -62,7 +62,7 @@
 ##' @export
 qlapply <- function(X, FUN, obj, ...,
                     envir = parent.frame(),
-                    timeout = 0, time_poll = 1, progress_bar = TRUE,
+                    timeout = 0, time_poll = 1, progress = TRUE,
                     name = NULL, overwrite = FALSE) {
   ## TODO: The dots here are going to cause grief at some point.  I
   ## may need a more robust way of passing additional arguments in,
@@ -70,14 +70,14 @@ qlapply <- function(X, FUN, obj, ...,
   enqueue_bulk(obj, X, FUN, ...,
                do.call = FALSE,
                timeout = timeout, time_poll = time_poll,
-               progress_bar = progress_bar, name = name,
+               progress = progress, name = name,
                envir = envir, overwrite = overwrite)
 }
 
 ## A downside of the current treatment of dots is there are quite a
 ## few arguments on the RHS of it; if a function uses any of these
 ## they're not going to be allowed access to them.  Usually this seems
-## solved by something like progress_bar. = TRUE but I think that looks
+## solved by something like progress. = TRUE but I think that looks
 ## horrid.  So for now leave it as-is and we'll see what happens.
 ##
 ## TODO: Consider allowing DOTS as an argument itself.
@@ -94,16 +94,16 @@ qlapply <- function(X, FUN, obj, ...,
 ##'   \code{use_names = FALSE}, then names will be stripped off each row
 ##'   of the data.frame before the function call is composed.
 enqueue_bulk <- function(obj, X, FUN, ..., do.call = TRUE,
-                         timeout = 0, time_poll = 1, progress_bar = TRUE,
+                         timeout = 0, time_poll = 1, progress = TRUE,
                          envir = parent.frame(), name = NULL, use_names = TRUE,
                          overwrite = FALSE) {
   obj <- enqueue_bulk_submit(obj, X, FUN, ..., do.call = do.call, envir = envir,
-                             progress_bar = progress_bar, name = name,
+                             progress = progress, name = name,
                              use_names = use_names, overwrite = overwrite)
   if (timeout > 0) {
     ## TODO: this is possibly going to change as interrupt changes in
     ## current R-devel (as of 3.3.x)
-    tryCatch(obj$wait(timeout, time_poll, progress_bar),
+    tryCatch(obj$wait(timeout, time_poll, progress),
              interrupt = function(e) obj)
   } else {
     obj
@@ -165,7 +165,7 @@ enqueue_bulk_prepare <- function(X, FUN, dots, do.call, use_names) {
 }
 
 enqueue_bulk_submit <- function(obj, X, FUN, ..., DOTS = NULL, do.call = FALSE,
-                                envir = parent.frame(), progress_bar = TRUE,
+                                envir = parent.frame(), progress = TRUE,
                                 name = NULL, use_names = TRUE,
                                 overwrite = FALSE) {
   ## TODO: If I push this to *only* be a method, then the assertion is

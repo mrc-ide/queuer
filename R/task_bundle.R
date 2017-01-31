@@ -106,8 +106,8 @@ R6_task_bundle <- R6::R6Class(
       }
     },
 
-    wait = function(timeout = 60, time_poll = 1, progress_bar = TRUE) {
-      task_bundle_wait(self, timeout, time_poll, progress_bar)
+    wait = function(timeout = 60, time_poll = 1, progress = TRUE) {
+      task_bundle_wait(self, timeout, time_poll, progress)
     },
 
     status = function(named = TRUE) {
@@ -180,7 +180,7 @@ task_bundle_info <- function(obj) {
   ret
 }
 
-task_bundle_wait <- function(bundle, timeout, time_poll, progress_bar) {
+task_bundle_wait <- function(bundle, timeout, time_poll, progress) {
   ## NOTE: For Redis we'd probably implement this differently due to
   ## the availability of BLPOP.  Note that would require *nonzero
   ## integer* time_poll though, and that 0.1 would become 0 which
@@ -208,7 +208,7 @@ task_bundle_wait <- function(bundle, timeout, time_poll, progress_bar) {
     return(cleanup(results))
   }
 
-  p <- progress(total = length(bundle$tasks), show = progress_bar)
+  p <- progress(total = length(bundle$tasks), show = progress)
   p(sum(done))
   time_poll <- min(time_poll, timeout)
   times_up <- time_checker(timeout)
@@ -223,7 +223,7 @@ task_bundle_wait <- function(bundle, timeout, time_poll, progress_bar) {
         ## class, updating the done-ness should be done before failing
         ## here.
         bundle$done <- done
-        if (progress_bar) {
+        if (progress) {
           message()
         }
         stop(sprintf("Exceeded maximum time (%d / %d tasks pending)",

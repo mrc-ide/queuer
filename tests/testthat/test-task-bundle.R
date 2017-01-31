@@ -29,7 +29,7 @@ test_that("task_bundle", {
   expect_error(grp$wait(0), "Tasks not yet completed")
 
   t0 <- Sys.time()
-  expect_error(grp$wait(0.1, progress_bar = FALSE), "Exceeded maximum time")
+  expect_error(grp$wait(0.1, progress = FALSE), "Exceeded maximum time")
   t1 <- Sys.time()
   expect_lt(as.numeric(t1 - t0, "secs"), 1)
 
@@ -40,7 +40,7 @@ test_that("task_bundle", {
   context::task_run(id2, ctx)
   expect_equal(grp$results(), list(sin(1), sin(2)))
   t0 <- Sys.time()
-  expect_equal(grp$wait(10, progress_bar = FALSE), list(sin(1), sin(2)))
+  expect_equal(grp$wait(10, progress = FALSE), list(sin(1), sin(2)))
   t1 <- Sys.time()
   expect_lt(as.numeric(t1 - t0, "secs"), 1)
 })

@@ -6,10 +6,10 @@
 \title{Run tasks in a queue}
 \usage{
 qlapply(X, FUN, obj, ..., envir = parent.frame(), timeout = 0,
-  time_poll = 1, progress_bar = TRUE, name = NULL, overwrite = FALSE)
+  time_poll = 1, progress = TRUE, name = NULL, overwrite = FALSE)
 
 enqueue_bulk(obj, X, FUN, ..., do.call = TRUE, timeout = 0, time_poll = 1,
-  progress_bar = TRUE, envir = parent.frame(), name = NULL,
+  progress = TRUE, envir = parent.frame(), name = NULL,
   use_names = TRUE, overwrite = FALSE)
 }
 \arguments{
@@ -48,7 +48,7 @@ Ctrl-C or Esc depending on platform) and it will return the
 default is every second.  This is an \emph{approximate} time and
 should be seen as a lower limit.}
 
-\item{progress_bar}{Display a progress bar as tasks are polled.}
+\item{progress}{Display a progress bar as tasks are polled.}
 
 \item{name}{Name for the task bundle.  If not provided a
 human-recognisable random name will be generated and printed to
@@ -64,7 +64,7 @@ If \code{FALSE} (the default) we throw an error if it exists.}
 
 \item{use_names}{Only meaningful when \code{do.call} is
 \code{TRUE} and \code{X} is a \code{data.frame}, if
-\code{use_names=FALSE}, then names will be stripped off each row
+\code{use_names = FALSE}, then names will be stripped off each row
 of the data.frame before the function call is composed.}
 }
 \description{

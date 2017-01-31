@@ -5,16 +5,16 @@
 \alias{task_bundle_get}
 \title{Create a task bundle}
 \usage{
-task_bundle_create(obj, task_ids, name = NULL, X = NULL,
-  overwrite = FALSE)
+task_bundle_create(task_ids, obj, name = NULL, X = NULL,
+  overwrite = FALSE, homogeneous = NULL)
 
-task_bundle_get(obj, name)
+task_bundle_get(name, root)
 }
 \arguments{
-\item{obj}{An observer or queue object; something that can be
-passed through to \code{\link{context_db}}.}
-
 \item{task_ids}{A vector of task ids}
+
+\item{obj}{An observer or queue object; something that can be
+passed through to \code{\link{context_root_get}}.}
 
 \item{name}{Group name}
 
