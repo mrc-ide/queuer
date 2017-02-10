@@ -8,7 +8,7 @@
 qlapply(X, FUN, obj, ..., envir = parent.frame(), timeout = 0,
   time_poll = 1, progress = TRUE, name = NULL, overwrite = FALSE)
 
-enqueue_bulk(obj, X, FUN, ..., do.call = TRUE, timeout = 0, time_poll = 1,
+enqueue_bulk(obj, X, FUN, ..., do_call = TRUE, timeout = 0, time_poll = 1,
   progress = TRUE, envir = parent.frame(), name = NULL,
   use_names = TRUE, overwrite = FALSE)
 }
@@ -58,11 +58,11 @@ the console.}
 should we overwrite it (see \code{\link{task_bundle_create}})?
 If \code{FALSE} (the default) we throw an error if it exists.}
 
-\item{do.call}{If \code{TRUE}, rather than evaluating \code{FUN(x,
+\item{do_call}{If \code{TRUE}, rather than evaluating \code{FUN(x,
 ...)}, evaluate \code{FUN(x[1], x[2], ..., x[n], ...)} (where
 \code{x} is an element of \code{X}).}
 
-\item{use_names}{Only meaningful when \code{do.call} is
+\item{use_names}{Only meaningful when \code{do_call} is
 \code{TRUE} and \code{X} is a \code{data.frame}, if
 \code{use_names = FALSE}, then names will be stripped off each row
 of the data.frame before the function call is composed.}

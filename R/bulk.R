@@ -67,8 +67,7 @@ qlapply <- function(X, FUN, obj, ...,
   ## TODO: The dots here are going to cause grief at some point.  I
   ## may need a more robust way of passing additional arguments in,
   ## but not sure what that looks like...
-  enqueue_bulk(obj, X, FUN, ...,
-               do.call = FALSE,
+  enqueue_bulk(obj, X, FUN, ..., do_call = FALSE,
                timeout = timeout, time_poll = time_poll,
                progress = progress, name = name,
                envir = envir, overwrite = overwrite)
@@ -85,19 +84,19 @@ qlapply <- function(X, FUN, obj, ...,
 ##' @export
 ##' @rdname qlapply
 ##'
-##' @param do.call If \code{TRUE}, rather than evaluating \code{FUN(x,
+##' @param do_call If \code{TRUE}, rather than evaluating \code{FUN(x,
 ##'   ...)}, evaluate \code{FUN(x[1], x[2], ..., x[n], ...)} (where
 ##'   \code{x} is an element of \code{X}).
 ##'
-##' @param use_names Only meaningful when \code{do.call} is
+##' @param use_names Only meaningful when \code{do_call} is
 ##'   \code{TRUE} and \code{X} is a \code{data.frame}, if
 ##'   \code{use_names = FALSE}, then names will be stripped off each row
 ##'   of the data.frame before the function call is composed.
-enqueue_bulk <- function(obj, X, FUN, ..., do.call = TRUE,
+enqueue_bulk <- function(obj, X, FUN, ..., do_call = TRUE,
                          timeout = 0, time_poll = 1, progress = TRUE,
                          envir = parent.frame(), name = NULL, use_names = TRUE,
                          overwrite = FALSE) {
-  obj <- enqueue_bulk_submit(obj, X, FUN, ..., do.call = do.call, envir = envir,
+  obj <- enqueue_bulk_submit(obj, X, FUN, ..., do_call = do_call, envir = envir,
                              progress = progress, name = name,
                              use_names = use_names, overwrite = overwrite)
   if (timeout > 0) {
@@ -110,7 +109,7 @@ enqueue_bulk <- function(obj, X, FUN, ..., do.call = TRUE,
   }
 }
 
-enqueue_bulk_submit <- function(obj, X, FUN, ..., DOTS = NULL, do.call = FALSE,
+enqueue_bulk_submit <- function(obj, X, FUN, ..., DOTS = NULL, do_call = FALSE,
                                 envir = parent.frame(), progress = TRUE,
                                 name = NULL, use_names = TRUE,
                                 overwrite = FALSE) {
@@ -139,7 +138,7 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., DOTS = NULL, do.call = FALSE,
     DOTS <- lapply(lazyeval::lazy_dots(...), "[[", "expr")
   }
   ids <- context::task_bulk_save(X, FUN, obj$context, DOTS,
-                                 do.call, use_names, envir)
+                                 do_call, use_names, envir)
 
   message(sprintf("submitting %s tasks", length(ids)))
   obj$submit_or_delete(ids, names(ids))
