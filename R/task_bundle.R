@@ -68,7 +68,7 @@ R6_task_bundle <- R6::R6Class(
     db = NULL,
     homogeneous = NULL,
 
-    initialize=function(name, root) {
+    initialize = function(name, root) {
       self$name <- name
       self$root <- context::context_root_get(root)
       self$db <- self$root$db
