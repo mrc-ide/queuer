@@ -38,7 +38,7 @@ test_that("runner loop", {
   x <- runif(4, max = 0.1)
   id <- ids::sentence()
   res <- obj$lapply(x, "slow_double", timeout = 100, time_poll = 0.02,
-                    progress = interactive(), name = id)
+                    progress = FALSE, name = id)
   expect_equal(res, as.list(x * 2))
 
   ## Can also get things this way:

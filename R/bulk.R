@@ -110,60 +110,6 @@ enqueue_bulk <- function(obj, X, FUN, ..., do.call = TRUE,
   }
 }
 
-enqueue_bulk_prepare <- function(X, FUN, dots, do.call, use_names) {
-  ## TODO: Consider moving this into context as part of the
-  ## preparation?  It's not ideal as the idx/len bits are tangled up
-  ## in here.  However, I could shift the templating there too and
-  ## pass dots through directly.
-  if (is.data.frame(X)) {
-    len <- ncol(X)
-    XX <- df_to_list(X, use_names)
-    if (len == 0L) {
-      stop("'X' must have at least one column")
-    }
-    if (nrow(X) == 0L) {
-      stop("'X' must have at least one row")
-    }
-  } else if (is.atomic(X) && !is.null(X)) {
-    len <- 1L
-    XX <- as.list(X)
-  } else if (!is.list(X)) {
-    stop("X must be a data.frame or list")
-  } else {
-    if (do.call) {
-      len <- lengths(X)
-      if (length(unique(len)) != 1L) {
-        stop("Every element of 'X' must have the same length")
-      }
-      len <- len[[1L]]
-      if (len == 0L) {
-        stop("Elements of 'X' must have at least one element")
-      }
-    } else {
-      len <- 1L
-    }
-    XX <- X
-  }
-
-  if (length(XX) == 0L) {
-    stop("'X' must have at least one element")
-  }
-
-  ## Bunch of wrangling here:
-  if (len != 1L && !do.call) {
-    XX <- lapply(XX, list)
-  }
-  if (do.call) {
-    template <- as.call(c(list(FUN), rep(list(NULL), len), dots))
-    idx <- seq_len(len)
-  } else {
-    template <- as.call(c(list(FUN), list(NULL), dots))
-    idx <- 1L
-  }
-
-  list(template = template, X = XX, idx = idx)
-}
-
 enqueue_bulk_submit <- function(obj, X, FUN, ..., DOTS = NULL, do.call = FALSE,
                                 envir = parent.frame(), progress = TRUE,
                                 name = NULL, use_names = TRUE,
@@ -192,14 +138,11 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., DOTS = NULL, do.call = FALSE,
   if (is.null(DOTS)) {
     DOTS <- lapply(lazyeval::lazy_dots(...), "[[", "expr")
   }
-  dat <- enqueue_bulk_prepare(X, FUN, DOTS, do.call, use_names)
-
-  ids <- context::task_save_bulk(dat$template, dat$X, dat$idx,
-                                 obj$context, envir)
+  ids <- context::task_bulk_save(X, FUN, obj$context, DOTS,
+                                 do.call, use_names, envir)
 
   message(sprintf("submitting %s tasks", length(ids)))
-  obj$submit_or_delete(ids, names(dat$X))
+  obj$submit_or_delete(ids, names(ids))
 
-  task_bundle_create(setNames(ids, names(dat$X)), obj, name, X,
-                     overwrite = TRUE, homogeneous = TRUE)
+  task_bundle_create(ids, obj, name, X, overwrite = TRUE, homogeneous = TRUE)
 }

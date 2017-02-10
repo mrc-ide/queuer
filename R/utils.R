@@ -23,21 +23,6 @@ time_checker <- function(timeout, remaining = FALSE) {
   }
 }
 
-## Not necessarily the fastest, but it should do.
-df_to_list <- function(x, use_names) {
-  keep <- c("names", "class", "row.names")
-  at <- attributes(x)
-  attributes(x) <- at[intersect(names(at), keep)]
-  ret <- unname(lapply(split(x, seq_len(nrow(x))), as.list))
-  if (!use_names) {
-    ret <- lapply(ret, unname)
-  }
-  if (is.character(at$row.names)) {
-    names(ret) <- at$row.names
-  }
-  ret
-}
-
 progress <- function(total, ..., show = TRUE, prefix = "", fmt = NULL) {
   if (show) {
     if (is.null(fmt)) {
@@ -53,6 +38,37 @@ progress <- function(total, ..., show = TRUE, prefix = "", fmt = NULL) {
     }
   } else {
     function(...) {}
+  }
+}
+
+remaining <- function(timeout, what, digits = 0, show = TRUE) {
+  if (show && timeout > 0) {
+    total <- 1e8 # arbitrarily large number :(
+    if (is.finite(timeout)) {
+      fmt <- sprintf("(:spin) waiting for %s, giving up in :remaining s",
+                     what)
+    } else {
+      fmt <- sprintf("(:spin) waiting for %s, waited for :elapsed", what)
+    }
+
+    ## digits <- if (every < 1) abs(floor(log10(every))) else 0
+    p <- progress(total, fmt = fmt)
+    t <- time_checker(timeout, TRUE)
+    function(..., clear = FALSE) {
+      rem <- if (clear) 0 else t()
+      if (rem <= 0) {
+        p(clear = TRUE, tokens = list(remaining = "0s"))
+      } else {
+        remaining <- formatC(rem, digits = digits, format = "f")
+        p(tokens = list(remaining = remaining))
+      }
+      rem <= 0
+    }
+  } else {
+    t <- time_checker(timeout, FALSE)
+    function(..., clear = FALSE) {
+      if (clear) 0 else t()
+    }
   }
 }
 

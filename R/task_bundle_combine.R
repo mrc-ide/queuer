@@ -47,10 +47,9 @@ task_bundle_combine <- function(..., bundles = list(...),
   is_df <- vlapply(X, is.data.frame)
   if (all(is_df)) {
     X <- do.call("rbind", X)
+  } else if (any(is_df)) {
+    stop("Can't combine these task bundles")
   } else {
-    if (any(is_df)) {
-      X[is_df] <- lapply(X[is_df], df_to_list)
-    }
     X <- unlist(X, FALSE)
   }
 

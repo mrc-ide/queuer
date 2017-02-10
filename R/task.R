@@ -49,35 +49,18 @@ R6_queuer_task <- R6::R6Class(
 ## interface is available, because then we can do an optimal wait.
 ## See rrq for the approach there.
 task_wait <- function(db, task_id, timeout, every = 0.5, progress = TRUE) {
-  t <- time_checker(timeout, TRUE)
   every <- min(every, timeout)
-
-  ## TODO: This does not always do a great job of reprinting
-  if (is.finite(timeout)) {
-    fmt <- sprintf("(:spin) waiting for %s, giving up in :remaining s",
-                   trim_id(task_id, 7, 3))
-    total <- ceiling(timeout / every) + 1
-  } else {
-    fmt <- sprintf("(:spin) waiting for %s, waited for :elapsed",
-                   trim_id(task_id, 7, 3))
-    total <- 1e8 # arbitrarily large number :(
-  }
-
   digits <- if (every < 1) abs(floor(log10(every))) else 0
-  p <- progress(total, show = progress && timeout > 0, fmt = fmt)
+  p <- remaining(timeout, trim_id(task_id, 7, 3), digits, progress)
   repeat {
     res <- context::task_result(task_id, db, sanitise = TRUE)
     if (!inherits(res, "UnfetchableTask")) {
-      p(clear = TRUE, tokens = list(remaining = "0s"))
+      p(clear = TRUE)
       return(res)
     } else {
-      rem <- t()
-      if (rem < 0) {
-        p(clear = TRUE, tokens = list(remaining = "0s"))
+      if (p()) {
         stop("task not returned in time")
       } else {
-        remaining <- formatC(rem, digits = digits, format = "f")
-        p(tokens = list(remaining = remaining))
         Sys.sleep(every)
       }
     }
