@@ -76,3 +76,29 @@ test_that("$enqueue_bulk", {
   expect_is(bundle, "task_bundle")
   expect_equal(bundle$function_name(), "base::I")
 })
+
+test_that("exotic functions", {
+  Sys.setenv(R_TESTS = "")
+
+  ctx <- context::context_save(tempfile(), storage_type = "environment")
+  obj <- queue_local(ctx)
+
+  x <- 1:5
+  res <- local({
+    f_local <- function(x) {
+      x + 2
+    }
+    obj$lapply(x, quote(f_local), progress = FALSE, timeout = 0)
+  })
+
+  expect_equal(length(obj$task_list()), length(x))
+  done <- obj$run_all()
+  expect_equal(done, res$ids)
+  expect_equal(res$results(), as.list(x + 2))
+
+  res <- local({
+    obj$lapply(x, function(x) x + 3, progress = FALSE, timeout = 0)
+  })
+  expect_equal(obj$run_all(), res$ids)
+  expect_equal(res$results(), as.list(x + 3))
+})

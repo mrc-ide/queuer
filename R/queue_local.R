@@ -50,15 +50,23 @@ R6_queue_local <- R6::R6Class(
     ## This is the running half of the system; these will shortly move
     ## into workers, but the queue_local case might be weird enough to
     ## warrant keeping them here too.
-    run_task = function(task_id, ...) {
+    run_task = function(task_id) {
+      ## There is an issue here (and in the other workers, though
+      ## potentially a bit less of an issue) where we need to check
+      ## that the context that is loaded is the appropriate one.  This
+      ## probably means that task_run should get a 'context_id'
+      ## argument that we can pass to it so that it will throw an
+      ## error if a context mismatch is detected.  Practically, this
+      ## is not something I want to be too concerned about though as
+      ## it will just lead to lots and lots of stray 'PENDING' jobs.
       if (is.null(self$log_path)) {
-        ## there's plenty of printing here without printing any extra
-        context::task_run(task_id, self$root, self$context_envir, ...)
+        logfile <- NULL
       } else {
-        log <- file.path(self$log_path, task_id)
+        logfile <- file.path(self$log_path, task_id)
         context::context_log("running", task_id)
-        context::task_run(task_id, self$root, self$context_envir, log)
       }
+      context::task_run(task_id, self$root, self$context_envir, logfile,
+                        load_context = FALSE)
     },
 
     run_next = function() {

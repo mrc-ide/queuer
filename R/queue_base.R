@@ -112,12 +112,21 @@ R6_queue_base <- R6::R6Class(
         invisible(queuer_task(task_id, self$root))
       },
 
-      ## I'm finally moving these in here.
-      enqueue_bulk = function(X, FUN, ...) {
-        enqueue_bulk(self, X, FUN, ...)
+      enqueue_bulk = function(X, FUN, ..., do_call = FALSE,
+                              envir = parent.frame(),
+                              timeout = 0, time_poll = 1, progress = TRUE,
+                              name = NULL, overwrite = FALSE) {
+        enqueue_bulk(self, X, FUN, ..., do_call = do_call, envir = envir,
+                     timeout = timeout, time_poll = time_poll,
+                     progress = progress, name = name, overwrite = overwrite)
       },
-      lapply = function(X, FUN, ...) {
-        qlapply(X, FUN, self, ...)
+
+      lapply = function(X, FUN, ..., envir = parent.frame(),
+                        timeout = 0, time_poll = 1, progress = TRUE,
+                        name = NULL, overwrite = FALSE) {
+        qlapply(X, FUN, self, ..., envir = envir,
+                timeout = timeout, time_poll = time_poll,
+                progress = progress, name = name, overwrite = overwrite)
       },
 
       ## These exist only as a stub for now, for other classes to

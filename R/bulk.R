@@ -93,8 +93,9 @@ qlapply <- function(X, FUN, obj, ...,
 ##'   \code{use_names = FALSE}, then names will be stripped off each row
 ##'   of the data.frame before the function call is composed.
 enqueue_bulk <- function(obj, X, FUN, ..., do_call = TRUE,
+                         envir = parent.frame(),
                          timeout = 0, time_poll = 1, progress = TRUE,
-                         envir = parent.frame(), name = NULL, use_names = TRUE,
+                         name = NULL, use_names = TRUE,
                          overwrite = FALSE) {
   obj <- enqueue_bulk_submit(obj, X, FUN, ..., do_call = do_call, envir = envir,
                              progress = progress, name = name,
@@ -121,15 +122,9 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., DOTS = NULL, do_call = FALSE,
 
   name <- create_bundle_name(name, overwrite, obj$db)
 
-  ## TODO: why is there so much work done here just to drop down to
-  ## getting the "name_symbol" out?
   obj$initialize_context()
   fun_dat <- match_fun_queue(FUN, envir, obj$context_envir)
-  if (is.null(fun_dat$name_symbol)) {
-    stop("Not yet supported")
-  } else {
-    FUN <- fun_dat$name_symbol
-  }
+  FUN <- fun_dat$name_symbol %||% fun_dat$value
 
   ## It is important not to use list(...) here and instead capture the
   ## symbols.  Otherwise later when we print the expression bad things
