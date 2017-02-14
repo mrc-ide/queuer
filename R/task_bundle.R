@@ -1,30 +1,3 @@
-##' Create a task bundle.  Generally these are not created manually,
-##' but this page serves to document what task bundles are and the
-##' methods that they have.
-##'
-##' A task bundle exists to group together tasks that are related.  It
-##' is possible for a task to belong to multiple bundles.
-##'
-##' @title Create a task bundle
-##'
-##' @param obj An observer or queue object; something that can be
-##'   passed through to \code{\link{context_root_get}}.
-##'
-##' @param task_ids A vector of task ids
-##'
-##' @param name Group name
-##'
-##' @param X Metadata to associate with the tasks.  This is used by
-##'   the bulk interface (\code{\link{qlapply}} and
-##'   \code{\link{enqueue_bulk}} to associate the first argument with
-##'   the bundle).
-##'
-##' @param overwrite Logical indicating if an existing bundle with the
-##'   same name should be overwritten.  If \code{FALSE} and a bundle
-##'   with this name already exists, an error will be thrown.
-##'
-##' @export
-##' @rdname task_bundle
 task_bundle_create <- function(task_ids, obj, name = NULL, X = NULL,
                                overwrite = FALSE, homogeneous = NULL) {
   ## TODO: flag if the task is homogeneous; we do this by setting a
@@ -48,8 +21,6 @@ task_bundle_create <- function(task_ids, obj, name = NULL, X = NULL,
   task_bundle_get(name, root)
 }
 
-##' @export
-##' @rdname task_bundle
 task_bundle_get <- function(name, root) {
   R6_task_bundle$new(name, root)
 }

@@ -7,7 +7,12 @@
 ##' @param bundles A list of bundles (used in place of \code{...} and
 ##'   probably more useful for programming).
 ##'
-##' @inheritParams task_bundle_create
+##' @param name Group name
+##'
+##' @param overwrite Logical indicating if an existing bundle with the
+##'   same name should be overwritten.  If \code{FALSE} and a bundle
+##'   with this name already exists, an error will be thrown.
+##'
 ##' @export
 task_bundle_combine <- function(..., bundles = list(...),
                                 name = NULL, overwrite = FALSE) {

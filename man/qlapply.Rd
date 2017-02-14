@@ -8,8 +8,8 @@
 qlapply(X, FUN, obj, ..., envir = parent.frame(), timeout = 0,
   time_poll = 1, progress = TRUE, name = NULL, overwrite = FALSE)
 
-enqueue_bulk(obj, X, FUN, ..., do_call = TRUE, timeout = 0, time_poll = 1,
-  progress = TRUE, envir = parent.frame(), name = NULL,
+enqueue_bulk(obj, X, FUN, ..., do_call = TRUE, envir = parent.frame(),
+  timeout = 0, time_poll = 1, progress = TRUE, name = NULL,
   use_names = TRUE, overwrite = FALSE)
 }
 \arguments{
@@ -55,7 +55,7 @@ human-recognisable random name will be generated and printed to
 the console.}
 
 \item{overwrite}{If a task bundle name \code{name} exists already,
-should we overwrite it (see \code{\link{task_bundle_create}})?
+should we overwrite it (see \code{obj$task_bundle_create})?
 If \code{FALSE} (the default) we throw an error if it exists.}
 
 \item{do_call}{If \code{TRUE}, rather than evaluating \code{FUN(x,

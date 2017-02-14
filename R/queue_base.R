@@ -1,3 +1,4 @@
+##' @importFrom R6 R6Class
 queue_base <- function(context_id, root = NULL, initialize = TRUE) {
   R6_queue_base$new(context_id, root, initialize)
 }

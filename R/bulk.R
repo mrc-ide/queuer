@@ -56,7 +56,7 @@
 ##'   the console.
 ##'
 ##' @param overwrite If a task bundle name \code{name} exists already,
-##'   should we overwrite it (see \code{\link{task_bundle_create}})?
+##'   should we overwrite it (see \code{obj$task_bundle_create})?
 ##'   If \code{FALSE} (the default) we throw an error if it exists.
 ##'
 ##' @export

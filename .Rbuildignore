@@ -7,3 +7,5 @@
 ^ignore$
 ^notes.md$
 ^queuer_.*\.tar\.gz$
+^\.lintr$
+^man-roxygen$
