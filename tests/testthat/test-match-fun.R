@@ -11,7 +11,7 @@ context("match_fun")
 
 test_that("match_fun", {
   ctx <- context::context_save(tempfile(), sources = "scope.R")
-  context::context_load(ctx)
+  ctx <- context::context_load(ctx, .GlobalEnv)
 
   cmp <- list(namespace = NULL, name = "f1", envir = .GlobalEnv, value = f1)
   res <- local({

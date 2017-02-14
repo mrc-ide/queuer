@@ -29,6 +29,7 @@ test_that("submit", {
 
 test_that("named", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
+  ctx <- context::context_load(ctx, new.env(parent = .GlobalEnv))
   obj <- queue_base(ctx)
 
   x <- setNames(runif(10), ids::adjective_animal(10))

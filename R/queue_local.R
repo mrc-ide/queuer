@@ -65,8 +65,7 @@ R6_queue_local <- R6::R6Class(
         logfile <- file.path(self$log_path, task_id)
         context::context_log("running", task_id)
       }
-      context::task_run(task_id, self$root, self$context_envir, logfile,
-                        load_context = FALSE)
+      context::task_run(task_id, self$context, logfile)
     },
 
     run_next = function() {

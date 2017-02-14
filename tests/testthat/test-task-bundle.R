@@ -3,6 +3,7 @@ context("task bundle")
 ## This tests the lifecycle of a pair of tasks in a bundle:
 test_that("task_bundle", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
+  ctx <- context::context_load(ctx, new.env(parent = .GlobalEnv))
   on.exit(unlink(ctx$root$path, recursive = TRUE))
 
   id1 <- context::task_save(quote(sin(1)), ctx)

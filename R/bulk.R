@@ -123,7 +123,7 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., DOTS = NULL, do_call = FALSE,
   name <- create_bundle_name(name, overwrite, obj$db)
 
   obj$initialize_context()
-  fun_dat <- match_fun_queue(FUN, envir, obj$context_envir)
+  fun_dat <- match_fun_queue(FUN, envir, obj$context$envir)
   FUN <- fun_dat$name_symbol %||% fun_dat$value
 
   ## It is important not to use list(...) here and instead capture the
@@ -132,7 +132,7 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., DOTS = NULL, do_call = FALSE,
   if (is.null(DOTS)) {
     DOTS <- lapply(lazyeval::lazy_dots(...), "[[", "expr")
   }
-  ids <- context::task_bulk_save(X, FUN, obj$context, DOTS,
+  ids <- context::bulk_task_save(X, FUN, obj$context, DOTS,
                                  do_call, use_names, envir)
 
   message(sprintf("submitting %s tasks", length(ids)))

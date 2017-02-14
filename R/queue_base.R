@@ -7,7 +7,6 @@ R6_queue_base <- R6::R6Class(
   public =
     list(
       context = NULL,
-      context_envir = NULL,
       root = NULL,
       db = NULL,
       workdir = NULL,
@@ -41,9 +40,9 @@ R6_queue_base <- R6::R6Class(
         ## interface for doing that is tricky though because we need
         ## to pass the environment around from the beginning and pass
         ## it in whenever this is called.
-        if (is.null(self$context_envir)) {
+        if (is.null(self$context$envir)) {
           message("Loading context ", self$context$id)
-          self$context_envir <- context::context_load(self$context)
+          self$context <- context::context_load(self$context)
        }
       },
 

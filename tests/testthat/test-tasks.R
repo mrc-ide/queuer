@@ -4,7 +4,8 @@ test_that("basic", {
   path <- tempfile("queuer_")
   on.exit(unlink(path, recursive = TRUE))
 
-  ctx <- context::context_save(path)
+  ctx <- context::context_load(context::context_save(path),
+                               new.env(parent = .GlobalEnv))
   id <- context::task_save(quote(sin(1)), ctx)
 
   t <- queuer_task(id, ctx)
@@ -30,7 +31,7 @@ test_that("basic", {
   ## file <- path_log(t$root, t$id)
   file <- NULL
   context::context_log_start()
-  res <- context::task_run(t$id, t$root, filename = file)
+  res <- context::task_run(t$id, ctx, filename = file)
   ## readLines(file)
   context::context_log_stop()
   ## t$log()
@@ -52,7 +53,7 @@ test_that("missing task", {
                "Task does not exist")
 
   t <- queuer_task(ids::random_id(), ctx, FALSE)
-  expect_error(t$context_id(), "not found")
+  expect_equal(t$context_id(), NA_character_)
   expect_error(t$expr(), "not found")
   expect_equal(t$status(), "MISSING")
   expect_error(t$result(), "unfetchable: MISSING")

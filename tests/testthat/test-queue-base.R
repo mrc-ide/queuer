@@ -31,6 +31,7 @@ test_that("empty", {
 
 test_that("enqueue", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
+  ctx <- context::context_load(ctx, new.env(parent = .GlobalEnv))
   obj <- queue_base(ctx)
   t <- obj$enqueue(sin(1))
   expect_equal(t$status(), "PENDING")

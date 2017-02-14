@@ -20,8 +20,8 @@ R6_queuer_task <- R6::R6Class(
       context::task_status(self$id, self$root$db)
     },
 
-    result = function(sanitise = FALSE) {
-      context::task_result(self$id, self$root$db, sanitise)
+    result = function(allow_incomplete = FALSE) {
+      context::task_result(self$id, self$root$db, allow_incomplete)
     },
 
     expr = function(locals = FALSE) {
@@ -29,7 +29,7 @@ R6_queuer_task <- R6::R6Class(
     },
 
     context_id = function() {
-      context::task_read(self$id, self$root$db)$context_id
+      context::task_context_id(self$id, self$root$db)
     },
 
     times = function(unit_elapsed = "secs") {
@@ -53,7 +53,7 @@ task_wait <- function(db, task_id, timeout, every = 0.5, progress = TRUE) {
   digits <- if (every < 1) abs(floor(log10(every))) else 0
   p <- remaining(timeout, trim_id(task_id, 7, 3), digits, progress)
   repeat {
-    res <- context::task_result(task_id, db, sanitise = TRUE)
+    res <- context::task_result(task_id, db, allow_incomplete = TRUE)
     if (!inherits(res, "UnfetchableTask")) {
       p(clear = TRUE)
       return(res)

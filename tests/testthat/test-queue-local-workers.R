@@ -14,7 +14,7 @@ test_that("runner", {
     unlink(ctx$root$path)
   })
 
-  ans <- res$wait(100, time_poll = 0.02, progress = interactive())
+  ans <- res$wait(100, time_poll = 0.02, progress = FALSE)
   expect_equal(ans, as.list(x * 2))
 })
 

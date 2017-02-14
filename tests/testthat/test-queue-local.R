@@ -104,10 +104,10 @@ test_that("initialise later", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   on.exit(unlink(ctx$db$destroy()))
   obj <- queue_local(ctx, initialize = FALSE)
-  expect_null(obj$context_envir)
+  expect_null(obj$context$envir)
 
   expect_message(t <- obj$enqueue(sin(1)), "Loading context")
-  expect_is(obj$context_envir, "environment")
+  expect_is(obj$context$envir, "environment")
   expect_is(t, "queuer_task")
   res <- obj$run_next()
   expect_equal(res, list(task_id = t$id, value = t$result()))
