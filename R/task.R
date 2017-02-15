@@ -36,8 +36,8 @@ R6_queuer_task <- R6::R6Class(
       context::task_times(self$id, self$root$db, unit_elapsed)
     },
 
-    log = function() {
-      context::task_log(self$id, self$root)
+    log = function(parse = TRUE) {
+      context::task_log(self$id, self$root, parse)
     },
 
     wait = function(timeout, every = 0.5, progress = TRUE) {
