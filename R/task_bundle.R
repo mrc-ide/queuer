@@ -179,17 +179,17 @@ task_bundle_wait <- function(bundle, timeout, time_poll, progress) {
     return(cleanup(results))
   }
 
-  p <- progress(total = length(bundle$tasks), show = progress)
+  p <- progress_timeout(total = length(bundle$tasks), show = progress,
+                        timeout = timeout)
   p(sum(done))
   time_poll <- min(time_poll, timeout)
-  times_up <- time_checker(timeout)
   while (!all(done)) {
     res <- task_bundle_fetch1(db, task_ids[!done])
     if (is.null(res$id)) {
-      p(0)
+      times_up <- p(0)
       ## This is put here so that we never abort while actively
       ## collecting jobs.
-      if (times_up()) {
+      if (times_up) {
         ## Even though we're aborting, because bundles are a reference
         ## class, updating the done-ness should be done before failing
         ## here.
