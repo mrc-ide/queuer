@@ -40,9 +40,11 @@ match_fun <- function(fun, envir) {
     ## need to search through base and try and find it, which can be
     ## quite slow.
     if (is.symbol(fun_lazy$expr)) {
-      match_fun_name(deparse(fun_lazy$expr), envir)
+      ## This line will not trigger until lazyeval is fixed:
+      match_fun_name(deparse(fun_lazy$expr), envir) # nocov
     } else {
-      match_fun_value(fun, envir, emptyenv())
+      ## workaround for lazyeval 0.2:
+      match_fun_primitive(fun)
     }
   } else if (is.function(fun)) {
     if (is_function_definition(fun_lazy$expr)) {
@@ -99,7 +101,8 @@ match_fun_name <- function(str, envir) {
   if (has_namespace(str)) {
     ret  <- split_namespace(str)
     if (!exists_function_ns(ret[[2]], ret[[1]])) {
-      stop("Did not find function in loaded namespace")
+      stop(sprintf("Did not find function '%s' in namespace '%s'",
+                   ret[[2]], ret[[1]]))
     }
     match_fun_sanitise(ret[[2]], asNamespace(ret[[1]]))
   } else {
@@ -109,32 +112,30 @@ match_fun_name <- function(str, envir) {
   }
 }
 
-## This one is much harder and might take a while.
-##
-## TODO: Don't deal here with the case that the function is in
-## anything other than the environment that it's enclosure points at;
-## that's going to skip memoized functions, etc.  It also is going to
-## miss anonymous functions for now.  But start with this bit I think.
-##
-## TODO: This is going to miss things like extra attributes added to a
-## function, but that's going in the category of "users making things
-## difficult".
+## This one is much harder and might take a while if it has to recurse
+## through all functions.
 match_fun_value <- function(fun, envir, stopat = .GlobalEnv) {
   nm <- environmentName(environment(fun))
   if (nzchar(nm)) {
     e <- if (nm == "R_GlobalEnv") .GlobalEnv else asNamespace(nm)
-    match_fun_sanitise(find_fun_in_envir(fun, e), e)
-  } else {
-    res <- find_fun_by_value(fun, envir, stopat)
-    match_fun_sanitise(res$name, res$envir)
+    name <- find_fun_in_envir(fun, e)
+    if (!is.null(name)) {
+      return(match_fun_sanitise(name, e))
+    }
   }
+  res <- find_fun_by_value(fun, envir, stopat)
+  match_fun_sanitise(res$name, res$envir)
+}
+
+match_fun_primitive <- function(fun) {
+  match_fun_value(fun, baseenv(), emptyenv())
 }
 
 ## This is going to search back and find the location of a function by
 ## descending through environments recursively.
 find_fun_by_name <- function(name, envir) {
   if (identical(envir, emptyenv())) {
-    stop("Did not find function")
+    stop(sprintf("Did not find function '%s' in environment", name))
   }
   if (exists_function_here(name, envir)) {
     envir
@@ -212,7 +213,7 @@ split_namespace <- function(str) {
   ## res <- strsplit(str, ":::?", fixed = TRUE)[[1]]
   res <- strsplit(str, "::", fixed = TRUE)[[1]]
   if (length(res) != 2L) {
-    stop("Not a namespace-qualified variable")
+    stop(sprintf("Invalid namespace-qualified name '%s'", str))
   }
   res
 }

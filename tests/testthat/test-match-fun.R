@@ -129,3 +129,51 @@ test_that("symbol", {
 test_that("error case", {
   expect_error(match_fun(1, .GlobalEnv), "Invalid input")
 })
+
+test_that("find primitive by value", {
+  res <- match_fun(sin, .GlobalEnv)
+  expect_equal(res$namespace, "base")
+  expect_equal(res$name, "sin")
+  expect_identical(res$envir, baseenv())
+  expect_equal(res$value, sin)
+})
+
+test_that("missing function by name in namespace", {
+  expect_equal(match_fun_name("stats::df", .GlobalEnv)$name,
+               "df")
+  expect_error(
+    match_fun_name("stats::no_such_function", .GlobalEnv),
+    "Did not find function 'no_such_function' in namespace 'stats'")
+})
+
+test_that("missing function by name", {
+  expect_error(match_fun_name("no_such_function", .GlobalEnv),
+               "Did not find function 'no_such_function' in environment")
+})
+
+test_that("missing function by value", {
+  expect_error(match_fun_value(function(x) my_thing(x), .GlobalEnv),
+               "Did not find function")
+})
+
+test_that("invalid namespace", {
+  expect_error(match_fun_name("stats::df::foo", .GlobalEnv),
+               "Invalid namespace-qualified name 'stats::df::foo'")
+})
+
+test_that("function in non-loaded namespace", {
+  expect_error(match_fun_name("nonamespace::myfunction", .GlobalEnv),
+               "Did not find function 'myfunction' in namespace 'nonamespace'")
+})
+
+test_that("nested environments", {
+  local({
+    fun <- local(local(local(function(x) x + 1)))
+    e1 <- environment()
+    e2 <- new.env(parent = e1)
+    e3 <- new.env(parent = e2)
+    expect_identical(match_fun_value(fun, e1)$envir, e1)
+    expect_identical(match_fun_value(fun, e2)$envir, e1)
+    expect_identical(match_fun_value(fun, e3)$envir, e1)
+  })
+})
