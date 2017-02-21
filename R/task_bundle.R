@@ -186,17 +186,14 @@ task_bundle_wait <- function(bundle, timeout, time_poll, progress) {
   while (!all(done)) {
     res <- task_bundle_fetch1(db, task_ids[!done])
     if (is.null(res$id)) {
-      times_up <- p(0)
       ## This is put here so that we never abort while actively
       ## collecting jobs.
-      if (times_up) {
+      if (p(0)) {
         ## Even though we're aborting, because bundles are a reference
         ## class, updating the done-ness should be done before failing
         ## here.
         bundle$done <- done
-        if (progress) {
-          message()
-        }
+        p(clear = TRUE)
         stop(sprintf("Exceeded maximum time (%d / %d tasks pending)",
                      sum(!done), length(done)))
       }

@@ -62,7 +62,7 @@ remaining <- function(timeout, what, digits = 0, show = TRUE, ...) {
       fmt <- sprintf("(:spin) waiting for %s, waited for :elapsed", what)
     }
 
-    ## digits <- if (every < 1) abs(floor(log10(every))) else 0
+    ## digits <- if (time_poll < 1) abs(floor(log10(time_poll))) else 0
     p <- progress(total, fmt = fmt, ...)
     t <- time_checker(timeout, TRUE)
     function(..., clear = FALSE) {

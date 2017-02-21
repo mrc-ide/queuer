@@ -1,7 +1,7 @@
 context("progress")
 
 test_that("progress_timeout", {
-  run <- function(total, timeout, every, n = total, ...) {
+  run <- function(total, timeout, time_poll, n = total, ...) {
     p <- progress_timeout(total, timeout, ...,
                           show_after = 0, stream = stdout(),
                           force = TRUE, width = 40)
@@ -9,7 +9,7 @@ test_that("progress_timeout", {
     done <- FALSE
     p(0)
     for (i in seq_len(n)) {
-      Sys.sleep(every)
+      Sys.sleep(time_poll)
       if (p()) {
         expired <- TRUE
         break
