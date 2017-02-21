@@ -103,3 +103,8 @@ test_that("exotic functions", {
   expect_equal(obj$run_all(), res$ids)
   expect_equal(res$results(), as.list(x + 3))
 })
+
+test_that("sanity checking", {
+  expect_error(qlapply(1:4, sin, NULL), "must be a queue object")
+  expect_error(enqueue_bulk(NULL, 1:4, sin), "must be a queue object")
+})
