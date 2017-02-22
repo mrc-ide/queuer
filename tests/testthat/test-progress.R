@@ -1,33 +1,7 @@
 context("progress")
 
 test_that("progress_timeout", {
-  run <- function(total, timeout, time_poll, n = total, ...) {
-    p <- progress_timeout(total, timeout, ...,
-                          show_after = 0, stream = stdout(),
-                          force = TRUE, width = 40)
-    expired <- FALSE
-    done <- FALSE
-    p(0)
-    for (i in seq_len(n)) {
-      Sys.sleep(time_poll)
-      if (p()) {
-        expired <- TRUE
-        break
-      }
-    }
-    done <- i == n
-    list(done = done, expired = expired)
-  }
-
-  prepare_expected <- function(x) {
-    x <- gsub("\\", "\\\\", x, fixed = TRUE)
-    x <- paste0("\\r", c(strsplit(x, "\r")[[1]][-1], ""))
-    writeLines(
-      sprintf("win_newline(\n%s\n)",
-              paste(sprintf('  "%s"', x), collapse = ",\n")))
-  }
-
-  msg <- get_output(ans <- run(3, 100.1, 0.1, digits = 1))
+  msg <- get_output(ans <- run_progress_timeout(3, 100.1, 0.1, digits = 1))
   expected <- win_newline(
     "\r(-) [------]   0% | giving up in 100.1 s",
     "\r(\\) [==----]  33% | giving up in 100.0 s",
@@ -38,4 +12,92 @@ test_that("progress_timeout", {
   )
   expect_equal(ans, list(done = TRUE, expired = FALSE))
   expect_equal(msg, expected)
+})
+
+test_that("progress_timeout; prefix", {
+  msg <- get_output(ans <- run_progress_timeout(3, 100.1, 0.1, digits = 1,
+                                                prefix = "foo: ", width = 44))
+  expected <- win_newline(
+    "\rfoo: (-) [-----]   0% | giving up in 100.1 s",
+    "\rfoo: (\\) [==---]  33% | giving up in 100.0 s",
+    "\rfoo: (|) [===--]  67% | giving up in  99.9 s",
+    "\rfoo: (/) [=====] 100% | giving up in  99.8 s",
+    "\r                                            ",
+    "\r"
+  )
+  expect_equal(ans, list(done = TRUE, expired = FALSE))
+  expect_equal(msg, expected)
+})
+
+test_that("progress_timeout; infinite time", {
+  msg <- get_output(ans <- run_progress_timeout(3, Inf, 0.2))
+  expected <- win_newline(
+    "\r(-) [------------]   0% | waited for  0s",
+    "\r(\\) [====--------]  33% | waited for  0s",
+    "\r(|) [========----]  67% | waited for  0s",
+    "\r(/) [============] 100% | waited for  1s",
+    "\r                                        ",
+    "\r"
+  )
+  expect_equal(ans, list(done = TRUE, expired = FALSE))
+  expect_equal(msg, expected)
+})
+
+test_that("progress_timeout; expires", {
+  msg <- get_output(ans <- run_progress_timeout(5, 0.3, 0.1, digits = 1))
+  expected <- win_newline(
+    "\r(-) [--------]   0% | giving up in 0.3 s",
+    "\r(\\) [==------]  20% | giving up in 0.2 s",
+    "\r(|) [===-----]  40% | giving up in 0.1 s",
+    "\r(/) [========] 100% | giving up in 0.0 s",
+    "\r                                        ",
+    "\r"
+  )
+  expect_equal(ans, list(done = FALSE, expired = TRUE))
+  expect_equal(msg, expected)
+})
+
+test_that("remaining", {
+  ## NOTE: There is some extra output here when clearing; the last set
+  ## of lines all come together from the final p(clear = TRUE) call
+  ## and seem to come from progress itself.  A better option would
+  ## probably be to just do a newline and deal with leaving the
+  ## progress bar up on the screen.
+  msg <- get_output(ans <- run_remaining(100.1, 0.1, 3, digits = 1))
+  expected <- win_newline(
+    "\r(-) waiting for task, giving up in 100.1 s",
+    "\r(\\) waiting for task, giving up in 100.0 s",
+    "\r(|) waiting for task, giving up in  99.9 s",
+    "\r(/) waiting for task, giving up in  99.8 s",
+    "\r(-) waiting for task, giving up in  99.8 s",
+    "\r                                        ",
+    "\r"
+  )
+  expect_equal(ans, list(done = TRUE, expired = FALSE))
+  expect_equal(msg, expected)
+})
+
+test_that("remaining; infinite", {
+  ## NOTE: There is some extra output here when clearing; the last set
+  ## of lines all come together from the final p(clear = TRUE) call
+  ## and seem to come from progress itself.  A better option would
+  ## probably be to just do a newline and deal with leaving the
+  ## progress bar up on the screen.
+  msg <- get_output(ans <- run_remaining(Inf, 0.2, 3))
+  expected <- win_newline(
+    "\r(-) waiting for task, waited for  0s",
+    "\r(\\) waiting for task, waited for  0s",
+    "\r(|) waiting for task, waited for  0s",
+    "\r(/) waiting for task, waited for  1s",
+    "\r(-) waiting for task, waited for  1s",
+    "\r                                        ",
+    "\r"
+  )
+  expect_equal(ans, list(done = TRUE, expired = FALSE))
+  expect_equal(msg, expected)
+})
+
+test_that("progress", {
+  p <- progress(10, show = FALSE)
+  expect_silent(p())
 })

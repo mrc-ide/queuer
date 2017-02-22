@@ -51,7 +51,7 @@ R6_queuer_task <- R6::R6Class(
 task_wait <- function(db, task_id, timeout, time_poll = 0.5, progress = TRUE) {
   time_poll <- min(time_poll, timeout)
   digits <- if (time_poll < 1) abs(floor(log10(time_poll))) else 0
-  p <- remaining(timeout, trim_id(task_id, 7, 3), digits, progress)
+  p <- progress_remaining(timeout, trim_id(task_id, 7, 3), digits, progress)
   repeat {
     res <- context::task_result(task_id, db, allow_incomplete = TRUE)
     if (!inherits(res, "UnfetchableTask")) {

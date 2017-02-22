@@ -24,10 +24,58 @@ get_output <- function(...) {
   rawToChar(x)
 }
 
+run_progress_timeout <- function(total, timeout, time_poll, n = total, ...,
+                                 width = 40) {
+  p <- progress_timeout(total, timeout, ...,
+                        show_after = 0, stream = stdout(),
+                        force = TRUE, width = width)
+  expired <- FALSE
+  done <- FALSE
+  p(0)
+  for (i in seq_len(n)) {
+    Sys.sleep(time_poll)
+    if (p()) {
+      expired <- TRUE
+      break
+    }
+  }
+  done <- i == n
+  list(done = done, expired = expired)
+}
+
+run_remaining <- function(timeout, time_poll, n, what = "task", ...) {
+  p <- progress_remaining(timeout, what, ...,
+                          show_after = 0, stream = stdout(),
+                          force = TRUE, width = 40)
+  expired <- FALSE
+  done <- FALSE
+  p(0)
+  for (i in seq_len(n)) {
+    Sys.sleep(time_poll)
+    if (p()) {
+      expired <- TRUE
+      break
+    }
+  }
+  done <- i == n
+  if (done) {
+    p(clear = TRUE)
+  }
+  list(done = done, expired = expired)
+}
+
 win_newline <- function(..., collapse = NULL) {
   x <- paste0(...)
   if (.Platform$OS.type == "windows") {
     x <- gsub("\n", "\r\n", x, fixed = TRUE)
   }
   x
+}
+
+prepare_expected <- function(x) {
+  x <- gsub("\\", "\\\\", x, fixed = TRUE)
+  x <- paste0("\\r", c(strsplit(x, "\r")[[1]][-1], ""))
+  writeLines(
+    sprintf("win_newline(\n%s\n)",
+            paste(sprintf('  "%s"', x), collapse = ",\n")))
 }
