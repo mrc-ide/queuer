@@ -16,6 +16,13 @@ test_that("runner", {
 
   ans <- res$wait(100, time_poll = 0.02, progress = FALSE)
   expect_equal(ans, as.list(x * 2))
+
+  ## Need to wait for this to exit gracefully or coverage data is
+  ## corrupted.
+  times_up <- time_checker(1)
+  while (px$is_alive() && !times_up()) {
+    Sys.sleep(0.02)
+  }
 })
 
 ## From command line:
@@ -23,6 +30,7 @@ test_that("runner", {
 ## writeLines(paste(c(path_worker, args), collapse = " "))
 ## cat(sprintf('queue_local_worker("%s", "%s", TRUE)\n', ctx$root$path, ctx$id))
 test_that("runner loop", {
+  skip_on_os("windows") # requires interrupt support
   ctx <- context::context_save(tempfile(), sources = "functions.R")
   obj <- queue_local(ctx)
 
