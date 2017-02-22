@@ -16,8 +16,8 @@
 ##' @export
 task_bundle_combine <- function(..., bundles = list(...),
                                 name = NULL, overwrite = FALSE) {
-  if (length(bundles) == 0L) {
-    stop("Provide at least one task bundle")
+  if (length(bundles) < 2) {
+    stop("Provide at least two task bundles")
   }
   names(bundles) <- NULL
 
@@ -28,11 +28,11 @@ task_bundle_combine <- function(..., bundles = list(...),
 
   ## Check that the functions of each bundle job are the same.
   ##
-  ## NOTE: we should probably check here (somewhere!) that the the
-  ## task bundles are all composed of things that have the same names
-  ## within a bundle.
+  ## TODO: now that there is a 'homogeneous' flag in the bundles
+  ## itself, we can probably do away with this.
+  homogeneous <- all(vlapply(bundles, function(x) x$homogeneous))
   fns <- vcapply(bundles, function(x) x$function_name())
-  if (length(unique(fns)) != 1L) {
+  if (homogeneous && length(unique(fns)) != 1L) {
     stop("task bundles must have same function to combine")
   }
 
@@ -51,6 +51,9 @@ task_bundle_combine <- function(..., bundles = list(...),
   X <- lapply(bundles, function(x) x$X)
   is_df <- vlapply(X, is.data.frame)
   if (all(is_df)) {
+    if (length(unique(lapply(X, names))) != 1L) {
+      stop("All bundle data.frames must have the same column names")
+    }
     X <- do.call("rbind", X)
   } else if (any(is_df)) {
     stop("Can't combine these task bundles")
@@ -58,5 +61,6 @@ task_bundle_combine <- function(..., bundles = list(...),
     X <- unlist(X, FALSE)
   }
 
-  task_bundle_create(bundles[[1]], task_ids, name, X, overwrite)
+  task_bundle_create(task_ids, bundles[[1]]$root, name, X, overwrite,
+                     homogeneous)
 }

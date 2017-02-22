@@ -124,3 +124,80 @@ test_that("info", {
   expect_is(dat$created, "POSIXt")
   expect_gte(as.numeric(diff(dat$created)), 0)
 })
+
+test_that("create data.frame group", {
+  ctx <- context::context_save(tempfile(), storage_type = "environment")
+  on.exit(unlink(ctx$root$path, recursive = TRUE))
+  obj <- queue_local(ctx)
+  df <- data.frame(a = 1:5, x = runif(5))
+  grp <- obj$enqueue_bulk(df, list)
+  expect_null(grp$names)
+  rownames(df) <- letters[seq_len(nrow(df))]
+  grp <- obj$enqueue_bulk(df, list)
+  expect_equal(grp$names, letters[seq_len(nrow(df))])
+})
+
+test_that("combine", {
+  ctx <- context::context_save(tempfile(), storage_type = "environment")
+  on.exit(unlink(ctx$root$path, recursive = TRUE))
+
+  obj <- queue_local(ctx)
+  grp1_sin <- obj$lapply(runif(4), quote(sin))
+  grp2_sin <- obj$lapply(runif(10), quote(sin))
+  grp3_sin <- obj$lapply(setNames(runif(5), letters[1:5]), quote(sin))
+  grp4_sin <- obj$lapply(setNames(runif(4), letters[6:9]), quote(sin))
+  grp_cos <- obj$lapply(runif(10), quote(cos))
+  grp1_df <- obj$enqueue_bulk(data.frame(x = runif(10)), quote(sin),
+                              use_names = FALSE)
+  grp2_df <- obj$enqueue_bulk(data.frame(x = runif(4)), quote(sin),
+                              use_names = FALSE)
+  grp3_df <- obj$enqueue_bulk(data.frame(y = runif(4)), quote(sin),
+                              use_names = FALSE)
+  grp4_df <- obj$enqueue_bulk(data.frame(a = 1:3, y = runif(3)), quote(sin),
+                              use_names = FALSE)
+
+  res <- task_bundle_combine(grp1_sin, grp2_sin)
+  expect_is(res, "task_bundle")
+  expect_equal(res$ids, c(grp1_sin$ids, grp2_sin$ids))
+  expect_equal(res$X, c(grp1_sin$X, grp2_sin$X))
+  expect_null(res$names)
+
+  res <- task_bundle_combine(grp3_sin, grp4_sin)
+  expect_is(res, "task_bundle")
+  expect_equal(res$ids, c(grp3_sin$ids, grp4_sin$ids))
+  expect_equal(res$names, c(grp3_sin$names, grp4_sin$names))
+  expect_equal(res$X, c(grp3_sin$X, grp4_sin$X))
+
+  res <- task_bundle_combine(grp1_sin, grp4_sin)
+  expect_is(res, "task_bundle")
+  expect_equal(res$ids, c(grp1_sin$ids, grp4_sin$ids))
+  expect_equal(res$names, c(rep("", length(grp1_sin$ids)), grp4_sin$names))
+  expect_equal(res$X, c(grp1_sin$X, grp4_sin$X))
+
+  res <- task_bundle_combine(grp1_df, grp2_df)
+  expect_is(res, "task_bundle")
+  expect_equal(res$ids, c(grp1_df$ids, grp2_df$ids))
+  expect_null(res$names)
+  expect_equal(res$X, rbind(grp1_df$X, grp2_df$X))
+
+  expect_error(task_bundle_combine(),
+               "Provide at least two task bundles")
+  expect_error(task_bundle_combine(bundles = list()),
+               "Provide at least two task bundles")
+  expect_error(task_bundle_combine(grp1_sin),
+               "Provide at least two task bundles")
+  expect_error(task_bundle_combine(bundles = list(grp1_sin)),
+               "Provide at least two task bundles")
+  expect_error(task_bundle_combine(grp1_sin, grp_cos),
+               "task bundles must have same function to combine")
+  expect_error(task_bundle_combine("a", "b"),
+               "All elements of ... or bundles must be task_bundle objects")
+  expect_error(task_bundle_combine(grp1_df, grp3_df),
+               "All bundle data.frames must have the same column names")
+  expect_error(task_bundle_combine(grp1_df, grp4_df),
+               "All bundle data.frames must have the same column names")
+  ## Yeah, so this is not a great error message :-/
+  expect_error(task_bundle_combine(grp1_sin, grp1_df),
+               "Can't combine these task bundles")
+
+})
