@@ -7,6 +7,7 @@ test_that("runner", {
   res <- obj$lapply(x, "slow_double")
 
   path_worker <- file.path(ctx$root$path, "bin", "queue_local_worker")
+  expect_true(file.exists(path_worker))
   px <- processx::process$new(path_worker, c(ctx$root$path, ctx$id))
 
   on.exit({
@@ -14,7 +15,7 @@ test_that("runner", {
     unlink(ctx$root$path)
   })
 
-  ans <- res$wait(100, time_poll = 0.02, progress = FALSE)
+  ans <- res$wait(5, time_poll = 0.02, progress = FALSE)
   expect_equal(ans, as.list(x * 2))
 
   ## Need to wait for this to exit gracefully or coverage data is

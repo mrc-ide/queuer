@@ -44,7 +44,7 @@ R6_queue_local <- R6::R6Class(
         dir.create(self$log_path, FALSE, TRUE)
       }
 
-      write_queue_local_worker(self$root$path)
+      write_queue_local_worker(self$root)
     },
 
     ## This is the running half of the system; these will shortly move
