@@ -1,11 +1,10 @@
 PACKAGE := $(shell grep '^Package:' DESCRIPTION | sed -E 's/^Package:[[:space:]]+//')
 RSCRIPT = Rscript --no-init-file
-CONTEXT_SOURCE_PATH=${PWD}
 
 all: install
 
 test:
-	CONTEXT_SOURCE_PATH=${CONTEXT_SOURCE_PATH} ${RSCRIPT} -e 'library(methods); devtools::test()'
+	${RSCRIPT} -e 'library(methods); devtools::test()'
 
 roxygen:
 	@mkdir -p man
@@ -31,22 +30,6 @@ README.md: README.Rmd
 clean:
 	rm -f ${PACKAGE}_*.tar.gz
 	rm -rf ${PACKAGE}.Rcheck
-
-vignettes/src/context.Rmd: vignettes/src/context.R
-	${RSCRIPT} -e 'library(sowsear); sowsear("$<", output="$@")'
-
-vignettes/context.Rmd: vignettes/src/context.Rmd
-	cd vignettes/src && CONTEXT_SOURCE_PATH=${CONTEXT_SOURCE_PATH} ${RSCRIPT} -e 'knitr::knit("context.Rmd")'
-	mv vignettes/src/context.md $@
-	sed -i.bak 's/[[:space:]]*$$//' $@
-	rm -f $@.bak
-
-vignettes_install: vignettes/context.Rmd
-	${RSCRIPT} -e 'library(methods); devtools::build_vignettes()'
-
-vignettes:
-	rm -f vignettes/context.Rmd
-	make vignettes_install
 
 staticdocs:
 	@mkdir -p inst/staticdocs
