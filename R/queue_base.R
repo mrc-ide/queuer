@@ -114,7 +114,7 @@ R6_queue_base <- R6::R6Class(
 
       enqueue_bulk = function(X, FUN, ..., do_call = FALSE,
                               envir = parent.frame(),
-                              timeout = 0, time_poll = 1, progress = TRUE,
+                              timeout = 0, time_poll = 1, progress = NULL,
                               name = NULL, overwrite = FALSE) {
         enqueue_bulk(self, X, FUN, ..., do_call = do_call, envir = envir,
                      timeout = timeout, time_poll = time_poll,
@@ -122,7 +122,7 @@ R6_queue_base <- R6::R6Class(
       },
 
       lapply = function(X, FUN, ..., envir = parent.frame(),
-                        timeout = 0, time_poll = 1, progress = TRUE,
+                        timeout = 0, time_poll = 1, progress = NULL,
                         name = NULL, overwrite = FALSE) {
         qlapply(X, FUN, self, ..., envir = envir,
                 timeout = timeout, time_poll = time_poll,

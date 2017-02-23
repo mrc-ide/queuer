@@ -1,3 +1,4 @@
+## TODO: obj->root?
 task_bundle_create <- function(task_ids, obj, name = NULL, X = NULL,
                                overwrite = FALSE, homogeneous = NULL) {
   ## TODO: flag if the task is homogeneous; we do this by setting a
@@ -77,7 +78,7 @@ R6_task_bundle <- R6::R6Class(
       }
     },
 
-    wait = function(timeout = 60, time_poll = 1, progress = TRUE) {
+    wait = function(timeout = 60, time_poll = 1, progress = NULL) {
       task_bundle_wait(self, timeout, time_poll, progress)
     },
 

@@ -40,7 +40,7 @@ R6_queuer_task <- R6::R6Class(
       context::task_log(self$id, self$root, parse)
     },
 
-    wait = function(timeout, time_poll = 0.5, progress = TRUE) {
+    wait = function(timeout, time_poll = 0.5, progress = NULL) {
       task_wait(self$root$db, self$id, timeout, time_poll, progress)
     }
   ))
@@ -48,10 +48,13 @@ R6_queuer_task <- R6::R6Class(
 ## TODO: we want to override this (probably) where a Redis based
 ## interface is available, because then we can do an optimal wait.
 ## See rrq for the approach there.
-task_wait <- function(db, task_id, timeout, time_poll = 0.5, progress = TRUE) {
+task_wait <- function(db, task_id, timeout, time_poll, progress) {
   time_poll <- min(time_poll, timeout)
-  digits <- if (time_poll < 1) abs(floor(log10(time_poll))) else 0
-  p <- progress_remaining(timeout, trim_id(task_id, 7, 3), digits, progress)
+  digits <- if (time_poll < 1) min(2, abs(floor(log10(time_poll)))) else 0
+  p <- progress_timeout(NULL, timeout,
+                        label = trim_id(task_id, 7, 3),
+                        digits = digits,
+                        show = progress)
   repeat {
     res <- context::task_result(task_id, db, allow_incomplete = TRUE)
     if (!inherits(res, "UnfetchableTask")) {

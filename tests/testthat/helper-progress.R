@@ -43,10 +43,11 @@ run_progress_timeout <- function(total, timeout, time_poll, n = total, ...,
   list(done = done, expired = expired)
 }
 
-run_remaining <- function(timeout, time_poll, n, what = "task", ...) {
-  p <- progress_remaining(timeout, what, ...,
-                          show_after = 0, stream = stdout(),
-                          force = TRUE, width = 40)
+run_progress_timeout_single <- function(timeout, time_poll, n, what = "task",
+                                        ...) {
+  p <- progress_timeout(NULL, timeout, label = what, ...,
+                        show_after = 0, stream = stdout(),
+                        force = TRUE, width = 40)
   expired <- FALSE
   done <- FALSE
   p(0)

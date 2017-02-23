@@ -1,72 +1,63 @@
-progress <- function(total, fmt, ..., show = TRUE, prefix = "") {
+##' Progress bar with timeout
+##'
+##' @title Progress bar with timeout
+##' @param total Total number of expected things.  Use \code{NULL} if
+##'   you want to wait on a single thing
+##' @param timeout The number of seconds to wait
+##' @param ... Additional arguments to
+##'   \code{progress::progress_bar$new}
+##' @param show Flag to indicate if the bar should be displayed.  If
+##'   \code{NULL} then the global options \code{queuer.progress_show}
+##'   and \code{queuer.progress_suppress} are used to determine if the
+##'   bar is shown (with suppress overriding show).  This will
+##'   evaluate to \code{TRUE} by default.  A logical flag overrides
+##'   \code{queuer.progress_show} but not
+##'   \code{queuer.progress_suppress}.
+##' @param label An optional label to prefix the timeout bar with
+##'   (will not be padded with space), or in the case of \code{total =
+##'   NULL} to indicate what is being waited on.
+##' @param digits The number of digits of accuracy to display the
+##'   remaining time in
+##' @export
+progress_timeout <- function(total, timeout, ..., show = NULL, label = NULL,
+                             digits = 0) {
+  show <- show_progress(show)
   if (show) {
-    pb <- progress::progress_bar$new(fmt, total = total, ...)
-    function(len = 1, ...) {
-      invisible(pb$tick(len, ...))
+    single <- is.null(total)
+    if (single) {
+      total <- 1L
     }
-  } else {
-    function(...) {}
-  }
-}
-
-progress_timeout <- function(total, timeout, ..., show = TRUE, prefix = "",
-                             fmt = NULL, digits = 0) {
-  if (show) {
     forever <- !is.finite(timeout)
-    if (is.null(fmt)) {
+    width <- (if (digits > 0) digits + 1 else 0) +
+      max(0, floor(log10(timeout))) + 1
+
+    if (single) {
+      if (is.null(label)) {
+        label <- "task"
+      }
+      if (forever) {
+        fmt <- sprintf("(:spin) waiting for %s, waited for :elapsed", label)
+      } else {
+        fmt <- sprintf("(:spin) waiting for %s, giving up in :remaining s",
+                       label)
+      }
+    } else {
       if (forever) {
         fmt <- "(:spin) [:bar] :percent | waited for :elapsed"
       } else {
         fmt <- "(:spin) [:bar] :percent | giving up in :remaining s"
       }
+      if (!is.null(label)) {
+        fmt <- paste0(label, fmt)
+      }
     }
-    if (nzchar(prefix)) {
-      fmt <- paste0(prefix, fmt)
-    }
-    p <- progress(total, fmt, ...)
+
+    p <- progress::progress_bar$new(fmt, total = total, ...)$tick
     time_left <- time_checker(timeout, TRUE)
-    width <- (if (digits > 0) digits + 1 else 0) +
-      max(0, floor(log10(timeout))) + 1
 
     function(len = 1, ..., clear = FALSE) {
       rem <- max(0, time_left())
-      move <- if (clear || rem == 0) total else len
-      if (forever) {
-        p(move)
-      } else {
-        remaining <- formatC(rem, digits = digits, width = width, format = "f")
-        p(move, tokens = list(remaining = remaining))
-      }
-      rem <= 0
-    }
-  } else {
-    times_up <- time_checker(timeout, FALSE)
-    function(..., clear = FALSE) {
-      if (clear) 0 else times_up()
-    }
-  }
-}
-
-progress_remaining <- function(timeout, what, digits = 0, show = TRUE, ...) {
-  if (show && timeout > 0) {
-    total <- 1
-    forever <- !is.finite(timeout)
-    if (forever) {
-      fmt <- sprintf("(:spin) waiting for %s, waited for :elapsed", what)
-    } else {
-      fmt <- sprintf("(:spin) waiting for %s, giving up in :remaining s",
-                     what)
-    }
-
-    ## digits <- if (time_poll < 1) abs(floor(log10(time_poll))) else 0
-    p <- progress(total, fmt, ...)
-    time_left <- time_checker(timeout, TRUE)
-    width <- (if (digits > 0) digits + 1 else 0) +
-      abs(floor(log10(timeout))) + 1
-
-    function(..., clear = FALSE) {
-      rem <- max(0, time_left())
-      move <- if (clear || rem == 0) 1L else 0L
+      move <- if (clear || rem == 0) total else if (single) 0L else len
       if (forever) {
         p(move)
       } else {
@@ -103,4 +94,9 @@ time_checker <- function(timeout, remaining = FALSE) {
       function() FALSE
     }
   }
+}
+
+show_progress <- function(show) {
+  !getOption("queuer.progress_suppress", FALSE) &&
+    (show %||% getOption("queuer.progress_show", TRUE))
 }

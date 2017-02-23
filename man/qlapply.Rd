@@ -6,10 +6,10 @@
 \title{Run tasks in a queue}
 \usage{
 qlapply(X, FUN, obj, ..., envir = parent.frame(), timeout = 0,
-  time_poll = 1, progress = TRUE, name = NULL, overwrite = FALSE)
+  time_poll = 1, progress = NULL, name = NULL, overwrite = FALSE)
 
 enqueue_bulk(obj, X, FUN, ..., do_call = TRUE, envir = parent.frame(),
-  timeout = 0, time_poll = 1, progress = TRUE, name = NULL,
+  timeout = 0, time_poll = 1, progress = NULL, name = NULL,
   use_names = TRUE, overwrite = FALSE)
 }
 \arguments{

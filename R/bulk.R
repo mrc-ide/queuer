@@ -62,7 +62,7 @@
 ##' @export
 qlapply <- function(X, FUN, obj, ...,
                     envir = parent.frame(),
-                    timeout = 0, time_poll = 1, progress = TRUE,
+                    timeout = 0, time_poll = 1, progress = NULL,
                     name = NULL, overwrite = FALSE) {
   ## TODO: The dots here are going to cause grief at some point.  I
   ## may need a more robust way of passing additional arguments in,
@@ -94,7 +94,7 @@ qlapply <- function(X, FUN, obj, ...,
 ##'   of the data.frame before the function call is composed.
 enqueue_bulk <- function(obj, X, FUN, ..., do_call = TRUE,
                          envir = parent.frame(),
-                         timeout = 0, time_poll = 1, progress = TRUE,
+                         timeout = 0, time_poll = 1, progress = NULL,
                          name = NULL, use_names = TRUE,
                          overwrite = FALSE) {
   obj <- enqueue_bulk_submit(obj, X, FUN, ..., do_call = do_call, envir = envir,
@@ -111,7 +111,7 @@ enqueue_bulk <- function(obj, X, FUN, ..., do_call = TRUE,
 }
 
 enqueue_bulk_submit <- function(obj, X, FUN, ..., DOTS = NULL, do_call = FALSE,
-                                envir = parent.frame(), progress = TRUE,
+                                envir = parent.frame(), progress = NULL,
                                 name = NULL, use_names = TRUE,
                                 overwrite = FALSE) {
   ## TODO: If I push this to *only* be a method, then the assertion is

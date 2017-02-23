@@ -1,5 +1,53 @@
 context("progress")
 
+test_that("options", {
+  with_options <- function(opts, code) {
+    oo <- options(opts)
+    on.exit(options(oo))
+    force(code)
+  }
+
+  with_options(
+    list(queuer.progress_show = TRUE,
+         queuer.progress_suppress = FALSE), {
+           expect_true(show_progress(NULL))
+           expect_true(show_progress(TRUE))
+           expect_false(show_progress(FALSE))
+         })
+
+  with_options(
+    list(queuer.progress_show = FALSE,
+         queuer.progress_suppress = FALSE), {
+           expect_false(show_progress(NULL))
+           expect_true(show_progress(TRUE))
+           expect_false(show_progress(FALSE))
+         })
+
+  with_options(
+    list(queuer.progress_show = TRUE,
+         queuer.progress_suppress = TRUE), {
+           expect_false(show_progress(NULL))
+           expect_false(show_progress(TRUE))
+           expect_false(show_progress(FALSE))
+         })
+
+  with_options(
+    list(queuer.progress_show = FALSE,
+         queuer.progress_suppress = TRUE), {
+           expect_false(show_progress(NULL))
+           expect_false(show_progress(TRUE))
+           expect_false(show_progress(FALSE))
+         })
+
+  with_options(
+    list(queuer.progress_show = NULL,
+         queuer.progress_suppress = NULL), {
+           expect_true(show_progress(NULL))
+           expect_true(show_progress(TRUE))
+           expect_false(show_progress(FALSE))
+         })
+})
+
 test_that("progress_timeout", {
   msg <- get_output(ans <- run_progress_timeout(3, 100.1, 0.1, digits = 1))
   expected <- win_newline(
@@ -14,9 +62,9 @@ test_that("progress_timeout", {
   expect_equal(msg, expected)
 })
 
-test_that("progress_timeout; prefix", {
+test_that("progress_timeout; label", {
   msg <- get_output(ans <- run_progress_timeout(3, 100.1, 0.1, digits = 1,
-                                                prefix = "foo: ", width = 44))
+                                                label = "foo: ", width = 44))
   expected <- win_newline(
     "\rfoo: (-) [-----]   0% | giving up in 100.1 s",
     "\rfoo: (\\) [==---]  33% | giving up in 100.0 s",
@@ -63,7 +111,8 @@ test_that("remaining", {
   ## and seem to come from progress itself.  A better option would
   ## probably be to just do a newline and deal with leaving the
   ## progress bar up on the screen.
-  msg <- get_output(ans <- run_remaining(100.1, 0.1, 3, digits = 1))
+  msg <- get_output(ans <- run_progress_timeout_single(100.1, 0.1, 3,
+                                                       digits = 1))
   expected <- win_newline(
     "\r(-) waiting for task, giving up in 100.1 s",
     "\r(\\) waiting for task, giving up in 100.0 s",
@@ -83,7 +132,7 @@ test_that("remaining; infinite", {
   ## and seem to come from progress itself.  A better option would
   ## probably be to just do a newline and deal with leaving the
   ## progress bar up on the screen.
-  msg <- get_output(ans <- run_remaining(Inf, 0.2, 3))
+  msg <- get_output(ans <- run_progress_timeout_single(Inf, 0.2, 3))
   expected <- win_newline(
     "\r(-) waiting for task, waited for  0s",
     "\r(\\) waiting for task, waited for  0s",
@@ -95,9 +144,4 @@ test_that("remaining; infinite", {
   )
   expect_equal(ans, list(done = TRUE, expired = FALSE))
   expect_equal(msg, expected)
-})
-
-test_that("progress", {
-  p <- progress(10, show = FALSE)
-  expect_silent(p())
 })

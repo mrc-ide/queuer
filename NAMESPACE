@@ -3,6 +3,7 @@
 export(enqueue_bulk)
 export(match_fun)
 export(match_fun_queue)
+export(progress_timeout)
 export(qlapply)
 export(task_bundle_combine)
 importFrom(R6,R6Class)
