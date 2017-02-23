@@ -59,3 +59,14 @@ test_that("missing task", {
   expect_error(t$result(), "unfetchable: MISSING")
   expect_is(t$result(TRUE), "UnfetchableTask")
 })
+
+test_that("Expressions namespace-qualified arguments are allowed", {
+  path <- tempfile("queuer_")
+  on.exit(unlink(path, recursive = TRUE))
+  ctx <- context::context_save(path, storage_type = "environment")
+  obj <- queue_base(ctx)
+  ## This replicates issue #13
+  x <- 1
+  t <- obj$enqueue(foo(x, ids::random_id))
+  expect_equal(t$expr(), quote(foo(x, ids::random_id)))
+})
