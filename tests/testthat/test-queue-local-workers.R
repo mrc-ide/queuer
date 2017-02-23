@@ -1,5 +1,25 @@
 context("queue_local workers")
 
+test_that("in process", {
+  ctx <- context::context_save(tempfile(), sources = "functions.R")
+  obj <- queue_local(ctx)
+  x <- runif(4, max = 0.1)
+  res <- obj$lapply(x, "slow_double")
+
+  context::context_log_stop()
+  expect_message(queue_local_worker(ctx$root$path, ctx$id, FALSE),
+                 "worker")
+  expect_null(getOption("context.log"))
+
+  context::context_log_start()
+  on.exit(context::context_log_stop(), add = TRUE)
+  queue_local_worker(ctx$root$path, ctx$id, FALSE)
+  expect_true(getOption("context.log"))
+
+  expect_equal(res$results(), as.list(x * 2))
+})
+
+
 test_that("runner", {
   ctx <- context::context_save(tempfile(), sources = "functions.R")
   obj <- queue_local(ctx)

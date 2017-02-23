@@ -114,11 +114,11 @@ test_that("remaining", {
   msg <- get_output(ans <- run_progress_timeout_single(100.1, 0.1, 3,
                                                        digits = 1))
   expected <- win_newline(
-    "\r(-) waiting for task, giving up in 100.1 s",
-    "\r(\\) waiting for task, giving up in 100.0 s",
-    "\r(|) waiting for task, giving up in  99.9 s",
-    "\r(/) waiting for task, giving up in  99.8 s",
-    "\r(-) waiting for task, giving up in  99.8 s",
+    "\r(-) waiting for thing, giving up in 100.1 s",
+    "\r(\\) waiting for thing, giving up in 100.0 s",
+    "\r(|) waiting for thing, giving up in  99.9 s",
+    "\r(/) waiting for thing, giving up in  99.8 s",
+    "\r(-) waiting for thing, giving up in  99.8 s",
     "\r                                        ",
     "\r"
   )
@@ -134,11 +134,33 @@ test_that("remaining; infinite", {
   ## progress bar up on the screen.
   msg <- get_output(ans <- run_progress_timeout_single(Inf, 0.2, 3))
   expected <- win_newline(
-    "\r(-) waiting for task, waited for  0s",
-    "\r(\\) waiting for task, waited for  0s",
-    "\r(|) waiting for task, waited for  0s",
-    "\r(/) waiting for task, waited for  1s",
-    "\r(-) waiting for task, waited for  1s",
+    "\r(-) waiting for thing, waited for  0s",
+    "\r(\\) waiting for thing, waited for  0s",
+    "\r(|) waiting for thing, waited for  0s",
+    "\r(/) waiting for thing, waited for  1s",
+    "\r(-) waiting for thing, waited for  1s",
+    "\r                                        ",
+    "\r"
+  )
+  expect_equal(ans, list(done = TRUE, expired = FALSE))
+  expect_equal(msg, expected)
+})
+
+test_that("remaining; no name", {
+  ## NOTE: There is some extra output here when clearing; the last set
+  ## of lines all come together from the final p(clear = TRUE) call
+  ## and seem to come from progress itself.  A better option would
+  ## probably be to just do a newline and deal with leaving the
+  ## progress bar up on the screen.
+  msg <- get_output(ans <- run_progress_timeout_single(100.1, 0.1, 3,
+                                                       label = NULL,
+                                                       digits = 1))
+  expected <- win_newline(
+    "\r(-) waiting for task, giving up in 100.1 s",
+    "\r(\\) waiting for task, giving up in 100.0 s",
+    "\r(|) waiting for task, giving up in  99.9 s",
+    "\r(/) waiting for task, giving up in  99.8 s",
+    "\r(-) waiting for task, giving up in  99.8 s",
     "\r                                        ",
     "\r"
   )
