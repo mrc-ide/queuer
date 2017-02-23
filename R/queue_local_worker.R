@@ -30,7 +30,7 @@ queue_local_worker_main <- function(args = commandArgs(TRUE)) {
 }
 
 queue_local_worker_main_args <- function(args) {
-  args <- context:::parse_command_args(args, "queue_local_worker", 1:2)
+  args <- context::parse_context_args(args, "queue_local_worker", 1:2)
   list(root = args$root,
        context_id = args$args[[1L]],
        loop = if (args$n == 2L) args$args[[2L]] else FALSE)
@@ -38,6 +38,6 @@ queue_local_worker_main_args <- function(args) {
 
 write_queue_local_worker <- function(root) {
   path <- context::context_root_get(root)$path
-  context:::write_context_script(path, "queue_local_worker",
-                                 "queuer:::queue_local_worker_main", 1:2)
+  context::write_context_script(path, "queue_local_worker",
+                                "queuer:::queue_local_worker_main", 1:2)
 }
