@@ -26,10 +26,6 @@ R6_queue_base <- R6::R6Class(
         self$db <- self$root$db
         self$workdir <- getwd()
 
-        if (self$context$auto) {
-          stop("auto environments not yet supported")
-        }
-
         if (initialize) {
           self$initialize_context()
         }
