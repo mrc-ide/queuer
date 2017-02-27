@@ -52,8 +52,4 @@ test_that("invalid creation", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   expect_error(queue_base(ctx, ctx$root),
                "'root' must be NULL")
-
-  ctx <- context::context_save(tempfile(), storage_type = "environment",
-                               auto = TRUE)
-  expect_error(queue_base(ctx), "auto environments not yet supported")
 })
