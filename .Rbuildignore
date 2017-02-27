@@ -9,3 +9,5 @@
 ^queuer_.*\.tar\.gz$
 ^\.lintr$
 ^man-roxygen$
+^\.travis\.yml$
+^appveyor\.yml$
