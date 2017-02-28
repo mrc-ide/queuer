@@ -80,3 +80,5 @@ prepare_expected <- function(x) {
     sprintf("win_newline(\n%s\n)",
             paste(sprintf('  "%s"', x), collapse = ",\n")))
 }
+
+PROGRESS_RESTART <- 3

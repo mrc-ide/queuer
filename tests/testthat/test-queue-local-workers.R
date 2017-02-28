@@ -75,7 +75,7 @@ test_that("runner loop", {
   expect_is(grp, "task_bundle")
   expect_equal(grp$results(), as.list(x * 2))
 
-  pid <- obj$enqueue(Sys.getpid())$wait(Inf, 0.02, FALSE)
+  pid <- obj$enqueue(Sys.getpid())$wait(Inf, 0.1, FALSE)
 
   tools::pskill(pid, tools::SIGINT)
   times_up <- time_checker(1)
