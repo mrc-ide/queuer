@@ -56,7 +56,7 @@ test_that("options", {
 ## I'm using a testthat::try_again, in the hope that it will stay in
 ## the package for a couple of versions and be reliable enough to use.
 ## I'll probably still want to skip these on CRAN though.
-st_that("progress_timeout", {
+test_that("progress_timeout", {
   expected <- win_newline(
     "\r(-) [------]   0% | giving up in 100.1 s",
     "\r(\\) [==----]  33% | giving up in 100.0 s",
