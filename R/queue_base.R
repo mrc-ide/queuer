@@ -108,7 +108,7 @@ R6_queue_base <- R6::R6Class(
         invisible(queuer_task(task_id, self$root))
       },
 
-      enqueue_bulk = function(X, FUN, ..., do_call = FALSE,
+      enqueue_bulk = function(X, FUN, ..., do_call = TRUE,
                               envir = parent.frame(),
                               timeout = 0, time_poll = 1, progress = NULL,
                               name = NULL, overwrite = FALSE) {

@@ -135,6 +135,9 @@ test_that("create data.frame group", {
   rownames(df) <- letters[seq_len(nrow(df))]
   grp <- obj$enqueue_bulk(df, list)
   expect_equal(grp$names, letters[seq_len(nrow(df))])
+
+  expect_equal(grp$expr()[[1]],
+               bquote(base::list(a = 1L, x = .(df$x[[1L]]))))
 })
 
 test_that("combine", {
