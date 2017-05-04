@@ -12,7 +12,7 @@ Depends:
     R (>= 3.2.2)
 Imports:
     R6,
-    context (>= 0.1.0),
+    context (>= 0.1.1),
     ids,
     lazyeval,
     progress (>= 1.1.1)
@@ -22,6 +22,6 @@ Suggests:
     testthat
 RoxygenNote: 5.0.1
 Remotes:
-    dide-tools/context@develop,
+    dide-tools/context,
     richfitz/seagull,
     r-pkgs/processx
