@@ -140,3 +140,20 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., DOTS = NULL, do_call = FALSE,
 
   task_bundle_create(ids, obj, name, X, overwrite = TRUE, homogeneous = TRUE)
 }
+
+## This does the necessary wrangling of argument lengths and orientation
+mapply_X <- function(...) {
+  dots <- list(...)
+  len <- lengths(dots)
+  ul <- unique(len)
+
+  if (length(ul) == 2L && min(ul) == 1L) {
+    n <- max(len)
+    dots[len == 1L] <- lapply(dots[len == 1L], rep_len, n)
+    ul <- n
+  } else if (length(ul) != 1L) {
+    stop("Every element of '...' must have the same length (or 1)")
+  }
+
+  lapply(seq_len(ul), function(i) lapply(dots, "[[", i))
+}

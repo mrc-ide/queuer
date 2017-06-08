@@ -124,6 +124,21 @@ R6_queue_base <- R6::R6Class(
                 timeout = timeout, time_poll = time_poll,
                 progress = progress, name = name, overwrite = overwrite)
       },
+      ## mapply follows fairly straightforwardly from enqueue_bulk, so
+      ## that's good.  The bad is that we must duplicate every
+      ## argument after '...' because we can't automatically pass them
+      ## through.
+      mapply = function(FUN, ..., MoreArgs = NULL,
+                    envir = parent.frame(), timeout = 0,
+                    time_poll = 1, progress = NULL, name = NULL,
+                    use_names = TRUE, overwrite = FALSE) {
+        X <- mapply_X(...)
+        self$enqueue_bulk(X, FUN, DOTS = MoreArgs, do_call = TRUE,
+                          envir = envir, timeout = timeout,
+                          time_poll = time_poll, progress = progress,
+                          name = name, use_names = use_names,
+                          overwrite = overwrite)
+      },
 
       ## These exist only as a stub for now, for other classes to
       ## override.

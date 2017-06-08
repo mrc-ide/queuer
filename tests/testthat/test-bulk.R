@@ -108,3 +108,49 @@ test_that("sanity checking", {
   expect_error(qlapply(1:4, sin, NULL), "must be a queue object")
   expect_error(enqueue_bulk(NULL, 1:4, sin), "must be a queue object")
 })
+
+test_that("mapply", {
+  ctx <- context::context_save(tempfile(), storage_type = "environment")
+  obj <- queue_local(ctx)
+
+  grp <- obj$mapply(rep, 1:4, 4:1)
+  expect_equal(length(grp$tasks), 4)
+  expect_equal(grp$tasks[[1]]$expr(), quote(base::rep(1L, 4L)))
+  expect_equal(grp$tasks[[4]]$expr(), quote(base::rep(4L, 1L)))
+
+  expect_equal(obj$run_all(), grp$ids)
+  expect_equal(grp$results(), mapply(rep, 1:4, 4:1, SIMPLIFY = FALSE))
+
+  grp <- obj$mapply(rep, times = 1:4, x = 4:1)
+  expect_equal(length(grp$tasks), 4)
+  expect_equal(grp$tasks[[1]]$expr(), quote(base::rep(times = 1L, x = 4L)))
+  expect_equal(grp$tasks[[4]]$expr(), quote(base::rep(times = 4L, x = 1L)))
+  expect_equal(obj$run_all(), grp$ids)
+  expect_equal(grp$results(),
+               mapply(rep, times = 1:4, x = 4:1, SIMPLIFY = FALSE))
+
+  grp <- obj$mapply(rep, times = 1:4, MoreArgs = list(x = 42))
+  expect_equal(length(grp$tasks), 4)
+  expect_equal(grp$tasks[[1]]$expr(), quote(base::rep(times = 1L, x = 42)))
+  expect_equal(grp$tasks[[4]]$expr(), quote(base::rep(times = 4L, x = 42)))
+  expect_equal(obj$run_all(), grp$ids)
+  expect_equal(grp$results(),
+               mapply(rep, times = 1:4, MoreArgs = list(x = 42),
+                      SIMPLIFY = FALSE))
+})
+
+test_that("mapply - recycle", {
+  ctx <- context::context_save(tempfile(), storage_type = "environment")
+  obj <- queue_local(ctx)
+  grp <- obj$mapply(rep, 1:4, 1)
+
+  expect_equal(length(grp$tasks), 4)
+  expect_equal(grp$tasks[[1]]$expr(), quote(base::rep(1L, 1)))
+  expect_equal(grp$tasks[[4]]$expr(), quote(base::rep(4L, 1)))
+  expect_equal(obj$run_all(), grp$ids)
+  expect_equal(grp$results(), mapply(rep, 1:4, 1, SIMPLIFY = FALSE))
+
+  expect_error(obj$mapply(rep, 1:4, 1:3),
+               "Every element of '...' must have the same length (or 1)",
+               fixed = TRUE)
+})
