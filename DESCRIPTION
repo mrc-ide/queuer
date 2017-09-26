@@ -22,6 +22,6 @@ Suggests:
     testthat
 RoxygenNote: 5.0.1
 Remotes:
-    dide-tools/context,
+    mrc-ide/context,
     richfitz/seagull,
     r-pkgs/processx

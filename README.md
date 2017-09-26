@@ -1,9 +1,9 @@
 # queuer
 
 [![Project Status: WIP - Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](http://www.repostatus.org/badges/latest/wip.svg)](http://www.repostatus.org/#wip)
-[![Travis-CI Build Status](https://travis-ci.org/richfitz/queuer.svg?branch=master)](https://travis-ci.org/richfitz/queuer)
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/richfitz/queuer?branch=master&svg=true)](https://ci.appveyor.com/project/richfitz/queuer)
-[![codecov.io](https://codecov.io/github/richfitz/queuer/coverage.svg?branch=master)](https://codecov.io/github/richfitz/queuer?branch=master)
+[![Travis-CI Build Status](https://travis-ci.org/mrc-ide/queuer.svg?branch=master)](https://travis-ci.org/mrc-ide/queuer)
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/mrc-ide/queuer?branch=master&svg=true)](https://ci.appveyor.com/project/mrc-ide/queuer)
+[![codecov.io](https://codecov.io/github/mrc-ide/queuer/coverage.svg?branch=master)](https://codecov.io/github/mrc-ide/queuer?branch=master)
 
 > Queue Tasks
 
@@ -16,6 +16,6 @@ This package exists to make use of HPC systems where jobs are submitted to remot
 (Relatively) stable version via `drat`:
 
 ```r
-drat:::add("dide-tools")
+drat:::add("mrc-ide")
 install.packages("queuer")
 ```
