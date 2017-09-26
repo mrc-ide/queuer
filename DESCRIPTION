@@ -6,8 +6,8 @@ Maintainer: Rich FitzJohn <rich.fitzjohn@gmail.com>
 Description: Queue tasks to number of backends.
 License: MIT + file LICENSE
 LazyData: true
-URL: https://github.com/dide-tools/queuer
-BugReports: https://github.com/dide-tools/queuer/issues
+URL: https://github.com/mrc-ide/queuer
+BugReports: https://github.com/mrc-ide/queuer/issues
 Depends:
     R (>= 3.2.2)
 Imports:
