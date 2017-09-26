@@ -22,6 +22,7 @@ test_that("in process", {
 
 test_that("runner", {
   skip_if_not_installed("processx")
+  skip_on_os("windows")
   ctx <- context::context_save(tempfile(), sources = "functions.R")
   obj <- queue_local(ctx)
   x <- runif(4, max = 0.1)

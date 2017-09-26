@@ -82,3 +82,7 @@ prepare_expected <- function(x) {
 }
 
 PROGRESS_RESTART <- 3
+
+is_windows <- function() {
+  tolower(Sys.info()[["sysname"]]) == "windows"
+}

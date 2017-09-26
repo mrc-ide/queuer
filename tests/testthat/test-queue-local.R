@@ -75,7 +75,11 @@ test_that("enqueue", {
   tt <- obj$task_times()
   expect_is(tt, "data.frame")
   expect_equal(nrow(tt), 11)
-  expect_equal(tt$task_id, c(t$id, t1$id, ord))
+  ## This is too strict on windows because timing is not sensitive
+  ## enough.
+  if (!is_windows()) {
+    expect_equal(tt$task_id, c(t$id, t1$id, ord))
+  }
 })
 
 test_that("environment storage", {

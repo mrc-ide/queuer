@@ -33,6 +33,7 @@ test_that("time_checker", {
   expect_gt(t(), 0)
 
   t <- time_checker(0, FALSE)
+  Sys.sleep(0.001)
   expect_true(t())
   t <- time_checker(0, TRUE)
   expect_lte(t(), 0)
