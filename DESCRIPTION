@@ -23,5 +23,4 @@ Suggests:
 RoxygenNote: 5.0.1
 Remotes:
     mrc-ide/context,
-    richfitz/seagull,
-    r-pkgs/processx
+    richfitz/seagull
