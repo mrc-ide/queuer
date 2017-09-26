@@ -112,6 +112,9 @@ test_that("info", {
 
   obj <- queue_local(ctx)
   grp1 <- obj$lapply(runif(4), quote(sin))
+  if (is_windows()) {
+    Sys.sleep(0.01)
+  }
   grp2 <- obj$lapply(runif(10), quote(cos))
 
   expect_equal(sort(obj$task_bundle_list()),
