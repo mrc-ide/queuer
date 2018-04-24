@@ -1,6 +1,7 @@
 context("fifo")
 
 test_that("seagull", {
+  skip_if_not_installed("seagull")
   q <- fifo_seagull(storr::storr_environment(), "queue", "objects",
                     tempfile(), 1)
   expect_equal(q$read(), character(0))

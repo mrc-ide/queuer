@@ -1,6 +1,7 @@
 context("queue_local")
 
 test_that("empty queue", {
+  skip_if_not_installed("seagull")
   ctx <- context::context_save(tempfile())
   on.exit(unlink(ctx$db$destroy()))
   obj <- queue_local(ctx)
@@ -15,6 +16,7 @@ test_that("empty queue", {
 })
 
 test_that("enqueue", {
+  skip_if_not_installed("seagull")
   ctx <- context::context_save(tempfile())
   on.exit(unlink(ctx$db$destroy()))
   log_path <- "logs"
@@ -83,6 +85,7 @@ test_that("enqueue", {
 })
 
 test_that("environment storage", {
+  skip_if_not_installed("seagull")
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   on.exit(unlink(ctx$db$destroy()))
 
@@ -105,6 +108,7 @@ test_that("environment storage", {
 })
 
 test_that("initialise later", {
+  skip_if_not_installed("seagull")
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   on.exit(unlink(ctx$db$destroy()))
   obj <- queue_local(ctx, initialize = FALSE)
@@ -118,6 +122,7 @@ test_that("initialise later", {
 })
 
 test_that("unsubmit", {
+  skip_if_not_installed("seagull")
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   on.exit(unlink(ctx$db$destroy()))
 
@@ -137,6 +142,7 @@ test_that("unsubmit", {
 })
 
 test_that("submit_or_delete", {
+  skip_if_not_installed("seagull")
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   on.exit(unlink(ctx$db$destroy()))
 

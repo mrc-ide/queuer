@@ -54,6 +54,7 @@ test_that("named group", {
 })
 
 test_that("named lapply", {
+  skip_if_not_installed("seagull")
   ctx <- context::context_save(tempfile())
   obj <- queue_local(ctx)
   bundle <- obj$lapply(setNames(as.list(1:3), letters[1:3]), I)
@@ -71,6 +72,7 @@ test_that("named lapply", {
 })
 
 test_that("$enqueue_bulk", {
+  skip_if_not_installed("seagull")
   ctx <- context::context_save(tempfile())
   obj <- queue_local(ctx)
   bundle <- obj$enqueue_bulk(1:3, quote(I))
@@ -79,6 +81,7 @@ test_that("$enqueue_bulk", {
 })
 
 test_that("exotic functions", {
+  skip_if_not_installed("seagull")
   Sys.setenv(R_TESTS = "")
 
   ctx <- context::context_save(tempfile(), storage_type = "environment")
@@ -110,6 +113,7 @@ test_that("sanity checking", {
 })
 
 test_that("mapply", {
+  skip_if_not_installed("seagull")
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   obj <- queue_local(ctx)
 
@@ -140,6 +144,7 @@ test_that("mapply", {
 })
 
 test_that("mapply - recycle", {
+  skip_if_not_installed("seagull")
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   obj <- queue_local(ctx)
   grp <- obj$mapply(rep, 1:4, 1)
