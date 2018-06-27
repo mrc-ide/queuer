@@ -5,3 +5,6 @@ r_packages:
   - covr
 after_success:
   - Rscript -e 'covr::codecov()'
+r_github_packages:
+  - mrc-ide/context
+  - richfitz/seagull
