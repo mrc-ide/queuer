@@ -23,6 +23,9 @@ test_that("in process", {
 test_that("runner", {
   skip_if_not_installed("processx")
   skip_on_os("windows")
+  ## This is related to a failure in (I think) context where spawning
+  ## processes on travis is no longer working.
+  skip_on_travis()
   ctx <- context::context_save(tempfile(), sources = "functions.R")
   obj <- queue_local(ctx)
   x <- runif(4, max = 0.1)
@@ -55,6 +58,7 @@ test_that("runner", {
 test_that("runner loop", {
   skip_on_os("windows") # requires interrupt support
   skip_if_not_installed("processx")
+  skip_on_travis()
   ctx <- context::context_save(tempfile(), sources = "functions.R")
   obj <- queue_local(ctx)
 
