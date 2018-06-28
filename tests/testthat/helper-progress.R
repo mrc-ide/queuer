@@ -47,7 +47,7 @@ run_progress_timeout_single <- function(timeout, time_poll, n, label = "thing",
                                         ...) {
   p <- progress_timeout(NULL, timeout, label = label, ...,
                         show_after = 0, stream = stdout(),
-                        force = TRUE, width = 40)
+                        force = TRUE, width = 50)
   expired <- FALSE
   done <- FALSE
   p(0)

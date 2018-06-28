@@ -59,15 +59,16 @@ test_that("options", {
 test_that("progress_timeout", {
   expected <- win_newline(
     "\r(-) [------]   0% | giving up in 100.1 s",
-    "\r(\\) [==----]  33% | giving up in 100.0 s",
-    "\r(|) [====--]  67% | giving up in  99.9 s",
+    "\r(\\) [=>----]  33% | giving up in 100.0 s",
+    "\r(|) [===>--]  67% | giving up in  99.9 s",
     "\r(/) [======] 100% | giving up in  99.8 s",
     "\r                                        ",
     "\r"
   )
   try_again(PROGRESS_RESTART, {
-    msg <- get_output(ans <- run_progress_timeout(3, 100.1, 0.1, digits = 1))
-    expect_equal(msg, expected)
+    msg <- capture_messages(
+      ans <- run_progress_timeout(3, 100.1, 0.1, digits = 1))
+    expect_equal(paste(msg, collapse = ""), expected)
     expect_equal(ans, list(done = TRUE, expired = FALSE))
   })
 })
@@ -75,16 +76,17 @@ test_that("progress_timeout", {
 test_that("progress_timeout; label", {
   expected <- win_newline(
     "\rfoo: (-) [-----]   0% | giving up in 100.1 s",
-    "\rfoo: (\\) [==---]  33% | giving up in 100.0 s",
-    "\rfoo: (|) [===--]  67% | giving up in  99.9 s",
+    "\rfoo: (\\) [=>---]  33% | giving up in 100.0 s",
+    "\rfoo: (|) [==>--]  67% | giving up in  99.9 s",
     "\rfoo: (/) [=====] 100% | giving up in  99.8 s",
     "\r                                            ",
     "\r"
   )
   try_again(PROGRESS_RESTART, {
-    msg <- get_output(ans <- run_progress_timeout(3, 100.1, 0.1, digits = 1,
-                                                  label = "foo: ", width = 44))
-    expect_equal(msg, expected)
+    msg <- capture_messages(
+      ans <- run_progress_timeout(3, 100.1, 0.1, digits = 1,
+                                  label = "foo: ", width = 44))
+    expect_equal(paste(msg, collapse = ""), expected)
     expect_equal(ans, list(done = TRUE, expired = FALSE))
   })
 })
@@ -92,33 +94,35 @@ test_that("progress_timeout; label", {
 test_that("progress_timeout; infinite time", {
   expected <- win_newline(
     "\r(-) [------------]   0% | waited for  0s",
-    "\r(\\) [====--------]  33% | waited for  0s",
-    "\r(|) [========----]  67% | waited for  0s",
+    "\r(\\) [===>--------]  33% | waited for  0s",
+    "\r(|) [=======>----]  67% | waited for  0s",
     "\r(/) [============] 100% | waited for  1s",
     "\r                                        ",
     "\r"
   )
 
   try_again(PROGRESS_RESTART, {
-    msg <- get_output(ans <- run_progress_timeout(3, Inf, 0.2))
+    msg <- capture_messages(
+      ans <- run_progress_timeout(3, Inf, 0.2))
     expect_equal(ans, list(done = TRUE, expired = FALSE))
-    expect_equal(msg, expected)
+    expect_equal(paste(msg, collapse = ""), expected)
   })
 })
 
 test_that("progress_timeout; expires", {
   expected <- win_newline(
     "\r(-) [--------]   0% | giving up in 0.3 s",
-    "\r(\\) [==------]  20% | giving up in 0.2 s",
-    "\r(|) [===-----]  40% | giving up in 0.1 s",
+    "\r(\\) [=>------]  20% | giving up in 0.2 s",
+    "\r(|) [==>-----]  40% | giving up in 0.1 s",
     "\r(/) [========] 100% | giving up in 0.0 s",
     "\r                                        ",
     "\r"
   )
   try_again(PROGRESS_RESTART, {
-    msg <- get_output(ans <- run_progress_timeout(5, 0.3, 0.1, digits = 1))
+    msg <- capture_messages(
+      ans <- run_progress_timeout(5, 0.3, 0.1, digits = 1))
     expect_equal(ans, list(done = FALSE, expired = TRUE))
-    expect_equal(msg, expected)
+    expect_equal(paste(msg, collapse = ""), expected)
   })
 })
 
@@ -134,14 +138,14 @@ test_that("remaining", {
     "\r(|) waiting for thing, giving up in  99.9 s",
     "\r(/) waiting for thing, giving up in  99.8 s",
     "\r(-) waiting for thing, giving up in  99.8 s",
-    "\r                                        ",
+    "\r                                                  ",
     "\r"
   )
   try_again(PROGRESS_RESTART, {
-    msg <- get_output(ans <- run_progress_timeout_single(100.1, 0.1, 3,
-                                                         digits = 1))
+    msg <- capture_messages(
+      ans <- run_progress_timeout_single(100.1, 0.1, 3, digits = 1))
     expect_equal(ans, list(done = TRUE, expired = FALSE))
-    expect_equal(msg, expected)
+    expect_equal(paste(msg, collapse = ""), expected)
   })
 })
 
@@ -157,13 +161,13 @@ test_that("remaining; infinite", {
     "\r(|) waiting for thing, waited for  0s",
     "\r(/) waiting for thing, waited for  1s",
     "\r(-) waiting for thing, waited for  1s",
-    "\r                                        ",
+    "\r                                                  ",
     "\r"
   )
   try_again(PROGRESS_RESTART, {
-    msg <- get_output(ans <- run_progress_timeout_single(Inf, 0.2, 3))
+    msg <- capture_messages(ans <- run_progress_timeout_single(Inf, 0.2, 3))
     expect_equal(ans, list(done = TRUE, expired = FALSE))
-    expect_equal(msg, expected)
+    expect_equal(paste(msg, collapse = ""), expected)
   })
 })
 
@@ -179,14 +183,14 @@ test_that("remaining; no name", {
     "\r(|) waiting for task, giving up in  99.9 s",
     "\r(/) waiting for task, giving up in  99.8 s",
     "\r(-) waiting for task, giving up in  99.8 s",
-    "\r                                        ",
+    "\r                                                  ",
     "\r"
   )
   try_again(PROGRESS_RESTART, {
-    msg <- get_output(ans <- run_progress_timeout_single(100.1, 0.1, 3,
-                                                         label = NULL,
-                                                         digits = 1))
+    msg <- capture_messages(
+      ans <- run_progress_timeout_single(100.1, 0.1, 3, label = NULL,
+                                         digits = 1))
     expect_equal(ans, list(done = TRUE, expired = FALSE))
-    expect_equal(msg, expected)
+    expect_equal(paste(msg, collapse = ""), expected)
   })
 })
