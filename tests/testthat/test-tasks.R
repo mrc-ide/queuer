@@ -14,7 +14,7 @@ test_that("basic", {
   expect_equal(t$status(), "PENDING")
   expect_equal(t$expr(), quote(sin(1)))
   expect_equal(t$context_id(), ctx$id)
-  expect_error(t$result(), "is unfetchable")
+  expect_error(t$result(), "is unfetchable", class = "UnfetchableTask")
   expect_is(t$result(TRUE), "UnfetchableTask")
 
   ## expect_error(t$log(), "No log for")
@@ -54,9 +54,9 @@ test_that("missing task", {
 
   t <- queuer_task(ids::random_id(), ctx, FALSE)
   expect_equal(t$context_id(), NA_character_)
-  expect_error(t$expr(), "not found")
+  expect_error(t$expr(), "not found", class = "KeyError")
   expect_equal(t$status(), "MISSING")
-  expect_error(t$result(), "unfetchable: MISSING")
+  expect_error(t$result(), "unfetchable: MISSING", class = "UnfetchableTask")
   expect_is(t$result(TRUE), "UnfetchableTask")
 })
 

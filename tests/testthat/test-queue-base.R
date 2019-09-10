@@ -17,7 +17,8 @@ test_that("empty", {
   ## Behaviour of missing tasks is tested elsewhere
   expect_is(obj$task_get(ids::random_id(), FALSE), "queuer_task")
 
-  expect_error(obj$task_result(ids::random_id()), "unfetchable: MISSING")
+  expect_error(obj$task_result(ids::random_id()), "unfetchable: MISSING",
+               class = "UnfetchableTask")
   expect_false(obj$task_delete(ids::random_id()))
 
   expect_equal(obj$task_bundle_list(), character(0))
@@ -26,7 +27,7 @@ test_that("empty", {
   expect_equal(nrow(info), 0)
 
   expect_error(obj$task_bundle_get(ids::adjective_animal()),
-               "not found")
+               "not found", class = "KeyError")
 })
 
 test_that("enqueue", {
