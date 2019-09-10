@@ -1,3 +1,4 @@
 skip_if_not_using_local_queue <- function() {
-  testthat::skip("not using local queue")
+  skip_on_cran()
+  skip_if_not_installed("thor")
 }
