@@ -18,7 +18,6 @@ Imports:
     progress (>= 1.1.1)
 Suggests:
     processx,
-    seagull,
     testthat
 RoxygenNote: 5.0.1
 Encoding: UTF-8

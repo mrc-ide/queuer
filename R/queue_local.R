@@ -34,10 +34,9 @@ R6_queue_local <- R6::R6Class(
     initialize = function(context_id, root, initialize, log) {
       super$initialize(context_id, root, initialize)
 
-      lockfile <- file.path(self$root$path, "lockfiles", self$context$id)
-      dir.create(dirname(lockfile), FALSE, TRUE)
-      self$fifo <- fifo_seagull(self$db, self$context$id, "queue_local",
-                                lockfile, self$timeout)
+      path_fifo <- file.path(self$root$path, "fifo", self$context$id)
+      dir.create(dirname(path_fifo), FALSE, TRUE)
+      self$fifo <- fifo_thor(path_fifo)
 
       if (isTRUE(log)) {
         self$log_path <- file.path(self$root$path, "logs")
@@ -102,9 +101,6 @@ R6_queue_local <- R6::R6Class(
       ## TODO: Until messaging is implemented, this will need to run
       ## until interrupted.  Messaging should be fairly easy to
       ## implement because we can just poll a key with exists().
-      ##
-      ## TODO: get a growing timeout in here too (abstract away the
-      ## one I have in seagull:R/util.R:retry()
       tryCatch(
         repeat {
           res <- self$run_next()

@@ -1,9 +1,8 @@
 context("fifo")
 
-test_that("seagull", {
-  skip_if_not_installed("seagull")
-  q <- fifo_seagull(storr::storr_environment(), "queue", "objects",
-                    tempfile(), 1)
+test_that("fifo_thor", {
+  skip_if_not_installed("thor")
+  q <- fifo_thor(tempfile())
   expect_equal(q$read(), character(0))
   expect_null(q$pop())
 
