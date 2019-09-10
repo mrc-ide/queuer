@@ -2,6 +2,7 @@
 
 environment:
   global:
+    R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
     USE_RTOOLS: true
 
 # Download script file from GitHub
@@ -18,6 +19,7 @@ install:
 
 build_script:
   - travis-tool.sh install_deps
+  - travis-tool.sh install_github mrc-ide/context
 
 test_script:
   - travis-tool.sh run_tests
