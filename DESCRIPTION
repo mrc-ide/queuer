@@ -19,6 +19,7 @@ Imports:
 Suggests:
     processx,
     storr,
-    testthat
+    testthat,
+    thor
 RoxygenNote: 5.0.1
 Encoding: UTF-8
