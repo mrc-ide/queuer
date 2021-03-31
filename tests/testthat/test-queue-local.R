@@ -25,9 +25,6 @@ test_that("enqueue", {
   expect_is(obj$log_path, "character")
   expect_true(file.exists(obj$log_path))
 
-  if (context::context_log_start()) {
-    on.exit(context::context_log_stop(), add = TRUE)
-  }
   ## For some reason, this will not record the log correctly on the
   ## *first* task here.  Not sure why
   t <- obj$enqueue_(quote(sin(1)))

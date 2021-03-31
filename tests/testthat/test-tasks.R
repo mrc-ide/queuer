@@ -30,10 +30,8 @@ test_that("basic", {
 
   ## file <- path_log(t$root, t$id)
   file <- NULL
-  context::context_log_start()
   res <- context::task_run(t$id, ctx, filename = file)
   ## readLines(file)
-  context::context_log_stop()
   ## t$log()
 
   expect_equal(t$status(), "COMPLETE")

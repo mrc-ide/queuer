@@ -6,22 +6,17 @@ test_that("in process", {
   x <- runif(4, max = 0.1)
   res <- obj$lapply(x, "slow_double")
 
-  context::context_log_stop()
   expect_message(queue_local_worker(ctx$root$path, ctx$id, FALSE),
                  "worker")
-  expect_null(getOption("context.log"))
 
-  context::context_log_start()
-  on.exit(context::context_log_stop(), add = TRUE)
   queue_local_worker(ctx$root$path, ctx$id, FALSE)
-  expect_true(getOption("context.log"))
 
   expect_equal(res$results(), as.list(x * 2))
 })
 
 
 test_that("runner", {
-  skip_if_not_installed("processx")
+  skip_if_not_installed("callr")
   skip_on_os("windows")
   ctx <- context::context_save(tempfile(), sources = "functions.R")
   obj <- queue_local(ctx)
@@ -30,23 +25,14 @@ test_that("runner", {
 
   path_worker <- file.path(ctx$root$path, "bin", "queue_local_worker")
   expect_true(file.exists(path_worker))
-  px <- processx::process$new(path_worker, c(ctx$root$path, ctx$id))
 
-  on.exit({
-    if (px$is_alive()) px$kill(0)
-    unlink(ctx$root$path)
-  })
+  ans <- callr::rscript(path_worker, c(ctx$root$path, ctx$id), show = FALSE)
+  expect_equal(ans$status, 0)
 
-  ans <- res$wait(5, time_poll = 0.02, progress = FALSE)
+  ans <- res$results()
   expect_equal(ans, as.list(x * 2))
-
-  ## Need to wait for this to exit gracefully or coverage data is
-  ## corrupted.
-  times_up <- time_checker(1)
-  while (px$is_alive() && !times_up()) {
-    Sys.sleep(0.02)
-  }
 })
+
 
 ## From command line:
 ##
@@ -54,18 +40,13 @@ test_that("runner", {
 ## cat(sprintf('queue_local_worker("%s", "%s", TRUE)\n', ctx$root$path, ctx$id))
 test_that("runner loop", {
   skip_on_os("windows") # requires interrupt support
-  skip_if_not_installed("processx")
+  skip_if_not_installed("callr")
   ctx <- context::context_save(tempfile(), sources = "functions.R")
   obj <- queue_local(ctx)
 
-  path_worker <- file.path(ctx$root$path, "bin", "queue_local_worker")
-  args <- c(ctx$root$path, ctx$id, TRUE)
-
-  px <- processx::process$new(path_worker, args)
-  on.exit({
-    if (px$is_alive()) px$kill(0)
-    unlink(ctx$root$path)
-  })
+  px <- callr::r_bg(function(args) queuer:::queue_local_worker_main(args),
+                    args = list(c(ctx$root$path, ctx$id, TRUE)))
+  on.exit(if (px$is_alive()) px$kill())
 
   x <- runif(4, max = 0.1)
   id <- ids::sentence()
@@ -86,4 +67,18 @@ test_that("runner loop", {
     Sys.sleep(0.02)
   }
   expect_false(px$is_alive())
+})
+
+
+test_that("Argument parsing", {
+  expect_error(queue_local_worker_main_args(character(0)), "Usage")
+  expect_error(queue_local_worker_main_args("a"), "Usage")
+  expect_error(queue_local_worker_main_args(c("a", "b", "c", "d")), "Usage")
+
+  expect_equal(
+    queue_local_worker_main_args(c("root", "id")),
+    list(root = "root", context_id = "id", loop = FALSE))
+  expect_equal(
+    queue_local_worker_main_args(c("root", "id", "TRUE")),
+    list(root = "root", context_id = "id", loop = TRUE))
 })
