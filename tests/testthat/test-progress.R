@@ -52,10 +52,6 @@ test_that("options", {
 ## happens it's not going to work well.  Better will be to reduce the
 ## time a little to lose the 0.1s accuracy, but then things take 10x
 ## longer! (minimum ~4s)
-##
-## I'm using a testthat::try_again, in the hope that it will stay in
-## the package for a couple of versions and be reliable enough to use.
-## I'll probably still want to skip these on CRAN though.
 test_that("progress_timeout", {
   expected <- win_newline(
     "\r(-) [------]   0% | giving up in 100.1 s",
@@ -65,12 +61,12 @@ test_that("progress_timeout", {
     "\r                                        ",
     "\r"
   )
-  try_again(PROGRESS_RESTART, {
-    msg <- capture_messages(
-      ans <- run_progress_timeout(3, 100.1, 0.1, digits = 1))
+  msg <- capture_messages(
+    ans <- run_progress_timeout(3, 100.1, 0.1, digits = 1))
+  expect_equal(ans, list(done = TRUE, expired = FALSE))
+  if (!on_ci()) {
     expect_equal(paste(msg, collapse = ""), expected)
-    expect_equal(ans, list(done = TRUE, expired = FALSE))
-  })
+  }
 })
 
 test_that("progress_timeout; label", {
@@ -82,13 +78,13 @@ test_that("progress_timeout; label", {
     "\r                                            ",
     "\r"
   )
-  try_again(PROGRESS_RESTART, {
-    msg <- capture_messages(
-      ans <- run_progress_timeout(3, 100.1, 0.1, digits = 1,
-                                  label = "foo: ", width = 44))
+  msg <- capture_messages(
+    ans <- run_progress_timeout(3, 100.1, 0.1, digits = 1,
+                                label = "foo: ", width = 44))
+  expect_equal(ans, list(done = TRUE, expired = FALSE))
+  if (!on_ci()) {
     expect_equal(paste(msg, collapse = ""), expected)
-    expect_equal(ans, list(done = TRUE, expired = FALSE))
-  })
+  }
 })
 
 test_that("progress_timeout; infinite time", {
@@ -101,12 +97,12 @@ test_that("progress_timeout; infinite time", {
     "\r"
   )
 
-  try_again(PROGRESS_RESTART, {
-    msg <- capture_messages(
-      ans <- run_progress_timeout(3, Inf, 0.2))
-    expect_equal(ans, list(done = TRUE, expired = FALSE))
+  msg <- capture_messages(
+    ans <- run_progress_timeout(3, Inf, 0.2))
+  expect_equal(ans, list(done = TRUE, expired = FALSE))
+  if (!on_ci()) {
     expect_equal(paste(msg, collapse = ""), expected)
-  })
+  }
 })
 
 test_that("progress_timeout; expires", {
@@ -118,12 +114,12 @@ test_that("progress_timeout; expires", {
     "\r                                        ",
     "\r"
   )
-  try_again(PROGRESS_RESTART, {
-    msg <- capture_messages(
-      ans <- run_progress_timeout(5, 0.3, 0.1, digits = 1))
-    expect_equal(ans, list(done = FALSE, expired = TRUE))
+  msg <- capture_messages(
+    ans <- run_progress_timeout(5, 0.3, 0.1, digits = 1))
+  expect_equal(ans, list(done = FALSE, expired = TRUE))
+  if (!on_ci()) {
     expect_equal(paste(msg, collapse = ""), expected)
-  })
+  }
 })
 
 test_that("remaining", {
@@ -141,12 +137,12 @@ test_that("remaining", {
     "\r                                                  ",
     "\r"
   )
-  try_again(PROGRESS_RESTART, {
-    msg <- capture_messages(
-      ans <- run_progress_timeout_single(100.1, 0.1, 3, digits = 1))
-    expect_equal(ans, list(done = TRUE, expired = FALSE))
+  msg <- capture_messages(
+    ans <- run_progress_timeout_single(100.1, 0.1, 3, digits = 1))
+  expect_equal(ans, list(done = TRUE, expired = FALSE))
+  if (!on_ci()) {
     expect_equal(paste(msg, collapse = ""), expected)
-  })
+  }
 })
 
 test_that("remaining; infinite", {
@@ -164,11 +160,11 @@ test_that("remaining; infinite", {
     "\r                                                  ",
     "\r"
   )
-  try_again(PROGRESS_RESTART, {
-    msg <- capture_messages(ans <- run_progress_timeout_single(Inf, 0.2, 3))
-    expect_equal(ans, list(done = TRUE, expired = FALSE))
+  msg <- capture_messages(ans <- run_progress_timeout_single(Inf, 0.2, 3))
+  expect_equal(ans, list(done = TRUE, expired = FALSE))
+  if (!on_ci()) {
     expect_equal(paste(msg, collapse = ""), expected)
-  })
+  }
 })
 
 test_that("remaining; no name", {
@@ -186,11 +182,11 @@ test_that("remaining; no name", {
     "\r                                                  ",
     "\r"
   )
-  try_again(PROGRESS_RESTART, {
-    msg <- capture_messages(
-      ans <- run_progress_timeout_single(100.1, 0.1, 3, label = NULL,
-                                         digits = 1))
-    expect_equal(ans, list(done = TRUE, expired = FALSE))
+  msg <- capture_messages(
+    ans <- run_progress_timeout_single(100.1, 0.1, 3, label = NULL,
+                                       digits = 1))
+  expect_equal(ans, list(done = TRUE, expired = FALSE))
+  if (!on_ci()) {
     expect_equal(paste(msg, collapse = ""), expected)
-  })
+  }
 })

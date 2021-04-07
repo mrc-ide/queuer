@@ -86,3 +86,8 @@ PROGRESS_RESTART <- 3
 is_windows <- function() {
   tolower(Sys.info()[["sysname"]]) == "windows"
 }
+
+
+on_ci <- function() {
+  isTRUE(as.logical(Sys.getenv("CI")))
+}
