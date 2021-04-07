@@ -57,7 +57,7 @@ test_that("runner loop", {
   ## Can also get things this way:
   grp <- obj$task_bundle_get(id)
   expect_is(grp, "task_bundle")
-  expect_equal(grp$results(), as.list(x * 2))
+  expect_equal(grp$wait(5), as.list(x * 2))
 
   pid <- obj$enqueue(Sys.getpid())$wait(Inf, 0.1, FALSE)
 
