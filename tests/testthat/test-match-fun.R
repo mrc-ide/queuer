@@ -41,7 +41,7 @@ test_that("match_fun", {
   expect_is(res$envir, "environment")
   expect_is(res$value, "function")
   expect_identical(res$envir, environment(res$value))
-  expect_equal(res$value, function(x) x + 2)
+  expect_equal(res$value(4), 6)
 
   res <- local({
     e <- environment()
@@ -51,7 +51,7 @@ test_that("match_fun", {
   expect_is(res$envir, "environment")
   expect_is(res$value, "function")
   expect_identical(res$envir, environment(res$value))
-  expect_equal(res$value, function(x) x + 2)
+  expect_equal(res$value(4), 6)
 
   cmp <- list(namespace = "stats", name = "dnorm",
               envir = asNamespace("stats"), value = dnorm)
