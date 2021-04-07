@@ -1,13 +1,12 @@
 Package: queuer
 Title: Queue Tasks
-Version: 0.2.0
+Version: 0.3.0
 Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
                     email = "rich.fitzjohn@gmail.com"),
              person("Imperial College of Science, Technology and Medicine",
                     role = "cph"))
 Description: Queue tasks to number of backends.
 License: MIT + file LICENSE
-LazyData: true
 URL: https://github.com/mrc-ide/queuer
 BugReports: https://github.com/mrc-ide/queuer/issues
 Depends:
@@ -19,7 +18,7 @@ Imports:
     lazyeval,
     progress (>= 1.1.1)
 Suggests:
-    processx,
+    callr,
     storr,
     testthat,
     thor
