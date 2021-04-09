@@ -47,7 +47,7 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., DOTS = NULL, do_call = FALSE,
     stop("'obj' must be a queue object (inheriting from queue_base)")
   }
 
-  name <- create_bundle_name(name, overwrite, obj$db)
+  name <- create_bundle_name(name, overwrite, obj$context$db)
 
   obj$initialize_context()
   fun_dat <- match_fun_queue(FUN, envir, obj$context$envir)

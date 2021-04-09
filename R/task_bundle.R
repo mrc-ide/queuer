@@ -130,14 +130,15 @@ task_bundle_list <- function(db) {
 }
 
 task_bundle_info <- function(obj) {
-  bundles <- task_bundle_list(obj$db)
-  db <- obj$db
+  db <- obj$context$db
+  bundles <- task_bundle_list(db)
+
 
   task_ids <- db$mget(bundles, "task_bundles")
   task_id1 <- vcapply(task_ids, "[[", 1L)
 
   task_time_sub <- context::task_times(task_id1, db, sorted = FALSE)$submitted
-  task_function <- context::task_function_name(task_id1, obj$db)
+  task_function <- context::task_function_name(task_id1, db)
   i <- order(task_time_sub)
 
   ret <- data.frame(name = bundles[i],
