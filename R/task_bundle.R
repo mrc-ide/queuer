@@ -19,14 +19,11 @@ task_bundle_create <- function(task_ids, obj, name = NULL, X = NULL,
 
   db$mset(name, list(task_ids, homogeneous, X),
           c("task_bundles", "task_bundles_homogeneous", "task_bundles_X"))
-  task_bundle_get(name, root)
+  task_bundle$new(name, root)
 }
 
-task_bundle_get <- function(name, root) {
-  R6_task_bundle$new(name, root)
-}
 
-R6_task_bundle <- R6::R6Class(
+task_bundle <- R6::R6Class(
   "task_bundle",
 
   public = list(
@@ -54,8 +51,9 @@ R6_task_bundle <- R6::R6Class(
       ## and not simply to the context (or even the db).
 
       ## This does not do a db read
-      self$tasks <- setNames(lapply(task_ids, queuer_task, self$root, FALSE),
-                             task_ids)
+      self$tasks <- setNames(lapply(
+        task_ids, queuer_task$new, self$root, FALSE),
+        task_ids)
       self$X <- self$db$get(name, "task_bundles_X")
 
       self$check()

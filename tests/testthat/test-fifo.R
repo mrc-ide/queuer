@@ -2,7 +2,7 @@ context("fifo")
 
 test_that("fifo_thor", {
   skip_if_not_installed("thor")
-  q <- fifo_thor(tempfile())
+  q <- fifo_thor$new(tempfile())
   expect_equal(q$read(), character(0))
   expect_null(q$pop())
 

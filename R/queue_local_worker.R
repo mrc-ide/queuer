@@ -11,7 +11,7 @@
 ## atomically.
 queue_local_worker <- function(root, context_id, loop) {
   context::context_log("worker", Sys.getpid())
-  obj <- queue_local(context_id, root, log = TRUE)
+  obj <- queue_local$new(context_id, root, log = TRUE)
   if (loop) {
     obj$run_loop()
   } else {

@@ -8,7 +8,7 @@ test_that("basic", {
                                new.env(parent = .GlobalEnv))
   id <- context::task_save(quote(sin(1)), ctx)
 
-  t <- queuer_task(id, ctx)
+  t <- queuer_task$new(id, ctx)
 
   expect_is(t, "queuer_task")
   expect_equal(t$status(), "PENDING")
@@ -47,10 +47,10 @@ test_that("missing task", {
   path <- tempfile("queuer_")
   on.exit(unlink(path, recursive = TRUE))
   ctx <- context::context_save(path)
-  expect_error(queuer_task(ids::random_id(), ctx),
+  expect_error(queuer_task$new(ids::random_id(), ctx),
                "Task does not exist")
 
-  t <- queuer_task(ids::random_id(), ctx, FALSE)
+  t <- queuer_task$new(ids::random_id(), ctx, FALSE)
   expect_equal(t$context_id(), NA_character_)
   expect_error(t$expr(), "not found", class = "KeyError")
   expect_equal(t$status(), "MISSING")
@@ -62,7 +62,7 @@ test_that("Expressions namespace-qualified arguments are allowed", {
   path <- tempfile("queuer_")
   on.exit(unlink(path, recursive = TRUE))
   ctx <- context::context_save(path, storage_type = "environment")
-  obj <- queue_base(ctx)
+  obj <- queue_base$new(ctx)
   ## This replicates issue #13
   x <- 1
   t <- obj$enqueue(foo(x, ids::random_id))

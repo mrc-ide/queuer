@@ -1,9 +1,4 @@
-##' @importFrom R6 R6Class
-queue_base <- function(context_id, root = NULL, initialize = TRUE) {
-  R6_queue_base$new(context_id, root, initialize)
-}
-
-R6_queue_base <- R6::R6Class(
+queue_base <- R6::R6Class(
   "queue_base",
   public =
     list(
@@ -12,7 +7,7 @@ R6_queue_base <- R6::R6Class(
       db = NULL,
       workdir = NULL,
 
-      initialize = function(context_id, root, initialize = TRUE) {
+      initialize = function(context_id, root = NULL, initialize = TRUE) {
         if (inherits(context_id, "context")) {
           if (!is.null(root)) {
             stop("'root' must be NULL if 'context_id' is a context object")
@@ -69,7 +64,7 @@ R6_queue_base <- R6::R6Class(
       },
 
       task_get = function(task_id, check_exists = TRUE) {
-        queuer_task(task_id, self$root, check_exists)
+        queuer_task$new(task_id, self$root, check_exists)
       },
 
       task_result = function(task_id) {
@@ -90,7 +85,7 @@ R6_queue_base <- R6::R6Class(
       },
 
       task_bundle_get = function(name) {
-        task_bundle_get(name, self$root)
+        task_bundle$new(name, self$root)
       },
 
       enqueue = function(expr, envir = parent.frame(), submit = TRUE,
@@ -105,7 +100,7 @@ R6_queue_base <- R6::R6Class(
         if (submit) {
           self$submit_or_delete(task_id, name)
         }
-        invisible(queuer_task(task_id, self$root))
+        invisible(queuer_task$new(task_id, self$root))
       },
 
       enqueue_bulk = function(X, FUN, ..., do_call = TRUE,

@@ -4,7 +4,7 @@ test_that("empty queue", {
   skip_if_not_using_local_queue()
   ctx <- context::context_save(tempfile())
   on.exit(unlink(ctx$db$destroy()))
-  obj <- queue_local(ctx)
+  obj <- queue_local$new(ctx)
   expect_equal(obj$task_list(), character(0))
   expect_equal(obj$queue_list(), character(0))
   expect_equal(obj$run_next(), list(task_id = NULL, value = NULL))
@@ -20,7 +20,7 @@ test_that("enqueue", {
   ctx <- context::context_save(tempfile())
   on.exit(unlink(ctx$db$destroy()))
   log_path <- "logs"
-  obj <- queue_local(ctx, log = TRUE)
+  obj <- queue_local$new(ctx, log = TRUE)
 
   expect_is(obj$log_path, "character")
   expect_true(file.exists(obj$log_path))
@@ -86,7 +86,7 @@ test_that("environment storage", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   on.exit(unlink(ctx$db$destroy()))
 
-  obj <- queue_local(ctx)
+  obj <- queue_local$new(ctx)
   t <- obj$enqueue(sin(1))
 
   expect_is(t, "queuer_task")
@@ -108,7 +108,7 @@ test_that("initialise later", {
   skip_if_not_using_local_queue()
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   on.exit(unlink(ctx$db$destroy()))
-  obj <- queue_local(ctx, initialize = FALSE)
+  obj <- queue_local$new(ctx, initialize = FALSE)
   expect_null(obj$context$envir)
 
   expect_message(t <- obj$enqueue(sin(1)), "Loading context")
@@ -123,7 +123,7 @@ test_that("unsubmit", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   on.exit(unlink(ctx$db$destroy()))
 
-  obj <- queue_local(ctx)
+  obj <- queue_local$new(ctx)
   for (i in seq_len(10)) {
     obj$enqueue(sin(i))
   }
@@ -143,7 +143,7 @@ test_that("submit_or_delete", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   on.exit(unlink(ctx$db$destroy()))
 
-  obj <- queue_local(ctx)
+  obj <- queue_local$new(ctx)
   ## Then we sabotage the queue to test that submit_or_delete works:
   obj$fifo <- NULL
   expect_message(try(obj$enqueue(sin(1)), silent = TRUE), "Deleting task")

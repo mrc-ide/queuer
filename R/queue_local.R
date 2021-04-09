@@ -16,27 +16,22 @@
 ## NOTE: No lockfile for environment storage, won't be possible for
 ## redis, which we can easily lock with SETX, but will need a general
 ## interface for the lockfile.
-
-queue_local <- function(context_id, root = NULL, initialize = TRUE,
-                        log = FALSE) {
-  R6_queue_local$new(context_id, root, initialize, log)
-}
-
-R6_queue_local <- R6::R6Class(
+queue_local <- R6::R6Class(
   "queue_local",
-  inherit = R6_queue_base,
+  inherit = queue_base,
 
   public = list(
     log_path = NULL,
     timeout = 10.0, # TODO: configurable...
     fifo = NULL,
 
-    initialize = function(context_id, root, initialize, log) {
+    initialize = function(context_id, root = NULL, initialize = TRUE,
+                          log = FALSE) {
       super$initialize(context_id, root, initialize)
 
       path_fifo <- file.path(self$root$path, "fifo", self$context$id)
       dir.create(dirname(path_fifo), FALSE, TRUE)
-      self$fifo <- fifo_thor(path_fifo)
+      self$fifo <- fifo_thor$new(path_fifo)
 
       if (isTRUE(log)) {
         self$log_path <- file.path(self$root$path, "logs")

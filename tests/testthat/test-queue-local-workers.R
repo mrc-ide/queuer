@@ -2,7 +2,7 @@ context("queue_local workers")
 
 test_that("in process", {
   ctx <- context::context_save(tempfile(), sources = "functions.R")
-  obj <- queue_local(ctx)
+  obj <- queue_local$new(ctx)
   x <- runif(4, max = 0.1)
   res <- obj$lapply(x, "slow_double")
 
@@ -19,7 +19,7 @@ test_that("runner", {
   skip_if_not_installed("callr")
   skip_on_os("windows")
   ctx <- context::context_save(tempfile(), sources = "functions.R")
-  obj <- queue_local(ctx)
+  obj <- queue_local$new(ctx)
   x <- runif(4, max = 0.1)
   res <- obj$lapply(x, "slow_double")
 
@@ -42,7 +42,7 @@ test_that("runner loop", {
   skip_on_os("windows") # requires interrupt support
   skip_if_not_installed("callr")
   ctx <- context::context_save(tempfile(), sources = "functions.R")
-  obj <- queue_local(ctx)
+  obj <- queue_local$new(ctx)
 
   px <- callr::r_bg(function(args) queuer:::queue_local_worker_main(args),
                     args = list(c(ctx$root$path, ctx$id, TRUE)))
