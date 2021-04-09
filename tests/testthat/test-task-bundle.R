@@ -14,11 +14,11 @@ test_that("task_bundle", {
 
   expect_is(grp, "task_bundle")
 
-  expect_equal(grp$done, setNames(c(FALSE, FALSE), ids))
+  expect_equal(grp$done, set_names(c(FALSE, FALSE), ids))
   expect_true(grp$homogeneous)
 
   expect_equal(grp$expr(),
-               setNames(list(quote(sin(1)), quote(sin(2))), ids))
+               set_names(list(quote(sin(1)), quote(sin(2))), ids))
   expect_equal(grp$function_name(), "sin")
 
   tt <- grp$times()
@@ -88,7 +88,7 @@ test_that("nonhomogeneous bundle", {
   expect_equal(grp$function_name(), NA_character_)
 
   expect_equal(grp$expr(),
-               setNames(list(quote(sin(1)), quote(cos(2))), ids))
+               set_names(list(quote(sin(1)), quote(cos(2))), ids))
 })
 
 test_that("delete", {
@@ -150,8 +150,8 @@ test_that("combine", {
   obj <- queue_local$new(ctx)
   grp1_sin <- obj$lapply(runif(4), quote(sin))
   grp2_sin <- obj$lapply(runif(10), quote(sin))
-  grp3_sin <- obj$lapply(setNames(runif(5), letters[1:5]), quote(sin))
-  grp4_sin <- obj$lapply(setNames(runif(4), letters[6:9]), quote(sin))
+  grp3_sin <- obj$lapply(set_names(runif(5), letters[1:5]), quote(sin))
+  grp4_sin <- obj$lapply(set_names(runif(4), letters[6:9]), quote(sin))
   grp_cos <- obj$lapply(runif(10), quote(cos))
   grp1_df <- obj$enqueue_bulk(data.frame(x = runif(10)), quote(sin),
                               use_names = FALSE)

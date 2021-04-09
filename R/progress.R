@@ -74,15 +74,6 @@ progress_timeout <- function(total, timeout, ..., show = NULL, label = NULL,
   }
 }
 
-##' A simple timer
-##' @title Simple timer
-##' @param timeout The length of time to set the timer for (can be
-##'   infinite)
-##' @param remaining Logical, indicating if the timer should return
-##'   the time remaining (as the number of seconds).  If \code{FALSE}
-##'   (the default) then the timer returns \code{FALSE} until the time
-##'   has completed, then returns \code{TRUE}.
-##' @export
 time_checker <- function(timeout, remaining = FALSE) {
   t0 <- Sys.time()
   timeout <- as.difftime(timeout, units = "secs")

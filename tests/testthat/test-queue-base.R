@@ -5,7 +5,7 @@ test_that("empty", {
   obj <- queue_base$new(ctx, initialize = FALSE)
 
   expect_equal(obj$task_list(), character(0))
-  expect_equal(obj$task_status(), setNames(character(0), character(0)))
+  expect_equal(obj$task_status(), set_names(character(0), character(0)))
   expect_equal(obj$task_status(named = FALSE), character(0))
 
   tt <- obj$task_times()

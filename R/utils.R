@@ -1,7 +1,3 @@
-## Base imports:
-##' @importFrom stats setNames
-NULL
-
 ## Short-circuit apply; returns the index of the first element of x
 ## for which cond(x[[i]]) holds true.
 scapply <- function(x, cond, no_match = NA_integer_) {
@@ -48,4 +44,9 @@ capture_log <- function(expr, filename, suppress_messages = FALSE) {
 
 `%||%` <- function(a, b) {
   if (is.null(a)) b else a
+}
+
+set_names <- function(x, nms) {
+  names(x) <- nms
+  x
 }
