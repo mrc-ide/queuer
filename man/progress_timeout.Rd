@@ -24,8 +24,7 @@ evaluate to \code{TRUE} by default.  A logical flag overrides
 \code{queuer.progress_suppress}.}
 
 \item{label}{An optional label to prefix the timeout bar with
-(will not be padded with space), or in the case of \code{total =
-  NULL} to indicate what is being waited on.}
+(will not be padded with space), or in the case of \code{total = NULL} to indicate what is being waited on.}
 
 \item{digits}{The number of digits of accuracy to display the
 remaining time in}

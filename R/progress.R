@@ -1,23 +1,30 @@
 ##' Progress bar with timeout
 ##'
 ##' @title Progress bar with timeout
-##' @param total Total number of expected things.  Use \code{NULL} if
+##'
+##' @param total Total number of expected things.  Use `NULL` if
 ##'   you want to wait on a single thing
+##'
 ##' @param timeout The number of seconds to wait
+##'
 ##' @param ... Additional arguments to
-##'   \code{progress::progress_bar$new}
+##'   `progress::progress_bar$new`
+##'
 ##' @param show Flag to indicate if the bar should be displayed.  If
-##'   \code{NULL} then the global options \code{queuer.progress_show}
-##'   and \code{queuer.progress_suppress} are used to determine if the
+##'   `NULL` then the global options `queuer.progress_show`
+##'   and `queuer.progress_suppress` are used to determine if the
 ##'   bar is shown (with suppress overriding show).  This will
-##'   evaluate to \code{TRUE} by default.  A logical flag overrides
-##'   \code{queuer.progress_show} but not
-##'   \code{queuer.progress_suppress}.
+##'   evaluate to `TRUE` by default.  A logical flag overrides
+##'   `queuer.progress_show` but not
+##'   `queuer.progress_suppress`.
+##'
 ##' @param label An optional label to prefix the timeout bar with
-##'   (will not be padded with space), or in the case of \code{total =
-##'   NULL} to indicate what is being waited on.
+##'   (will not be padded with space), or in the case of `total =
+##'   NULL` to indicate what is being waited on.
+##'
 ##' @param digits The number of digits of accuracy to display the
 ##'   remaining time in
+##'
 ##' @export
 progress_timeout <- function(total, timeout, ..., show = NULL, label = NULL,
                              digits = 0) {
