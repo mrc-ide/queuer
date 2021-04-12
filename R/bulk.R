@@ -1,11 +1,11 @@
-qlapply <- function(X, FUN, obj, ...,
+qlapply <- function(obj, private, X, FUN, ...,
                     envir = parent.frame(),
                     timeout = 0, time_poll = 1, progress = NULL,
                     name = NULL, overwrite = FALSE) {
   ## TODO: The dots here are going to cause grief at some point.  I
   ## may need a more robust way of passing additional arguments in,
   ## but not sure what that looks like...
-  enqueue_bulk(obj, X, FUN, ..., do_call = FALSE,
+  enqueue_bulk(obj, private, X, FUN, ..., do_call = FALSE,
                timeout = timeout, time_poll = time_poll,
                progress = progress, name = name,
                envir = envir, overwrite = overwrite)
@@ -19,13 +19,13 @@ qlapply <- function(X, FUN, obj, ...,
 ##
 ## TODO: Consider allowing DOTS as an argument itself.
 
-enqueue_bulk <- function(obj, X, FUN, ..., do_call = TRUE,
+enqueue_bulk <- function(obj, private, X, FUN, ..., do_call = TRUE,
                          envir = parent.frame(),
                          timeout = 0, time_poll = 1, progress = NULL,
                          name = NULL, use_names = TRUE,
                          overwrite = FALSE) {
-  obj <- enqueue_bulk_submit(obj, X, FUN, ..., do_call = do_call, envir = envir,
-                             progress = progress, name = name,
+  obj <- enqueue_bulk_submit(obj, private, X, FUN, ..., do_call = do_call,
+                             envir = envir, progress = progress, name = name,
                              use_names = use_names, overwrite = overwrite)
   if (timeout > 0) {
     ## TODO: this is possibly going to change as interrupt changes in
@@ -37,7 +37,8 @@ enqueue_bulk <- function(obj, X, FUN, ..., do_call = TRUE,
   }
 }
 
-enqueue_bulk_submit <- function(obj, X, FUN, ..., DOTS = NULL, do_call = FALSE,
+enqueue_bulk_submit <- function(obj, private, X, FUN, ..., DOTS = NULL,
+                                do_call = FALSE,
                                 envir = parent.frame(), progress = NULL,
                                 name = NULL, use_names = TRUE,
                                 overwrite = FALSE) {
@@ -63,7 +64,7 @@ enqueue_bulk_submit <- function(obj, X, FUN, ..., DOTS = NULL, do_call = FALSE,
                                  do_call, use_names, envir)
 
   message(sprintf("submitting %s tasks", length(ids)))
-  obj$submit_or_delete(ids, names(ids))
+  private$submit_or_delete(ids, names(ids))
 
   task_bundle_create(ids, obj, name, X, overwrite = TRUE, homogeneous = TRUE)
 }

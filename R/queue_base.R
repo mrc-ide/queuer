@@ -7,6 +7,7 @@
 ##' @export
 queue_base <- R6::R6Class(
   "queue_base",
+  cloneable = FALSE,
   public = list(
     ##' @field context The context object
     context = NULL,
@@ -229,7 +230,7 @@ queue_base <- R6::R6Class(
                             envir = parent.frame(),
                             timeout = 0, time_poll = 1, progress = NULL,
                             name = NULL, overwrite = FALSE) {
-      enqueue_bulk(self, X, FUN, ..., do_call = do_call, envir = envir,
+      enqueue_bulk(self, private, X, FUN, ..., do_call = do_call, envir = envir,
                    timeout = timeout, time_poll = time_poll,
                    progress = progress, name = name, overwrite = overwrite)
     },
@@ -263,7 +264,7 @@ queue_base <- R6::R6Class(
     lapply = function(X, FUN, ..., envir = parent.frame(),
                       timeout = 0, time_poll = 1, progress = NULL,
                       name = NULL, overwrite = FALSE) {
-      qlapply(X, FUN, self, ..., envir = envir,
+      qlapply(self, private, X, FUN, ..., envir = envir,
               timeout = timeout, time_poll = time_poll,
               progress = progress, name = name, overwrite = overwrite)
     },

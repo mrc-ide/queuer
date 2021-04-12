@@ -36,7 +36,6 @@ actually submitting tasks.
 \item \href{#method-mapply}{\code{queue_base$mapply()}}
 \item \href{#method-submit}{\code{queue_base$submit()}}
 \item \href{#method-unsubmit}{\code{queue_base$unsubmit()}}
-\item \href{#method-clone}{\code{queue_base$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -493,23 +492,6 @@ to do anything.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{task_ids}}{Vector of tasks to submit}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{queue_base$clone(deep = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
 }
 \if{html}{\out{</div>}}
 }

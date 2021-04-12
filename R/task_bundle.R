@@ -8,7 +8,12 @@ task_bundle_create <- function(task_ids, obj, name = NULL, X = NULL,
   if (length(task_ids) < 1L) {
     stop("task_ids must be nonempty")
   }
-  root <- context::context_root_get(obj)
+
+  if (inherits(obj, "queue_base")) {
+    root <- context::context_root_get(obj$context)
+  } else {
+    root <- context::context_root_get(obj)
+  }
   db <- root$db
   name <- create_bundle_name(name, overwrite, db)
 
