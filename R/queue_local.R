@@ -16,34 +16,29 @@
 ## NOTE: No lockfile for environment storage, won't be possible for
 ## redis, which we can easily lock with SETX, but will need a general
 ## interface for the lockfile.
-
-queue_local <- function(context_id, root = NULL, initialize = TRUE,
-                        log = FALSE) {
-  R6_queue_local$new(context_id, root, initialize, log)
-}
-
-R6_queue_local <- R6::R6Class(
+queue_local <- R6::R6Class(
   "queue_local",
-  inherit = R6_queue_base,
+  inherit = queue_base,
 
   public = list(
     log_path = NULL,
     timeout = 10.0, # TODO: configurable...
     fifo = NULL,
 
-    initialize = function(context_id, root, initialize, log) {
+    initialize = function(context_id, root = NULL, initialize = TRUE,
+                          log = FALSE) {
       super$initialize(context_id, root, initialize)
 
-      path_fifo <- file.path(self$root$path, "fifo", self$context$id)
+      path_fifo <- file.path(private$root$path, "fifo", self$context$id)
       dir.create(dirname(path_fifo), FALSE, TRUE)
-      self$fifo <- fifo_thor(path_fifo)
+      self$fifo <- fifo_thor$new(path_fifo)
 
       if (isTRUE(log)) {
-        self$log_path <- file.path(self$root$path, "logs")
+        self$log_path <- file.path(private$root$path, "logs")
         dir.create(self$log_path, FALSE, TRUE)
       }
 
-      write_queue_local_worker(self$root)
+      write_queue_local_worker(private$root)
     },
 
     ## This is the running half of the system; these will shortly move
@@ -118,7 +113,7 @@ R6_queue_local <- R6::R6Class(
     ## one queue.  but for the local queue these are the same.
     submit = function(task_ids, names = NULL) {
       if (!is.null(self$log_path)) {
-        self$db$mset(task_ids, self$log_path, "log_path")
+        private$db$mset(task_ids, self$log_path, "log_path")
       }
       self$fifo$push(task_ids)
     },

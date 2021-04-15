@@ -4,8 +4,7 @@
 \alias{progress_timeout}
 \title{Progress bar with timeout}
 \usage{
-progress_timeout(total, timeout, ..., show = NULL, label = NULL,
-  digits = 0)
+progress_timeout(total, timeout, ..., show = NULL, label = NULL, digits = 0)
 }
 \arguments{
 \item{total}{Total number of expected things.  Use \code{NULL} if
@@ -25,8 +24,7 @@ evaluate to \code{TRUE} by default.  A logical flag overrides
 \code{queuer.progress_suppress}.}
 
 \item{label}{An optional label to prefix the timeout bar with
-(will not be padded with space), or in the case of \code{total =
-NULL} to indicate what is being waited on.}
+(will not be padded with space), or in the case of \code{total = NULL} to indicate what is being waited on.}
 
 \item{digits}{The number of digits of accuracy to display the
 remaining time in}
@@ -34,4 +32,3 @@ remaining time in}
 \description{
 Progress bar with timeout
 }
-

@@ -14,11 +14,11 @@ test_that("task_bundle", {
 
   expect_is(grp, "task_bundle")
 
-  expect_equal(grp$done, setNames(c(FALSE, FALSE), ids))
+  expect_equal(grp$done, set_names(c(FALSE, FALSE), ids))
   expect_true(grp$homogeneous)
 
   expect_equal(grp$expr(),
-               setNames(list(quote(sin(1)), quote(sin(2))), ids))
+               set_names(list(quote(sin(1)), quote(sin(2))), ids))
   expect_equal(grp$function_name(), "sin")
 
   tt <- grp$times()
@@ -70,7 +70,7 @@ test_that("bundle name", {
 
 test_that("empty bundle", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
-  obj <- queue_local(ctx)
+  obj <- queue_local$new(ctx)
   expect_error(task_bundle_create(character(0), obj),
                "task_ids must be nonempty")
 })
@@ -88,7 +88,7 @@ test_that("nonhomogeneous bundle", {
   expect_equal(grp$function_name(), NA_character_)
 
   expect_equal(grp$expr(),
-               setNames(list(quote(sin(1)), quote(cos(2))), ids))
+               set_names(list(quote(sin(1)), quote(cos(2))), ids))
 })
 
 test_that("delete", {
@@ -110,7 +110,7 @@ test_that("info", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   on.exit(unlink(ctx$root$path, recursive = TRUE))
 
-  obj <- queue_local(ctx)
+  obj <- queue_local$new(ctx)
   grp1 <- obj$lapply(runif(4), quote(sin))
   if (is_windows()) {
     Sys.sleep(0.01)
@@ -131,7 +131,7 @@ test_that("info", {
 test_that("create data.frame group", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   on.exit(unlink(ctx$root$path, recursive = TRUE))
-  obj <- queue_local(ctx)
+  obj <- queue_local$new(ctx)
   df <- data.frame(a = 1:5, x = runif(5))
   grp <- obj$enqueue_bulk(df, list)
   expect_null(grp$names)
@@ -147,11 +147,11 @@ test_that("combine", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   on.exit(unlink(ctx$root$path, recursive = TRUE))
 
-  obj <- queue_local(ctx)
+  obj <- queue_local$new(ctx)
   grp1_sin <- obj$lapply(runif(4), quote(sin))
   grp2_sin <- obj$lapply(runif(10), quote(sin))
-  grp3_sin <- obj$lapply(setNames(runif(5), letters[1:5]), quote(sin))
-  grp4_sin <- obj$lapply(setNames(runif(4), letters[6:9]), quote(sin))
+  grp3_sin <- obj$lapply(set_names(runif(5), letters[1:5]), quote(sin))
+  grp4_sin <- obj$lapply(set_names(runif(4), letters[6:9]), quote(sin))
   grp_cos <- obj$lapply(runif(10), quote(cos))
   grp1_df <- obj$enqueue_bulk(data.frame(x = runif(10)), quote(sin),
                               use_names = FALSE)

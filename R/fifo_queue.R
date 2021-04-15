@@ -1,9 +1,4 @@
-fifo_thor <- function(path) {
-  R6_fifo_thor$new(path)
-}
-
-
-R6_fifo_thor <- R6::R6Class(
+fifo_thor <- R6::R6Class(
   "fifo_thor",
   cloneable = FALSE,
 

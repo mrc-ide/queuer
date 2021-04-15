@@ -1,8 +1,4 @@
-queuer_task <- function(id, root, check_exists = TRUE) {
-  R6_queuer_task$new(id, root, check_exists)
-}
-
-R6_queuer_task <- R6::R6Class(
+queuer_task <- R6::R6Class(
   "queuer_task",
   public = list(
     root = NULL,

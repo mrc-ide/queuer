@@ -4,13 +4,13 @@
 ##' @title Combine task bundles
 ##' @param ... Any number of task bundles
 ##'
-##' @param bundles A list of bundles (used in place of \code{...} and
+##' @param bundles A list of bundles (used in place of `...` and
 ##'   probably more useful for programming).
 ##'
 ##' @param name Group name
 ##'
 ##' @param overwrite Logical indicating if an existing bundle with the
-##'   same name should be overwritten.  If \code{FALSE} and a bundle
+##'   same name should be overwritten.  If `FALSE` and a bundle
 ##'   with this name already exists, an error will be thrown.
 ##'
 ##' @export

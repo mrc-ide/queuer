@@ -2,7 +2,7 @@ context("bulk")
 
 test_that("submit", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
-  obj <- queue_base(ctx)
+  obj <- queue_base$new(ctx)
 
   x <- 1:30
   fun <- quote(sin)
@@ -23,23 +23,23 @@ test_that("submit", {
   expect_error(res$results(), "Tasks not yet completed")
   expect_equal(res$results(TRUE), rep(list(NULL), length(x)))
 
-  expect_equal(res$status(), setNames(rep("PENDING", length(x)), res$ids))
+  expect_equal(res$status(), set_names(rep("PENDING", length(x)), res$ids))
   expect_equal(res$status(FALSE), rep("PENDING", length(x)))
 })
 
 test_that("named", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   ctx <- context::context_load(ctx, new.env(parent = .GlobalEnv))
-  obj <- queue_base(ctx)
+  obj <- queue_base$new(ctx)
 
-  x <- setNames(runif(10), ids::adjective_animal(10))
+  x <- set_names(runif(10), ids::adjective_animal(10))
   fun <- quote(sin)
 
   res <- obj$lapply(x, fun)
   expect_equal(res$names, names(x))
 
   expect_equal(res$results(TRUE),
-               setNames(rep(list(NULL), length(x)), names(x)))
+               set_names(rep(list(NULL), length(x)), names(x)))
 
   tmp <- lapply(res$ids, context::task_run, ctx)
   expect_equal(res$results(TRUE), as.list(sin(x)))
@@ -47,7 +47,7 @@ test_that("named", {
 
 test_that("named group", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
-  obj <- queue_base(ctx)
+  obj <- queue_base$new(ctx)
   nm <- ids::sentence()
   res <- obj$lapply(1:30, quote(sin), name = nm)
   expect_equal(res$name, nm)
@@ -56,8 +56,8 @@ test_that("named group", {
 test_that("named lapply", {
   skip_if_not_using_local_queue()
   ctx <- context::context_save(tempfile())
-  obj <- queue_local(ctx)
-  bundle <- obj$lapply(setNames(as.list(1:3), letters[1:3]), I)
+  obj <- queue_local$new(ctx)
+  bundle <- obj$lapply(set_names(as.list(1:3), letters[1:3]), I)
 
   expect_equal(bundle$tasks[[1]]$expr(),
                quote(base::I(1L)))
@@ -68,13 +68,13 @@ test_that("named lapply", {
   obj$run_all()
 
   ## Check names are returned:
-  expect_equal(bundle$results(), setNames(lapply(bundle$X, I), letters[1:3]))
+  expect_equal(bundle$results(), set_names(lapply(bundle$X, I), letters[1:3]))
 })
 
 test_that("$enqueue_bulk", {
   skip_if_not_using_local_queue()
   ctx <- context::context_save(tempfile())
-  obj <- queue_local(ctx)
+  obj <- queue_local$new(ctx)
   bundle <- obj$enqueue_bulk(1:3, quote(I))
   expect_is(bundle, "task_bundle")
   expect_equal(bundle$function_name(), "base::I")
@@ -85,7 +85,7 @@ test_that("exotic functions", {
   Sys.setenv(R_TESTS = "")
 
   ctx <- context::context_save(tempfile(), storage_type = "environment")
-  obj <- queue_local(ctx)
+  obj <- queue_local$new(ctx)
 
   x <- 1:5
   res <- local({
@@ -115,7 +115,7 @@ test_that("sanity checking", {
 test_that("mapply", {
   skip_if_not_using_local_queue()
   ctx <- context::context_save(tempfile(), storage_type = "environment")
-  obj <- queue_local(ctx)
+  obj <- queue_local$new(ctx)
 
   grp <- obj$mapply(rep, 1:4, 4:1)
   expect_equal(length(grp$tasks), 4)
@@ -146,7 +146,7 @@ test_that("mapply", {
 test_that("mapply - recycle", {
   skip_if_not_using_local_queue()
   ctx <- context::context_save(tempfile(), storage_type = "environment")
-  obj <- queue_local(ctx)
+  obj <- queue_local$new(ctx)
   grp <- obj$mapply(rep, 1:4, 1)
 
   expect_equal(length(grp$tasks), 4)

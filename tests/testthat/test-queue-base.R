@@ -2,10 +2,10 @@ context("queue_base")
 
 test_that("empty", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
-  obj <- queue_base(ctx, initialize = FALSE)
+  obj <- queue_base$new(ctx, initialize = FALSE)
 
   expect_equal(obj$task_list(), character(0))
-  expect_equal(obj$task_status(), setNames(character(0), character(0)))
+  expect_equal(obj$task_status(), set_names(character(0), character(0)))
   expect_equal(obj$task_status(named = FALSE), character(0))
 
   tt <- obj$task_times()
@@ -33,7 +33,7 @@ test_that("empty", {
 test_that("enqueue", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   ctx <- context::context_load(ctx, new.env(parent = .GlobalEnv))
-  obj <- queue_base(ctx)
+  obj <- queue_base$new(ctx)
   t <- obj$enqueue(sin(1))
   expect_equal(t$status(), "PENDING")
 
@@ -45,12 +45,12 @@ test_that("enqueue", {
 
 test_that("create by id", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
-  obj <- queue_base(ctx$id, ctx$root)
+  obj <- queue_base$new(ctx$id, ctx$root)
   expect_equal(obj$context$id, ctx$id)
 })
 
 test_that("invalid creation", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
-  expect_error(queue_base(ctx, ctx$root),
+  expect_error(queue_base$new(ctx, ctx$root),
                "'root' must be NULL")
 })

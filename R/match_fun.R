@@ -12,20 +12,6 @@
 
 ## TODO: match_fun -> find_fun? locate_fun?
 
-##' Find functions in various places.  Probably best not to use this...
-##'
-##' @title Find a function
-##'
-##' @param fun A function; as a quoted symbol, a character string or
-##'   as value.
-##'
-##' @param envir The environment where the search should start from.
-##'
-##' @param envir_queue The queue environment.  This is used to
-##'   determine if the function can be reasonably expected to be found
-##'   in the context environment.
-##'
-##' @export
 match_fun <- function(fun, envir) {
   fun_lazy <- lazyeval::lazy(fun, envir)
   if (is.character(fun)) {
@@ -62,8 +48,6 @@ match_fun <- function(fun, envir) {
 ## `function(x) bar(x, a, b)` but it might be hard to pick up all the
 ## locals without doing some serious messing around.
 
-##' @export
-##' @rdname match_fun
 match_fun_queue <- function(fun, envir = parent.frame(),
                             envir_queue = .GlobalEnv) {
   dat <- match_fun(fun, envir)

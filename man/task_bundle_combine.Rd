@@ -4,8 +4,7 @@
 \alias{task_bundle_combine}
 \title{Combine task bundles}
 \usage{
-task_bundle_combine(..., bundles = list(...), name = NULL,
-  overwrite = FALSE)
+task_bundle_combine(..., bundles = list(...), name = NULL, overwrite = FALSE)
 }
 \arguments{
 \item{...}{Any number of task bundles}
@@ -25,4 +24,3 @@ Combine two or more task bundles
 \details{
 For now task bundles must have the same function to be combined.
 }
-

@@ -8,7 +8,12 @@ task_bundle_create <- function(task_ids, obj, name = NULL, X = NULL,
   if (length(task_ids) < 1L) {
     stop("task_ids must be nonempty")
   }
-  root <- context::context_root_get(obj)
+
+  if (inherits(obj, "queue_base")) {
+    root <- context::context_root_get(obj$context)
+  } else {
+    root <- context::context_root_get(obj)
+  }
   db <- root$db
   name <- create_bundle_name(name, overwrite, db)
 
@@ -19,14 +24,11 @@ task_bundle_create <- function(task_ids, obj, name = NULL, X = NULL,
 
   db$mset(name, list(task_ids, homogeneous, X),
           c("task_bundles", "task_bundles_homogeneous", "task_bundles_X"))
-  task_bundle_get(name, root)
+  task_bundle$new(name, root)
 }
 
-task_bundle_get <- function(name, root) {
-  R6_task_bundle$new(name, root)
-}
 
-R6_task_bundle <- R6::R6Class(
+task_bundle <- R6::R6Class(
   "task_bundle",
 
   public = list(
@@ -54,8 +56,9 @@ R6_task_bundle <- R6::R6Class(
       ## and not simply to the context (or even the db).
 
       ## This does not do a db read
-      self$tasks <- setNames(lapply(task_ids, queuer_task, self$root, FALSE),
-                             task_ids)
+      self$tasks <- set_names(lapply(
+        task_ids, queuer_task$new, self$root, FALSE),
+        task_ids)
       self$X <- self$db$get(name, "task_bundles_X")
 
       self$check()
@@ -85,21 +88,21 @@ R6_task_bundle <- R6::R6Class(
     status = function(named = TRUE) {
       ## TODO: Only need to check the undone ones here?
       ret <- context::task_status(self$ids, self$db, named)
-      self$done <- setNames(!(ret %in% c("PENDING", "RUNNING", "ORPHAN")),
-                            self$ids)
+      self$done <- set_names(!(ret %in% c("PENDING", "RUNNING", "ORPHAN")),
+                             self$ids)
       ret
     },
 
     expr = function(locals = FALSE) {
-      setNames(lapply(self$ids, context::task_expr, self$db, locals),
-               self$ids)
+      set_names(lapply(self$ids, context::task_expr, self$db, locals),
+                self$ids)
     },
 
     ## This is disabled for now, because it's not really clear how
     ## best to run it.
     ##
     ## log = function() {
-    ##   setNames(lapply(self$ids, context::task_log, self$root),
+    ##   set_names(lapply(self$ids, context::task_log, self$root),
     ##            self$names)
     ## },
 
@@ -132,14 +135,15 @@ task_bundle_list <- function(db) {
 }
 
 task_bundle_info <- function(obj) {
-  bundles <- task_bundle_list(obj$db)
-  db <- obj$db
+  db <- obj$context$db
+  bundles <- task_bundle_list(db)
+
 
   task_ids <- db$mget(bundles, "task_bundles")
   task_id1 <- vcapply(task_ids, "[[", 1L)
 
   task_time_sub <- context::task_times(task_id1, db, sorted = FALSE)$submitted
-  task_function <- context::task_function_name(task_id1, obj$db)
+  task_function <- context::task_function_name(task_id1, db)
   i <- order(task_time_sub)
 
   ret <- data.frame(name = bundles[i],
@@ -167,10 +171,10 @@ task_bundle_wait <- function(bundle, timeout, time_poll, progress) {
   }
 
   ## Immediately collect all completed results:
-  results <- setNames(vector("list", length(task_ids)), task_ids)
+  results <- set_names(vector("list", length(task_ids)), task_ids)
   cleanup <- function(results) {
     bundle$done <- done
-    setNames(results, bundle$names)
+    set_names(results, bundle$names)
   }
 
   if (any(done)) {
@@ -213,11 +217,11 @@ task_bundle_wait <- function(bundle, timeout, time_poll, progress) {
 task_bundle_partial <- function(bundle) {
   task_ids <- bundle$ids
   done <- bundle$check()
-  results <- setNames(vector("list", length(task_ids)), task_ids)
+  results <- set_names(vector("list", length(task_ids)), task_ids)
   if (any(done)) {
     results[done] <- bundle$db$mget(task_ids[done], "task_results")
   }
-  setNames(results, bundle$names)
+  set_names(results, bundle$names)
 }
 
 ## This is going to be something that a queue should provide and be
