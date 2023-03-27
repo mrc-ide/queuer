@@ -148,6 +148,19 @@ queue_base <- R6::R6Class(
       task_bundle$new(name, private$root)
     },
 
+    ##' @description Retry failed tasks in a bundle
+    ##'
+    ##' @param name A task bundle identifier (a string of the form
+    ##'   `adjective_anmimal`)
+    task_bundle_retry_failed = function(name) {
+      b <- self$task_bundle_get(name)
+      ret <- context::task_status(b$ids, private$db)
+      failed <- set_names(ret == "ERROR", b$ids)
+      ids <- names(failed[failed])
+      context::task_reset(ids, self$context)
+      private$submit_or_delete(ids)
+    },
+
     ##' @description Queue a task
     ##'
     ##' @param expr An unevaluated expression to put on the queue
