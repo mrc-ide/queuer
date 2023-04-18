@@ -60,9 +60,8 @@ test_that("retry tasks", {
   ctx <- context::context_load(ctx, new.env(parent = .GlobalEnv))
   obj <- queue_base$new(ctx)
 
-  fun <- function(x) if (x == 1) stop("fail")
-  t <- obj$enqueue(fun(1))
-  t2 <- obj$enqueue(fun(2))
+  t <- obj$enqueue(stop("fail"))
+  t2 <- obj$enqueue(sin(1))
 
   expect_equal(t$status(), "PENDING")
   expect_equal(t2$status(), "PENDING")
