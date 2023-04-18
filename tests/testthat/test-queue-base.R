@@ -54,3 +54,35 @@ test_that("invalid creation", {
   expect_error(queue_base$new(ctx, ctx$root),
                "'root' must be NULL")
 })
+
+test_that("retry tasks", {
+  ctx <- context::context_save(tempfile(), storage_type = "environment")
+  ctx <- context::context_load(ctx, new.env(parent = .GlobalEnv))
+  obj <- queue_base$new(ctx)
+
+  fun <- function(x) if (x == 1) stop("fail")
+  t <- obj$enqueue(fun(1))
+  t2 <- obj$enqueue(fun(2))
+
+  expect_equal(t$status(), "PENDING")
+  expect_equal(t2$status(), "PENDING")
+
+  context::task_run(t$id, ctx)
+  context::task_run(t2$id, ctx)
+
+  expect_equal(t$status(), "ERROR")
+  expect_equal(t2$status(), "COMPLETE")
+
+  now <- Sys.time()
+
+  expect_lt(t$times()$submitted, now)
+  expect_lt(t2$times()$submitted, now)
+
+  obj$task_retry_failed(c(t$id, t2$id))
+
+  expect_gt(t$times()$submitted, now)
+  expect_lt(t2$times()$submitted, now)
+
+  expect_equal(t$status(), "PENDING")
+  expect_equal(t2$status(), "COMPLETE")
+})

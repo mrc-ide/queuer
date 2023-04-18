@@ -129,6 +129,18 @@ queue_base <- R6::R6Class(
       context::task_delete(task_ids, private$root)
     },
 
+    ##' @description Retry failed tasks
+    ##'
+    ##' @param task_ids A vector of task identifiers (each a
+    ##'   hexadecimal string)
+    task_retry_failed = function(task_ids) {
+      ret <- context::task_status(task_ids, private$db)
+      failed <- set_names(ret == "ERROR", task_ids)
+      ids <- names(failed[failed])
+      context::task_reset(ids, self$context)
+      private$submit_or_delete(ids)
+    },
+
     ##' @description List all known task bundles
     task_bundle_list = function() {
       task_bundle_list(private$db)
@@ -154,11 +166,7 @@ queue_base <- R6::R6Class(
     ##'   `adjective_anmimal`)
     task_bundle_retry_failed = function(name) {
       b <- self$task_bundle_get(name)
-      ret <- context::task_status(b$ids, private$db)
-      failed <- set_names(ret == "ERROR", b$ids)
-      ids <- names(failed[failed])
-      context::task_reset(ids, self$context)
-      private$submit_or_delete(ids)
+      self$task_retry_failed(b$ids)
     },
 
     ##' @description Queue a task
