@@ -23,7 +23,7 @@ Suggests:
     testthat,
     thor
 Remotes:
-    mrc-ide/context
+    mrc-ide/context@mrc-4088
 RoxygenNote: 7.2.3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
