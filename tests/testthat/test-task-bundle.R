@@ -207,3 +207,25 @@ test_that("combine", {
                "Can't combine these task bundles")
 
 })
+
+test_that("retry bundle", {
+  ctx <- context::context_save(tempfile(), storage_type = "environment")
+  ctx <- context::context_load(ctx, new.env(parent = .GlobalEnv))
+  obj <- queue_local$new(ctx)
+  fun <- function(x) if (x == 1) stop("fail")
+  bundle <- obj$lapply(1:3, fun)
+  lapply(bundle$ids, function(id) context::task_run(id, ctx))
+
+  now <- Sys.time()
+  expect_equivalent(bundle$status(), c("ERROR", "COMPLETE", "COMPLETE"))
+  expect_lt(bundle$times()$submitted[[1]], now)
+
+  obj$task_bundle_retry_failed(bundle$name)
+  expect_equivalent(bundle$status(), c("PENDING", "COMPLETE", "COMPLETE"))
+  times <- bundle$times()
+  t <- times[times$task_id == bundle$ids[[1]], ]
+  expect_true(is.na.POSIXlt(t$started))
+  expect_true(is.na.POSIXlt(t$finished))
+  expect_true(is.na.POSIXlt(t$running))
+  expect_gt(t$submitted, now)
+})

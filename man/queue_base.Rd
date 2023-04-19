@@ -18,29 +18,30 @@ actually submitting tasks.
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{queue_base$new()}}
-\item \href{#method-initialize_context}{\code{queue_base$initialize_context()}}
-\item \href{#method-task_list}{\code{queue_base$task_list()}}
-\item \href{#method-task_status}{\code{queue_base$task_status()}}
-\item \href{#method-task_times}{\code{queue_base$task_times()}}
-\item \href{#method-task_get}{\code{queue_base$task_get()}}
-\item \href{#method-task_result}{\code{queue_base$task_result()}}
-\item \href{#method-task_delete}{\code{queue_base$task_delete()}}
-\item \href{#method-task_bundle_list}{\code{queue_base$task_bundle_list()}}
-\item \href{#method-task_bundle_info}{\code{queue_base$task_bundle_info()}}
-\item \href{#method-task_bundle_get}{\code{queue_base$task_bundle_get()}}
-\item \href{#method-enqueue}{\code{queue_base$enqueue()}}
-\item \href{#method-enqueue_}{\code{queue_base$enqueue_()}}
-\item \href{#method-enqueue_bulk}{\code{queue_base$enqueue_bulk()}}
-\item \href{#method-lapply}{\code{queue_base$lapply()}}
-\item \href{#method-mapply}{\code{queue_base$mapply()}}
-\item \href{#method-submit}{\code{queue_base$submit()}}
-\item \href{#method-unsubmit}{\code{queue_base$unsubmit()}}
+\item \href{#method-queue_base-new}{\code{queue_base$new()}}
+\item \href{#method-queue_base-initialize_context}{\code{queue_base$initialize_context()}}
+\item \href{#method-queue_base-task_list}{\code{queue_base$task_list()}}
+\item \href{#method-queue_base-task_status}{\code{queue_base$task_status()}}
+\item \href{#method-queue_base-task_times}{\code{queue_base$task_times()}}
+\item \href{#method-queue_base-task_get}{\code{queue_base$task_get()}}
+\item \href{#method-queue_base-task_result}{\code{queue_base$task_result()}}
+\item \href{#method-queue_base-task_delete}{\code{queue_base$task_delete()}}
+\item \href{#method-queue_base-task_bundle_list}{\code{queue_base$task_bundle_list()}}
+\item \href{#method-queue_base-task_bundle_info}{\code{queue_base$task_bundle_info()}}
+\item \href{#method-queue_base-task_bundle_get}{\code{queue_base$task_bundle_get()}}
+\item \href{#method-queue_base-task_bundle_retry_failed}{\code{queue_base$task_bundle_retry_failed()}}
+\item \href{#method-queue_base-enqueue}{\code{queue_base$enqueue()}}
+\item \href{#method-queue_base-enqueue_}{\code{queue_base$enqueue_()}}
+\item \href{#method-queue_base-enqueue_bulk}{\code{queue_base$enqueue_bulk()}}
+\item \href{#method-queue_base-lapply}{\code{queue_base$lapply()}}
+\item \href{#method-queue_base-mapply}{\code{queue_base$mapply()}}
+\item \href{#method-queue_base-submit}{\code{queue_base$submit()}}
+\item \href{#method-queue_base-unsubmit}{\code{queue_base$unsubmit()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-queue_base-new"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-new}{}}}
 \subsection{Method \code{new()}}{
 Constructor
 \subsection{Usage}{
@@ -67,8 +68,8 @@ loaded immediately. If you want to run tasks this must be
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-initialize_context"></a>}}
-\if{latex}{\out{\hypertarget{method-initialize_context}{}}}
+\if{html}{\out{<a id="method-queue_base-initialize_context"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-initialize_context}{}}}
 \subsection{Method \code{initialize_context()}}{
 Load the context. This causes the packages to be
 loaded and all script files to be sourced. This is required
@@ -81,8 +82,8 @@ any workers.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-task_list"></a>}}
-\if{latex}{\out{\hypertarget{method-task_list}{}}}
+\if{html}{\out{<a id="method-queue_base-task_list"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-task_list}{}}}
 \subsection{Method \code{task_list()}}{
 List all tasks known to this queue
 \subsection{Usage}{
@@ -91,8 +92,8 @@ List all tasks known to this queue
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-task_status"></a>}}
-\if{latex}{\out{\hypertarget{method-task_status}{}}}
+\if{html}{\out{<a id="method-queue_base-task_status"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-task_status}{}}}
 \subsection{Method \code{task_status()}}{
 Return the status of selected tasks
 \subsection{Usage}{
@@ -112,8 +113,8 @@ named by by task id.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-task_times"></a>}}
-\if{latex}{\out{\hypertarget{method-task_times}{}}}
+\if{html}{\out{<a id="method-queue_base-task_times"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-task_times}{}}}
 \subsection{Method \code{task_times()}}{
 Return the times taken by tasks as a \link{data.frame}
 \subsection{Usage}{
@@ -135,8 +136,8 @@ by submitted time.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-task_get"></a>}}
-\if{latex}{\out{\hypertarget{method-task_get}{}}}
+\if{html}{\out{<a id="method-queue_base-task_get"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-task_get}{}}}
 \subsection{Method \code{task_get()}}{
 Retrieve a task by id
 \subsection{Usage}{
@@ -155,8 +156,8 @@ that the task exists.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-task_result"></a>}}
-\if{latex}{\out{\hypertarget{method-task_result}{}}}
+\if{html}{\out{<a id="method-queue_base-task_result"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-task_result}{}}}
 \subsection{Method \code{task_result()}}{
 Retrieve a task's result
 \subsection{Usage}{
@@ -172,8 +173,8 @@ Retrieve a task's result
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-task_delete"></a>}}
-\if{latex}{\out{\hypertarget{method-task_delete}{}}}
+\if{html}{\out{<a id="method-queue_base-task_delete"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-task_delete}{}}}
 \subsection{Method \code{task_delete()}}{
 Delete tasks
 \subsection{Usage}{
@@ -190,8 +191,8 @@ hexadecimal string)}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-task_bundle_list"></a>}}
-\if{latex}{\out{\hypertarget{method-task_bundle_list}{}}}
+\if{html}{\out{<a id="method-queue_base-task_bundle_list"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-task_bundle_list}{}}}
 \subsection{Method \code{task_bundle_list()}}{
 List all known task bundles
 \subsection{Usage}{
@@ -200,8 +201,8 @@ List all known task bundles
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-task_bundle_info"></a>}}
-\if{latex}{\out{\hypertarget{method-task_bundle_info}{}}}
+\if{html}{\out{<a id="method-queue_base-task_bundle_info"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-task_bundle_info}{}}}
 \subsection{Method \code{task_bundle_info()}}{
 List all known task bundles along with information
 about what was run and when.
@@ -211,8 +212,8 @@ about what was run and when.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-task_bundle_get"></a>}}
-\if{latex}{\out{\hypertarget{method-task_bundle_get}{}}}
+\if{html}{\out{<a id="method-queue_base-task_bundle_get"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-task_bundle_get}{}}}
 \subsection{Method \code{task_bundle_get()}}{
 Get a task bundle by name
 \subsection{Usage}{
@@ -229,8 +230,26 @@ Get a task bundle by name
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-enqueue"></a>}}
-\if{latex}{\out{\hypertarget{method-enqueue}{}}}
+\if{html}{\out{<a id="method-queue_base-task_bundle_retry_failed"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-task_bundle_retry_failed}{}}}
+\subsection{Method \code{task_bundle_retry_failed()}}{
+Retry failed tasks in a bundle
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{queue_base$task_bundle_retry_failed(name)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{name}}{A task bundle identifier (a string of the form
+\code{adjective_anmimal})}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-queue_base-enqueue"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-enqueue}{}}}
 \subsection{Method \code{enqueue()}}{
 Queue a task
 \subsection{Usage}{
@@ -255,8 +274,8 @@ the value of \code{a} to the worker along with the expression.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-enqueue_"></a>}}
-\if{latex}{\out{\hypertarget{method-enqueue_}{}}}
+\if{html}{\out{<a id="method-queue_base-enqueue_"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-enqueue_}{}}}
 \subsection{Method \code{enqueue_()}}{
 Queue a task
 \subsection{Usage}{
@@ -281,8 +300,8 @@ the value of \code{a} to the worker along with the expression.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-enqueue_bulk"></a>}}
-\if{latex}{\out{\hypertarget{method-enqueue_bulk}{}}}
+\if{html}{\out{<a id="method-queue_base-enqueue_bulk"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-enqueue_bulk}{}}}
 \subsection{Method \code{enqueue_bulk()}}{
 Send a bulk set of tasks to your workers.
 This function is a bit like a mash-up of \link{Map} and \link{do.call},
@@ -342,8 +361,8 @@ bundle that exists with name \code{name}.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-lapply"></a>}}
-\if{latex}{\out{\hypertarget{method-lapply}{}}}
+\if{html}{\out{<a id="method-queue_base-lapply"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-lapply}{}}}
 \subsection{Method \code{lapply()}}{
 Apply a function over a list of data. This is
 equivalent to using \verb{$enqueue()} over each element in the list.
@@ -392,8 +411,8 @@ bundle that exists with name \code{name}.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-mapply"></a>}}
-\if{latex}{\out{\hypertarget{method-mapply}{}}}
+\if{html}{\out{<a id="method-queue_base-mapply"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-mapply}{}}}
 \subsection{Method \code{mapply()}}{
 A wrapper like \code{mapply}
 
@@ -457,8 +476,8 @@ arguments of your function.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-submit"></a>}}
-\if{latex}{\out{\hypertarget{method-submit}{}}}
+\if{html}{\out{<a id="method-queue_base-submit"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-submit}{}}}
 \subsection{Method \code{submit()}}{
 Submit a task into a queue. This is a stub
 method and must be overridden by a derived class for the queue
@@ -478,8 +497,8 @@ to do anything.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-unsubmit"></a>}}
-\if{latex}{\out{\hypertarget{method-unsubmit}{}}}
+\if{html}{\out{<a id="method-queue_base-unsubmit"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-unsubmit}{}}}
 \subsection{Method \code{unsubmit()}}{
 Unsubmit a task from the queue.  This is a stub
 method and must be overridden by a derived class for the queue
