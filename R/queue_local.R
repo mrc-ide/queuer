@@ -111,7 +111,7 @@ queue_local <- R6::R6Class(
 
     ## Ordinarily there would be two objects created; one worker and
     ## one queue.  but for the local queue these are the same.
-    submit = function(task_ids, names = NULL) {
+    submit = function(task_ids, names = NULL, depends_on = NULL) {
       if (!is.null(self$log_path)) {
         private$db$mset(task_ids, self$log_path, "log_path")
       }

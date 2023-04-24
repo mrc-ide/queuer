@@ -43,6 +43,22 @@ test_that("enqueue", {
   expect_equal(t$result(), sin(1))
 })
 
+test_that("enqueue with dependencies", {
+  ctx <- context::context_save(tempfile(), storage_type = "environment")
+  ctx <- context::context_load(ctx, new.env(parent = .GlobalEnv))
+  obj <- queue_base$new(ctx)
+  t <- obj$enqueue(sin(1))
+
+  expect_error(obj$enqueue(sin(1), depends_on = "123"),
+               "Failed to save as dependency 123 does not exist")
+
+  t2 <- obj$enqueue(sin(1), depends_on = t$id)
+  t3 <- obj$enqueue(sin(1), depends_on = c(t$id, t2$id))
+  expect_equal(t$status(), "PENDING")
+  expect_equal(t2$status(), "PENDING")
+  expect_equal(t3$status(), "PENDING")
+})
+
 test_that("create by id", {
   ctx <- context::context_save(tempfile(), storage_type = "environment")
   obj <- queue_base$new(ctx$id, ctx$root)

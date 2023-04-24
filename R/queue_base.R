@@ -182,9 +182,9 @@ queue_base <- R6::R6Class(
     ##'
     ##' @param name Optional name for the task
     enqueue = function(expr, envir = parent.frame(), submit = TRUE,
-                       name = NULL) {
+                       name = NULL, depends_on = NULL) {
       ## TODO: when is submit = FALSE wanted?
-      self$enqueue_(substitute(expr), envir, submit, name)
+      self$enqueue_(substitute(expr), envir, submit, name, depends_on)
     },
 
     ##' @description Queue a task
@@ -200,9 +200,9 @@ queue_base <- R6::R6Class(
     ##'
     ##' @param name Optional name for the task
     enqueue_ = function(expr, envir = parent.frame(), submit = TRUE,
-                        name = NULL) {
+                        name = NULL, depends_on = NULL) {
       self$initialize_context()
-      task_id <- context::task_save(expr, self$context, envir)
+      task_id <- context::task_save(expr, self$context, envir, depends_on = depends_on)
       if (submit) {
         private$submit_or_delete(task_id, name)
       }
@@ -350,7 +350,9 @@ queue_base <- R6::R6Class(
     ##' @param task_ids Vector of tasks to submit
     ##'
     ##' @param names Optional vector of names of tasks
-    submit = function(task_ids, names = NULL) {
+    ##'
+    ##' @param names Optional vector of task dependencies, named by task id
+    submit = function(task_ids, names = NULL, depends_on = NULL) {
     },
 
     ##' @description Unsubmit a task from the queue.  This is a stub
@@ -367,11 +369,12 @@ queue_base <- R6::R6Class(
     db = NULL,
 
     submit_or_delete = function(task_ids, name = NULL) {
+      dependencies <- context::task_deps(task_ids, private$db, named = TRUE)
       delete_these_tasks <- function(e) {
         message("Deleting task as submission failed")
         context::task_delete(task_ids, private$root)
       }
-      withCallingHandlers(self$submit(task_ids, name),
+      withCallingHandlers(self$submit(task_ids, name, dependencies),
                           error = delete_these_tasks)
     }
   ))
