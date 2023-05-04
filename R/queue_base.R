@@ -180,7 +180,7 @@ queue_base <- R6::R6Class(
     ##'
     ##' @param submit Logical indicating if the task should be submitted
     ##'
-    ##' @param depends_on Optional vector of task dependencies
+    ##' @param depends_on Optional vector of task ids to depend on
     ##'
     ##' @param name Optional name for the task
     enqueue = function(expr, envir = parent.frame(), submit = TRUE,
@@ -202,7 +202,7 @@ queue_base <- R6::R6Class(
     ##'
     ##' @param name Optional name for the task
     ##'
-    ##' @param depends_on Optional vector of task dependencies
+    ##' @param depends_on Optional vector of task ids to depend on
     ##'
     enqueue_ = function(expr, envir = parent.frame(), submit = TRUE,
                         name = NULL, depends_on = NULL) {
@@ -250,7 +250,7 @@ queue_base <- R6::R6Class(
     ##'
     ##' @param name Optional name for a created bundle
     ##'
-    ##' @param depends_on Optional vector of task dependencies
+    ##' @param depends_on Optional vector of task ids to depend on
     ##'
     ##' @param overwrite Logical, indicating if we should overwrite any
     ##'   bundle that exists with name `name`.
@@ -289,12 +289,15 @@ queue_base <- R6::R6Class(
     ##'
     ##' @param overwrite Logical, indicating if we should overwrite any
     ##'   bundle that exists with name `name`.
+    ##'
+    ##' @param depends_on Optional vector of task ids to depend on.
+    ##'
     lapply = function(X, FUN, ..., envir = parent.frame(),
                       timeout = 0, time_poll = 1, progress = NULL,
-                      name = NULL, overwrite = FALSE) {
+                      name = NULL, overwrite = FALSE, depends_on = NULL) {
       qlapply(self, private, X, FUN, ..., envir = envir,
               timeout = timeout, time_poll = time_poll,
-              progress = progress, name = name, overwrite = overwrite)
+              progress = progress, name = name, overwrite = overwrite, depends_on = depends_on)
     },
 
     ##' @description A wrapper like `mapply`
@@ -337,17 +340,20 @@ queue_base <- R6::R6Class(
     ##'   bundle that exists with name `name`.
     ##'
     ##' @param use_names Use names
+    ##'
+    ##' @param depends_on Optional vector of task ids to depend on
+    ##'
     mapply = function(FUN, ..., MoreArgs = NULL,
                       envir = parent.frame(), timeout = 0,
                       time_poll = 1, progress = NULL, name = NULL,
-                      use_names = TRUE, overwrite = FALSE) {
+                      use_names = TRUE, overwrite = FALSE, depends_on = NULL) {
       ## TODO: consider deleting
       X <- mapply_X(...)
       self$enqueue_bulk(X, FUN, DOTS = MoreArgs, do_call = TRUE,
                         envir = envir, timeout = timeout,
                         time_poll = time_poll, progress = progress,
                         name = name, use_names = use_names,
-                        overwrite = overwrite)
+                        overwrite = overwrite, depends_on = depends_on)
     },
 
     ##' @description Submit a task into a queue. This is a stub
@@ -358,7 +364,7 @@ queue_base <- R6::R6Class(
     ##'
     ##' @param names Optional vector of names of tasks
     ##'
-    ##' @param depends_on Optional vector of task dependencies, named by task id
+    ##' @param depends_on Optional vector of task ids to depend on, named by task id
     submit = function(task_ids, names = NULL, depends_on = NULL) {
     },
 

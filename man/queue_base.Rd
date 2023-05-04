@@ -295,7 +295,7 @@ the value of \code{a} to the worker along with the expression.}
 
 \item{\code{name}}{Optional name for the task}
 
-\item{\code{depends_on}}{Optional vector of task dependencies}
+\item{\code{depends_on}}{Optional vector of task ids to depend on}
 }
 \if{html}{\out{</div>}}
 }
@@ -329,7 +329,7 @@ the value of \code{a} to the worker along with the expression.}
 
 \item{\code{name}}{Optional name for the task}
 
-\item{\code{depends_on}}{Optional vector of task dependencies}
+\item{\code{depends_on}}{Optional vector of task ids to depend on}
 }
 \if{html}{\out{</div>}}
 }
@@ -393,7 +393,7 @@ progress bar if in an interactive session.}
 \item{\code{overwrite}}{Logical, indicating if we should overwrite any
 bundle that exists with name \code{name}.}
 
-\item{\code{depends_on}}{Optional vector of task dependencies}
+\item{\code{depends_on}}{Optional vector of task ids to depend on}
 }
 \if{html}{\out{</div>}}
 }
@@ -414,7 +414,8 @@ equivalent to using \verb{$enqueue()} over each element in the list.
   time_poll = 1,
   progress = NULL,
   name = NULL,
-  overwrite = FALSE
+  overwrite = FALSE,
+  depends_on = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -444,6 +445,8 @@ progress bar if in an interactive session.}
 
 \item{\code{overwrite}}{Logical, indicating if we should overwrite any
 bundle that exists with name \code{name}.}
+
+\item{\code{depends_on}}{Optional vector of task ids to depend on.}
 }
 \if{html}{\out{</div>}}
 }
@@ -531,7 +534,7 @@ to do anything.
 
 \item{\code{names}}{Optional vector of names of tasks}
 
-\item{\code{depends_on}}{Optional vector of task dependencies, named by task id}
+\item{\code{depends_on}}{Optional vector of task ids to depend on, named by task id}
 }
 \if{html}{\out{</div>}}
 }

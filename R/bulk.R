@@ -1,14 +1,14 @@
 qlapply <- function(obj, private, X, FUN, ...,
                     envir = parent.frame(),
                     timeout = 0, time_poll = 1, progress = NULL,
-                    name = NULL, overwrite = FALSE) {
+                    name = NULL, overwrite = FALSE, depends_on = NULL) {
   ## TODO: The dots here are going to cause grief at some point.  I
   ## may need a more robust way of passing additional arguments in,
   ## but not sure what that looks like...
   enqueue_bulk(obj, private, X, FUN, ..., do_call = FALSE,
                timeout = timeout, time_poll = time_poll,
                progress = progress, name = name,
-               envir = envir, overwrite = overwrite)
+               envir = envir, overwrite = overwrite, depends_on = depends_on)
 }
 
 ## A downside of the current treatment of dots is there are quite a
