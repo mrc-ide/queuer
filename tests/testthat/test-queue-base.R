@@ -54,9 +54,9 @@ test_that("enqueue with dependencies", {
 
   t2 <- obj$enqueue(sin(1), depends_on = t$id)
   t3 <- obj$enqueue(sin(1), depends_on = c(t$id, t2$id))
-  expect_equal(t$status(), "PENDING")
-  expect_equal(t2$status(), "PENDING")
-  expect_equal(t3$status(), "PENDING")
+
+  expect_equal(context::task_deps(t2$id, ctx), list(t$id))
+  expect_equal(context::task_deps(t3$id, ctx), list(c(t$id, t2$id)))
 })
 
 test_that("create by id", {

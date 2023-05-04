@@ -23,10 +23,10 @@ enqueue_bulk <- function(obj, private, X, FUN, ..., do_call = TRUE,
                          envir = parent.frame(),
                          timeout = 0, time_poll = 1, progress = NULL,
                          name = NULL, use_names = TRUE,
-                         overwrite = FALSE) {
+                         overwrite = FALSE, depends_on = NULL) {
   obj <- enqueue_bulk_submit(obj, private, X, FUN, ..., do_call = do_call,
                              envir = envir, progress = progress, name = name,
-                             use_names = use_names, overwrite = overwrite)
+                             use_names = use_names, overwrite = overwrite, depends_on = depends_on)
   if (timeout > 0) {
     ## TODO: this is possibly going to change as interrupt changes in
     ## current R-devel (as of 3.3.x)
@@ -41,7 +41,7 @@ enqueue_bulk_submit <- function(obj, private, X, FUN, ..., DOTS = NULL,
                                 do_call = FALSE,
                                 envir = parent.frame(), progress = NULL,
                                 name = NULL, use_names = TRUE,
-                                overwrite = FALSE) {
+                                overwrite = FALSE, depends_on = NULL) {
   ## TODO: If I push this to *only* be a method, then the assertion is
   ## not needed.
   if (!inherits(obj, "queue_base")) {
@@ -61,7 +61,7 @@ enqueue_bulk_submit <- function(obj, private, X, FUN, ..., DOTS = NULL,
     DOTS <- lapply(lazyeval::lazy_dots(...), "[[", "expr")
   }
   ids <- context::bulk_task_save(X, FUN, obj$context, DOTS,
-                                 do_call, use_names, envir)
+                                 do_call, use_names, envir, depends_on)
 
   message(sprintf("submitting %s tasks", length(ids)))
   private$submit_or_delete(ids, names(ids))

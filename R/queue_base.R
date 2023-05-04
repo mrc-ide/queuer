@@ -180,6 +180,8 @@ queue_base <- R6::R6Class(
     ##'
     ##' @param submit Logical indicating if the task should be submitted
     ##'
+    ##' @param depends_on Optional vector of task dependencies
+    ##'
     ##' @param name Optional name for the task
     enqueue = function(expr, envir = parent.frame(), submit = TRUE,
                        name = NULL, depends_on = NULL) {
@@ -199,6 +201,9 @@ queue_base <- R6::R6Class(
     ##' @param submit Logical indicating if the task should be submitted
     ##'
     ##' @param name Optional name for the task
+    ##'
+    ##' @param names Optional vector of task dependencies
+    ##'
     enqueue_ = function(expr, envir = parent.frame(), submit = TRUE,
                         name = NULL, depends_on = NULL) {
       self$initialize_context()
@@ -245,15 +250,17 @@ queue_base <- R6::R6Class(
     ##'
     ##' @param name Optional name for a created bundle
     ##'
+    ##' @param depends_on Optional vector of task dependencies
+    ##'
     ##' @param overwrite Logical, indicating if we should overwrite any
     ##'   bundle that exists with name `name`.
     enqueue_bulk = function(X, FUN, ..., do_call = TRUE,
                             envir = parent.frame(),
                             timeout = 0, time_poll = 1, progress = NULL,
-                            name = NULL, overwrite = FALSE) {
+                            name = NULL, overwrite = FALSE, depends_on = NULL) {
       enqueue_bulk(self, private, X, FUN, ..., do_call = do_call, envir = envir,
                    timeout = timeout, time_poll = time_poll,
-                   progress = progress, name = name, overwrite = overwrite)
+                   progress = progress, name = name, overwrite = overwrite, depends_on = depends_on)
     },
 
     ##' @description Apply a function over a list of data. This is
@@ -351,7 +358,7 @@ queue_base <- R6::R6Class(
     ##'
     ##' @param names Optional vector of names of tasks
     ##'
-    ##' @param names Optional vector of task dependencies, named by task id
+    ##' @param depends_on Optional vector of task dependencies, named by task id
     submit = function(task_ids, names = NULL, depends_on = NULL) {
     },
 
