@@ -202,7 +202,7 @@ queue_base <- R6::R6Class(
     ##'
     ##' @param name Optional name for the task
     ##'
-    ##' @param names Optional vector of task dependencies
+    ##' @param depends_on Optional vector of task dependencies
     ##'
     enqueue_ = function(expr, envir = parent.frame(), submit = TRUE,
                         name = NULL, depends_on = NULL) {
