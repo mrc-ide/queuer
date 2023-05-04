@@ -364,7 +364,8 @@ queue_base <- R6::R6Class(
     ##'
     ##' @param names Optional vector of names of tasks
     ##'
-    ##' @param depends_on Optional vector of task ids to depend on, named by task id
+    ##' @param depends_on Optional named list of task ids to vectors of
+    ##'    dependencies, e.g. list("t3" = c("t", "t1"), "t4" = "t)
     submit = function(task_ids, names = NULL, depends_on = NULL) {
     },
 

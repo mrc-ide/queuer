@@ -475,7 +475,8 @@ should feel intuitive.
   progress = NULL,
   name = NULL,
   use_names = TRUE,
-  overwrite = FALSE
+  overwrite = FALSE,
+  depends_on = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -509,6 +510,8 @@ progress bar if in an interactive session.}
 \item{\code{overwrite}}{Logical, indicating if we should overwrite any
 bundle that exists with name \code{name}.}
 
+\item{\code{depends_on}}{Optional vector of task ids to depend on}
+
 \item{\code{X}}{Typically a \link{data.frame}, which you want to apply \code{FUN}
 over, row-wise. The names of the \code{data.frame} must match the
 arguments of your function.}
@@ -534,7 +537,8 @@ to do anything.
 
 \item{\code{names}}{Optional vector of names of tasks}
 
-\item{\code{depends_on}}{Optional vector of task ids to depend on, named by task id}
+\item{\code{depends_on}}{Optional named list of task ids to vectors of
+dependencies, e.g. list("t3" = c("t", "t1"), "t4" = "t)}
 }
 \if{html}{\out{</div>}}
 }
