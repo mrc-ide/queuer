@@ -393,9 +393,8 @@ progress bar if in an interactive session.}
 \item{\code{overwrite}}{Logical, indicating if we should overwrite any
 bundle that exists with name \code{name}.}
 
-\item{\code{depends_on}}{Optional task ids to depend on.
-Should be a list of lists with an element per task.
-For example, list(list("abcde", "12345"), list(), list("12345"))}
+\item{\code{depends_on}}{Optional task ids to depend on (see
+\code{\link[context:bulk_task_save]{context::bulk_task_save()}}).}
 }
 \if{html}{\out{</div>}}
 }
@@ -448,9 +447,8 @@ progress bar if in an interactive session.}
 \item{\code{overwrite}}{Logical, indicating if we should overwrite any
 bundle that exists with name \code{name}.}
 
-\item{\code{depends_on}}{Optional task ids to depend on.
-Should be a list of lists with an element per task.
-For example, list(list("abcde", "12345"), list(), list("12345"))}
+\item{\code{depends_on}}{Optional task ids to depend on (see
+\code{\link[context:bulk_task_save]{context::bulk_task_save()}}).}
 }
 \if{html}{\out{</div>}}
 }
@@ -514,9 +512,8 @@ progress bar if in an interactive session.}
 \item{\code{overwrite}}{Logical, indicating if we should overwrite any
 bundle that exists with name \code{name}.}
 
-\item{\code{depends_on}}{Optional task ids to depend on.
-Should be a list of lists with an element per task.
-For example, list(list("abcde", "12345"), list(), list("12345"))}
+\item{\code{depends_on}}{Optional task ids to depend on (see
+\code{\link[context:bulk_task_save]{context::bulk_task_save()}}).}
 
 \item{\code{X}}{Typically a \link{data.frame}, which you want to apply \code{FUN}
 over, row-wise. The names of the \code{data.frame} must match the

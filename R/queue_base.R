@@ -250,9 +250,8 @@ queue_base <- R6::R6Class(
     ##'
     ##' @param name Optional name for a created bundle
     ##'
-    ##' @param depends_on Optional task ids to depend on.
-    ##'   Should be a list of lists with an element per task.
-    ##'   For example, list(list("abcde", "12345"), list(), list("12345"))
+    ##' @param depends_on Optional task ids to depend on (see
+    ##'   [context::bulk_task_save()]).
     ##'
     ##' @param overwrite Logical, indicating if we should overwrite any
     ##'   bundle that exists with name `name`.
@@ -292,10 +291,8 @@ queue_base <- R6::R6Class(
     ##' @param overwrite Logical, indicating if we should overwrite any
     ##'   bundle that exists with name `name`.
     ##'
-    ##' @param depends_on Optional task ids to depend on.
-    ##'   Should be a list of lists with an element per task.
-    ##'   For example, list(list("abcde", "12345"), list(), list("12345"))
-    ##'
+    ##' @param depends_on Optional task ids to depend on (see
+    ##'   [context::bulk_task_save()]).
     lapply = function(X, FUN, ..., envir = parent.frame(),
                       timeout = 0, time_poll = 1, progress = NULL,
                       name = NULL, overwrite = FALSE, depends_on = NULL) {
@@ -345,10 +342,8 @@ queue_base <- R6::R6Class(
     ##'
     ##' @param use_names Use names
     ##'
-    ##' @param depends_on Optional task ids to depend on.
-    ##'   Should be a list of lists with an element per task.
-    ##'   For example, list(list("abcde", "12345"), list(), list("12345"))
-    ##'
+    ##' @param depends_on Optional task ids to depend on (see
+    ##'   [context::bulk_task_save()]).
     mapply = function(FUN, ..., MoreArgs = NULL,
                       envir = parent.frame(), timeout = 0,
                       time_poll = 1, progress = NULL, name = NULL,
