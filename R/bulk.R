@@ -24,6 +24,7 @@ enqueue_bulk <- function(obj, private, X, FUN, ..., do_call = TRUE,
                          timeout = 0, time_poll = 1, progress = NULL,
                          name = NULL, use_names = TRUE,
                          overwrite = FALSE, depends_on = NULL) {
+
   obj <- enqueue_bulk_submit(obj, private, X, FUN, ..., do_call = do_call,
                              envir = envir, progress = progress, name = name,
                              use_names = use_names, overwrite = overwrite, depends_on = depends_on)

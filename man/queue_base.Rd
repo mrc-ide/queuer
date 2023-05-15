@@ -393,7 +393,9 @@ progress bar if in an interactive session.}
 \item{\code{overwrite}}{Logical, indicating if we should overwrite any
 bundle that exists with name \code{name}.}
 
-\item{\code{depends_on}}{Optional vector of task ids to depend on}
+\item{\code{depends_on}}{Optional task ids to depend on.
+Should be a list of lists with an element per task.
+For example, list(list("abcde", "12345"), list(), list("12345"))}
 }
 \if{html}{\out{</div>}}
 }
