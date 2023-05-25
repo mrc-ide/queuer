@@ -26,6 +26,7 @@ actually submitting tasks.
 \item \href{#method-queue_base-task_get}{\code{queue_base$task_get()}}
 \item \href{#method-queue_base-task_result}{\code{queue_base$task_result()}}
 \item \href{#method-queue_base-task_delete}{\code{queue_base$task_delete()}}
+\item \href{#method-queue_base-task_retry_failed}{\code{queue_base$task_retry_failed()}}
 \item \href{#method-queue_base-task_bundle_list}{\code{queue_base$task_bundle_list()}}
 \item \href{#method-queue_base-task_bundle_info}{\code{queue_base$task_bundle_info()}}
 \item \href{#method-queue_base-task_bundle_get}{\code{queue_base$task_bundle_get()}}
@@ -191,6 +192,24 @@ hexadecimal string)}
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-queue_base-task_retry_failed"></a>}}
+\if{latex}{\out{\hypertarget{method-queue_base-task_retry_failed}{}}}
+\subsection{Method \code{task_retry_failed()}}{
+Retry failed tasks
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{queue_base$task_retry_failed(task_ids)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{task_ids}}{A vector of task identifiers (each a
+hexadecimal string)}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-queue_base-task_bundle_list"></a>}}
 \if{latex}{\out{\hypertarget{method-queue_base-task_bundle_list}{}}}
 \subsection{Method \code{task_bundle_list()}}{
@@ -253,7 +272,13 @@ Retry failed tasks in a bundle
 \subsection{Method \code{enqueue()}}{
 Queue a task
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{queue_base$enqueue(expr, envir = parent.frame(), submit = TRUE, name = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{queue_base$enqueue(
+  expr,
+  envir = parent.frame(),
+  submit = TRUE,
+  name = NULL,
+  depends_on = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -269,6 +294,8 @@ the value of \code{a} to the worker along with the expression.}
 \item{\code{submit}}{Logical indicating if the task should be submitted}
 
 \item{\code{name}}{Optional name for the task}
+
+\item{\code{depends_on}}{Optional vector of task ids to depend on}
 }
 \if{html}{\out{</div>}}
 }
@@ -279,7 +306,13 @@ the value of \code{a} to the worker along with the expression.}
 \subsection{Method \code{enqueue_()}}{
 Queue a task
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{queue_base$enqueue_(expr, envir = parent.frame(), submit = TRUE, name = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{queue_base$enqueue_(
+  expr,
+  envir = parent.frame(),
+  submit = TRUE,
+  name = NULL,
+  depends_on = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -295,6 +328,8 @@ the value of \code{a} to the worker along with the expression.}
 \item{\code{submit}}{Logical indicating if the task should be submitted}
 
 \item{\code{name}}{Optional name for the task}
+
+\item{\code{depends_on}}{Optional vector of task ids to depend on}
 }
 \if{html}{\out{</div>}}
 }
@@ -320,7 +355,8 @@ should feel intuitive.
   time_poll = 1,
   progress = NULL,
   name = NULL,
-  overwrite = FALSE
+  overwrite = FALSE,
+  depends_on = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -356,6 +392,9 @@ progress bar if in an interactive session.}
 
 \item{\code{overwrite}}{Logical, indicating if we should overwrite any
 bundle that exists with name \code{name}.}
+
+\item{\code{depends_on}}{Optional task ids to depend on (see
+\code{\link[context:bulk_task_save]{context::bulk_task_save()}}).}
 }
 \if{html}{\out{</div>}}
 }
@@ -376,7 +415,8 @@ equivalent to using \verb{$enqueue()} over each element in the list.
   time_poll = 1,
   progress = NULL,
   name = NULL,
-  overwrite = FALSE
+  overwrite = FALSE,
+  depends_on = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -406,6 +446,9 @@ progress bar if in an interactive session.}
 
 \item{\code{overwrite}}{Logical, indicating if we should overwrite any
 bundle that exists with name \code{name}.}
+
+\item{\code{depends_on}}{Optional task ids to depend on (see
+\code{\link[context:bulk_task_save]{context::bulk_task_save()}}).}
 }
 \if{html}{\out{</div>}}
 }
@@ -434,7 +477,8 @@ should feel intuitive.
   progress = NULL,
   name = NULL,
   use_names = TRUE,
-  overwrite = FALSE
+  overwrite = FALSE,
+  depends_on = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -468,6 +512,9 @@ progress bar if in an interactive session.}
 \item{\code{overwrite}}{Logical, indicating if we should overwrite any
 bundle that exists with name \code{name}.}
 
+\item{\code{depends_on}}{Optional task ids to depend on (see
+\code{\link[context:bulk_task_save]{context::bulk_task_save()}}).}
+
 \item{\code{X}}{Typically a \link{data.frame}, which you want to apply \code{FUN}
 over, row-wise. The names of the \code{data.frame} must match the
 arguments of your function.}
@@ -483,7 +530,7 @@ Submit a task into a queue. This is a stub
 method and must be overridden by a derived class for the queue
 to do anything.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{queue_base$submit(task_ids, names = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{queue_base$submit(task_ids, names = NULL, depends_on = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -492,6 +539,9 @@ to do anything.
 \item{\code{task_ids}}{Vector of tasks to submit}
 
 \item{\code{names}}{Optional vector of names of tasks}
+
+\item{\code{depends_on}}{Optional named list of task ids to vectors of
+dependencies, e.g. list("t3" = c("t", "t1"), "t4" = "t)}
 }
 \if{html}{\out{</div>}}
 }

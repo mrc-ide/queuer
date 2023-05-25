@@ -80,6 +80,25 @@ test_that("$enqueue_bulk", {
   expect_equal(bundle$function_name(), "base::I")
 })
 
+test_that("enqueue_bulk with dependencies", {
+  ctx <- context::context_save(tempfile(), storage_type = "environment")
+  ctx <- context::context_load(ctx, new.env(parent = .GlobalEnv))
+  obj <- queue_base$new(ctx)
+  t <- obj$enqueue(sin(1))
+
+  expect_error(obj$enqueue_bulk(1:3, quote(I), depends_on = "123"),
+               "Failed to save as dependency 123 does not exist")
+
+  expect_error(obj$enqueue_bulk(1:3, quote(I), depends_on = list(t$id)),
+               "'depends_on' must either be a vector or a list of length 3")
+
+  t2 <- obj$enqueue_bulk(1:3, quote(I), depends_on = t$id)
+  t3 <- obj$enqueue_bulk(1:3, quote(I), depends_on = list(t$id, t2$id, list(t$id, t2$id)))
+
+  expect_equal(context::task_deps(t2$ids, ctx), rep(list(t$id), 3))
+  expect_equal(context::task_deps(t3$ids, ctx), list(t$id, t2$id, list(t$id, t2$id)))
+})
+
 test_that("exotic functions", {
   skip_if_not_using_local_queue()
   Sys.setenv(R_TESTS = "")
